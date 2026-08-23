@@ -127,8 +127,8 @@ export function mergeStates(local: SyncState, remote: SyncState): SyncState {
 
   // Kommandos zusammenführen.
   // Primärschlüssel: ID. Wenn zwei Geräte dasselbe Kommando mit gleichem Namen
-  // aber verschiedener ID anlegen, wird die ältere ID auf die neuere gelenkt
-  // (ID-Alias), damit Einträge, die die alte ID referenzieren, weiter funktionieren.
+  // aber verschiedener ID anlegen, gewinnt das neuere; die ältere ID wird verworfen
+  // und Einträge, die sie referenzieren, werden auf den Gewinner umgelenkt.
   const byId = new Map<string, Command>();
   const alias = new Map<string, string>();
 
@@ -145,8 +145,10 @@ export function mergeStates(local: SyncState, remote: SyncState): SyncState {
     if (clash && clash.id !== c.id) {
       const winner = stampOf(c) > stampOf(clash) ? c : clash;
       const loser = winner.id === c.id ? clash : c;
+      // Loser-ID verwerfen und auf Gewinner umleiten (verhindert Duplikate)
       byLowerName.set(key, winner);
-      put(winner);
+      byId.set(winner.id, winner);
+      byId.delete(loser.id);
       alias.set(loser.id, winner.id);
     } else {
       byLowerName.set(key, c);
@@ -333,17 +335,43 @@ export function schedulePush() {
 export async function pushNow(): Promise<void> {
   const cfg = getConfig();
   if (!cfg) return;
-  const local = loadState();
-  const remoteFile = await fetchFile(cfg);
-  const remote = remoteFile?.state ?? emptyState();
-  const merged = mergeStates(local, remote);
-  saveState(merged);
-  if (remoteFile && areEqual(remote, merged)) {
-    notifyChanged();
-    return;
+
+  // Bis zu 3 Versuche: Bei 409 (veralteter SHA) neu laden, erneut mergen, mit frischem SHA speichern.
+  let currentRemote: { sha: string; state: SyncState } | null;
+  try {
+    currentRemote = await fetchFile(cfg);
+  } catch (err) {
+    // Kein Zugriff (offline / Kapazitätslimit): lokalen Zustand nicht verändern, still fehlschlagen.
+    throw err;
   }
-  await putFile(cfg, merged, remoteFile?.sha);
-  notifyChanged();
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      currentRemote = await fetchFile(cfg);
+    }
+    const remote = currentRemote?.state ?? emptyState();
+    const merged = mergeStates(loadState(), remote);
+    if (currentRemote && areEqual(remote, merged)) {
+      // Keine Änderung gegenüber Remote – nur lokale Konvergenz sicherstellen.
+      saveState(merged);
+      notifyChanged();
+      return;
+    }
+    try {
+      await putFile(cfg, merged, currentRemote?.sha);
+      saveState(merged);
+      notifyChanged();
+      return;
+    } catch (err) {
+      lastError = err;
+      if (err instanceof SyncError && /409|Conflict|Konflikt/i.test(err.message)) {
+        continue; // SHA-Konflikt -> neu laden und erneut versuchen
+      }
+      throw err;
+    }
+  }
+  throw lastError;
 }
 
 export async function pullNow(): Promise<SyncState> {
