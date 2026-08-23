@@ -6,6 +6,11 @@ import { loadState, saveState } from './localStore';
 const CONFIG_KEY = 'hundeapp.syncConfig';
 const DATA_PATH = 'daten.json';
 
+// Praktische Obergrenze der GitHub Contents API. Die Datei wird Base64-kodiert
+// in einer einzigen Anfrage übertragen; wir warnen deutlich vor dem Limit.
+const MAX_PAYLOAD_BYTES = 1024 * 1024;
+const WARN_PAYLOAD_BYTES = 700 * 1024;
+
 export interface SyncConfig {
   user: string;
   repo: string;
@@ -57,6 +62,16 @@ function friendlyHttpError(status: number, body: string): string {
     return 'Zu viele Anfragen – bitte kurz warten und erneut versuchen.';
   }
   return `Fehler (HTTP ${status})${body ? ': ' + body.slice(0, 120) : ''}`;
+}
+
+// Netzwerkfehler (offline, DNS, TLS, aufgehobene Verbindung) landen nicht als
+// HTTP-Status, sondern als TypeError. Hier in eine verständliche Meldung wandeln.
+async function safeFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch {
+    throw new SyncError('Keine Verbindung – bitte Internetverbindung prüfen.');
+  }
 }
 
 // ===== Base64 (UTF-8 sicher) =====
@@ -443,6 +458,46 @@ function normalize(s: SyncState): SyncState {
   };
 }
 
+// ===== Tombstone-Aufräumung =====
+// Grundproblem: Tombstones wirklich gelöschter Objekte sind NICHT sicher zu
+// entfernen, solange ein Gerät die Löschung noch nicht gesehen hat – ein
+// Offline-Gerät würde das Objekt sonst beim nächsten Merge wiederbeleben.
+// Ohne Gerätetracking kann man sie daher nicht aggregiert löschen.
+//
+// Sichere, wirksame Teilmenge: Wir bereinigen nur Tombstones, die nachweislich
+// wirkungslos sind. Das sind Einträge, deren Objekt noch als aktiv in der
+// Live-Liste existiert (inkonsistenter Zustand, z. B. durch doppeltes Anlegen),
+// sowie Duplikate in den Listen selbst. Echte Lösch-Vermerke bleiben erhalten.
+export function pruneStaleTombstones(state: SyncState): SyncState {
+  const liveIds = (list: { id: string }[]) => new Set(list.map((x) => x.id));
+  const live = {
+    commands: liveIds(state.commands),
+    entries: liveIds(state.entries),
+    dogs: liveIds(state.dogs),
+    weight: liveIds(state.weight),
+    stool: liveIds(state.stool),
+    vet: liveIds(state.vet),
+    vaccinations: liveIds(state.vaccinations)
+  };
+
+  const dedupe = (list: string[]) => [...new Set(list)];
+  const prune = (tomb: string[], liveSet: Set<string>) =>
+    dedupe(tomb.filter((id) => !liveSet.has(id)));
+
+  return {
+    ...state,
+    deleted: {
+      commands: prune(state.deleted.commands, live.commands),
+      entries: prune(state.deleted.entries, live.entries),
+      dogs: prune(state.deleted.dogs, live.dogs),
+      weight: prune(state.deleted.weight, live.weight),
+      stool: prune(state.deleted.stool, live.stool),
+      vet: prune(state.deleted.vet, live.vet),
+      vaccinations: prune(state.deleted.vaccinations, live.vaccinations)
+    }
+  };
+}
+
 // ===== GitHub API =====
 
 function apiBase(cfg: SyncConfig): string {
@@ -460,7 +515,7 @@ function headers(cfg: SyncConfig): Record<string, string> {
 }
 
 async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncState } | null> {
-  const res = await fetch(apiBase(cfg), { headers: headers(cfg) });
+  const res = await safeFetch(apiBase(cfg), { headers: headers(cfg) });
   if (res.status === 404) return null;
   if (!res.ok) throw new SyncError(friendlyHttpError(res.status, await res.text()));
   const json = await res.json();
@@ -474,12 +529,26 @@ async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncSta
 }
 
 async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise<void> {
+  const content = b64encode(JSON.stringify(state));
+  // Base64 bläht um ~33 % auf; die Größenangabe der Contents API bezieht sich
+  // auf den codierten Inhalt. Wir messen daher den codierten String.
+  const bytes = content.length;
+  if (bytes > MAX_PAYLOAD_BYTES) {
+    throw new SyncError(
+      'Die Daten sind zu groß (> 1 MB) für eine einzelne Datei. Bitte Datenbestand bereinigen.'
+    );
+  }
+  if (bytes > WARN_PAYLOAD_BYTES) {
+    console.warn(
+      `Hundeapp Sync: Die Daten sind mit ${(bytes / 1024).toFixed(0)} KB fast am 1-MB-Limit. Bitte bereinigen.`
+    );
+  }
   const body: Record<string, unknown> = {
     message: 'Hundeapp Sync',
-    content: b64encode(JSON.stringify(state))
+    content
   };
   if (sha) body.sha = sha;
-  const res = await fetch(apiBase(cfg), {
+  const res = await safeFetch(apiBase(cfg), {
     method: 'PUT',
     headers: headers(cfg),
     body: JSON.stringify(body)
@@ -488,7 +557,7 @@ async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise
 }
 
 export async function validateConfig(cfg: SyncConfig): Promise<void> {
-  const res = await fetch(
+  const res = await safeFetch(
     `https://api.github.com/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(cfg.repo)}`,
     { headers: headers(cfg) }
   );
@@ -524,7 +593,8 @@ export function schedulePush() {
 // Nach dem Netzwerk-Roundtrip den aktuellen lokalen Stand erneut einmischen,
 // damit Änderungen, die während des Requests entstanden sind, nicht verloren gehen.
 function persistMerged(pushed: SyncState): void {
-  saveState(mergeStates(loadState(), pushed));
+  const merged = pruneStaleTombstones(mergeStates(loadState(), pushed));
+  saveState(merged);
   notifyChanged();
 }
 
@@ -569,7 +639,7 @@ export async function pullNow(): Promise<SyncState> {
     if (!cfg) return loadState();
     const remoteFile = await fetchFile(cfg);
     if (!remoteFile) return loadState();
-    const merged = mergeStates(loadState(), remoteFile.state);
+    const merged = pruneStaleTombstones(mergeStates(loadState(), remoteFile.state));
     saveState(merged);
     notifyChanged();
     return merged;

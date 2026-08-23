@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeStates, sanitizeState, type SyncState } from './github';
+import { mergeStates, pruneStaleTombstones, sanitizeState, type SyncState } from './github';
 import type { Command, Entry } from './types';
 
 const T1 = '2026-08-01T10:00:00.000Z';
@@ -169,5 +169,44 @@ describe('sanitizeState', () => {
     expect(state.stool[0].amount).toBeNull();
     expect(state.stool[0].consistency).toBe(0);
     expect(state.deleted.commands).toEqual(['a', 'b']);
+  });
+});
+
+describe('pruneStaleTombstones', () => {
+  it('behält Tombstones wirklich gelöschter Objekte', () => {
+    const s = base();
+    s.deleted.commands.push('geloescht');
+    const out = pruneStaleTombstones(s);
+    expect(out.deleted.commands).toContain('geloescht');
+  });
+
+  it('entfernt wirkungslose Tombstones, deren Objekt noch lebt', () => {
+    const s = base();
+    s.commands.push(cmd('a', 'Sitz', T1));
+    s.deleted.commands.push('a');
+    const out = pruneStaleTombstones(s);
+    expect(out.deleted.commands).not.toContain('a');
+    expect(out.commands.map((c) => c.id)).toContain('a');
+  });
+
+  it('dedupliziert Tombstone-Listen', () => {
+    const s = base();
+    s.deleted.entries.push('e1', 'e1', 'e2');
+    const out = pruneStaleTombstones(s);
+    expect(out.deleted.entries.sort()).toEqual(['e1', 'e2']);
+  });
+});
+
+describe('Netzwerkfehler -> verständliche Meldung', () => {
+  it('wirft bei Offline einen SyncError mit deutscher Meldung', async () => {
+    const { SyncError, validateConfig } = await import('./github');
+    const original = globalThis.fetch;
+    globalThis.fetch = async () => {
+      throw new TypeError('Network request failed');
+    };
+    const cfg = { user: 'u', repo: 'r', token: 't' };
+    await expect(validateConfig(cfg)).rejects.toThrow(SyncError);
+    await expect(validateConfig(cfg)).rejects.toThrow('Keine Verbindung');
+    globalThis.fetch = original;
   });
 });
