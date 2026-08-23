@@ -1,4 +1,5 @@
 import type { Settings } from '../settings';
+import Modal from './Modal';
 
 interface Props {
   settings: Settings;
@@ -34,31 +35,21 @@ function Toggle({ label, hint, value, onToggle }: { label: string; hint?: string
 
 export default function SettingsModal({ settings, onChange, onClose }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-stone-900/50" onClick={onClose} />
-      <div className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Einstellungen</h2>
-          <button className="btn-secondary px-3 py-1.5" onClick={onClose}>
-            Schließen
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <Toggle
-            label="Buttons oben anzeigen"
-            hint="Einträge / Kommandos oben statt unten"
-            value={settings.navTop}
-            onToggle={() => onChange({ ...settings, navTop: !settings.navTop })}
-          />
-          <Toggle
-            label="Kopfzeile kompakt"
-            hint="App-Name und Untertitel ausblenden"
-            value={!settings.headerText}
-            onToggle={() => onChange({ ...settings, headerText: !settings.headerText })}
-          />
-        </div>
+    <Modal title="Einstellungen" onClose={onClose}>
+      <div className="space-y-3">
+        <Toggle
+          label="Buttons oben anzeigen"
+          hint="Einträge / Kommandos oben statt unten"
+          value={settings.navTop}
+          onToggle={() => onChange({ ...settings, navTop: !settings.navTop })}
+        />
+        <Toggle
+          label="Kopfzeile kompakt"
+          hint="App-Name und Untertitel ausblenden"
+          value={!settings.headerText}
+          onToggle={() => onChange({ ...settings, headerText: !settings.headerText })}
+        />
       </div>
-    </div>
+    </Modal>
   );
 }

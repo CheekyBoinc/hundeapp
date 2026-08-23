@@ -85,3 +85,22 @@ export interface Vaccination {
   created_at: string;
   updated_at?: string;
 }
+
+export interface AppState {
+  commands: Command[];
+  entries: Entry[];
+  dogs: DogProfile[];
+  weight: WeightEntry[];
+  stool: StoolEntry[];
+  vet: VetVisit[];
+  vaccinations: Vaccination[];
+  deleted: {
+    commands: string[];
+    entries: string[];
+    dogs: string[];
+    weight: string[];
+    stool: string[];
+    vet: string[];
+    vaccinations: string[];
+  };
+}

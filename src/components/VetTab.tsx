@@ -3,6 +3,7 @@ import { deleteVet, fetchVets } from '../api';
 import { useLiveReload } from '../hooks';
 import type { VetVisit } from '../types';
 import { formatDateShort } from '../utils';
+import Modal from './Modal';
 import VetModal from './VetModal';
 
 interface Props {
@@ -93,28 +94,21 @@ export default function VetTab({ dogId }: Props) {
       )}
 
       {detail && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-          <div className="absolute inset-0 bg-stone-900/50" onClick={() => setDetail(null)} />
-          <div className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold">{formatDateShort(detail.date)}</h2>
-              <button className="btn-secondary px-3 py-1.5" onClick={() => setDetail(null)}>Schließen</button>
-            </div>
-            <div className="space-y-3">
-              <VetRow label="Praxis" value={detail.clinic} />
-              <VetRow label="Grund" value={detail.reason} />
-              <VetRow label="Befund" value={detail.diagnosis} />
-              <VetRow label="Behandlung" value={detail.treatment} />
-              <VetRow label="Medikamente" value={detail.medication} />
-              <VetRow label="Folgetermin" value={detail.followUp ? formatDateShort(detail.followUp) : null} />
-              <VetRow label="Notiz" value={detail.note} />
-            </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button className="btn-danger" onClick={() => handleDelete(detail)}>Löschen</button>
-              <button className="btn-primary" onClick={() => { setEditing(detail); setDetail(null); }}>Bearbeiten</button>
-            </div>
+        <Modal title={formatDateShort(detail.date)} onClose={() => setDetail(null)}>
+          <div className="space-y-3">
+            <VetRow label="Praxis" value={detail.clinic} />
+            <VetRow label="Grund" value={detail.reason} />
+            <VetRow label="Befund" value={detail.diagnosis} />
+            <VetRow label="Behandlung" value={detail.treatment} />
+            <VetRow label="Medikamente" value={detail.medication} />
+            <VetRow label="Folgetermin" value={detail.followUp ? formatDateShort(detail.followUp) : null} />
+            <VetRow label="Notiz" value={detail.note} />
           </div>
-        </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button className="btn-danger" onClick={() => handleDelete(detail)}>Löschen</button>
+            <button className="btn-primary" onClick={() => { setEditing(detail); setDetail(null); }}>Bearbeiten</button>
+          </div>
+        </Modal>
       )}
 
       {(adding || editing) && (

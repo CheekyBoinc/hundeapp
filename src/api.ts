@@ -1,6 +1,6 @@
 import * as local from './localStore';
 import { schedulePush } from './github';
-import type { Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
+import type { Command, DogProfile, Entry } from './types';
 
 export class ApiError extends Error {
   constructor(message: string) {
@@ -9,67 +9,35 @@ export class ApiError extends Error {
   }
 }
 
-export function translate(message: string): string {
-  if (message.includes('Ein Kommando mit diesem Namen gibt es schon.')) {
-    return 'Ein Kommando mit diesem Namen gibt es schon.';
-  }
-  return message;
-}
-
 function afterMutation() {
   schedulePush();
+}
+
+// Hüllt eine lokale Mutation ein und stößt danach den Sync an.
+function withSync<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => TResult
+): (...args: TArgs) => Promise<TResult> {
+  return async (...args) => {
+    const result = fn(...args);
+    afterMutation();
+    return result;
+  };
 }
 
 export async function fetchCommands(): Promise<Command[]> {
   return local.fetchCommands();
 }
 
-export async function saveCommand(cmd: {
-  id?: string;
-  dogId?: string | null;
-  name: string;
-  beschreibung?: string | null;
-  tipp?: string | null;
-}): Promise<Command> {
-  const saved = local.saveCommand(cmd);
-  afterMutation();
-  return saved;
-}
-
-export async function deleteCommand(id: string): Promise<void> {
-  local.deleteCommand(id);
-  afterMutation();
-}
+export const saveCommand = withSync(local.saveCommand);
+export const deleteCommand = withSync(local.deleteCommand);
 
 export async function fetchEntries(): Promise<Entry[]> {
   return local.fetchEntries();
 }
 
-export interface EntryInput {
-  id?: string;
-  dogId?: string | null;
-  date: string;
-  ort: string | null;
-  was_gemacht: string | null;
-  uebungsaufgaben: string | null;
-  tipps: string | null;
-  erledigt: boolean;
-}
-
-export async function saveEntry(input: EntryInput, commandIds: string[]): Promise<void> {
-  local.saveEntry(input, commandIds);
-  afterMutation();
-}
-
-export async function toggleEntryDone(id: string, erledigt: boolean): Promise<void> {
-  local.toggleEntryDone(id, erledigt);
-  afterMutation();
-}
-
-export async function deleteEntry(id: string): Promise<void> {
-  local.deleteEntry(id);
-  afterMutation();
-}
+export const saveEntry = withSync(local.saveEntry);
+export const toggleEntryDone = withSync(local.toggleEntryDone);
+export const deleteEntry = withSync(local.deleteEntry);
 
 // ===== Hunde =====
 
@@ -77,81 +45,23 @@ export async function fetchDogs(): Promise<DogProfile[]> {
   return local.fetchDogs();
 }
 
-export async function saveDogProfile(dog: Omit<DogProfile, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<DogProfile> {
-  const saved = local.saveDogProfile(dog);
-  afterMutation();
-  return saved;
-}
+export const saveDogProfile = withSync(local.saveDogProfile);
+export const deleteDog = withSync(local.deleteDog);
 
-export async function deleteDog(id: string): Promise<void> {
-  local.deleteDog(id);
-  afterMutation();
-}
+// ===== Hundezugehörige Sammlungen =====
 
-// ===== Gewicht =====
+export const fetchWeights = async (dogId: string) => local.fetchWeights(dogId);
+export const saveWeight = withSync(local.saveWeight);
+export const deleteWeight = withSync(local.deleteWeight);
 
-export async function fetchWeights(dogId: string): Promise<WeightEntry[]> {
-  return local.fetchWeights(dogId);
-}
+export const fetchStools = async (dogId: string) => local.fetchStools(dogId);
+export const saveStool = withSync(local.saveStool);
+export const deleteStool = withSync(local.deleteStool);
 
-export async function saveWeight(input: Omit<WeightEntry, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<WeightEntry> {
-  const saved = local.saveWeight(input);
-  afterMutation();
-  return saved;
-}
+export const fetchVets = async (dogId: string) => local.fetchVets(dogId);
+export const saveVet = withSync(local.saveVet);
+export const deleteVet = withSync(local.deleteVet);
 
-export async function deleteWeight(id: string): Promise<void> {
-  local.deleteWeight(id);
-  afterMutation();
-}
-
-// ===== Kot =====
-
-export async function fetchStools(dogId: string): Promise<StoolEntry[]> {
-  return local.fetchStools(dogId);
-}
-
-export async function saveStool(input: Omit<StoolEntry, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<StoolEntry> {
-  const saved = local.saveStool(input);
-  afterMutation();
-  return saved;
-}
-
-export async function deleteStool(id: string): Promise<void> {
-  local.deleteStool(id);
-  afterMutation();
-}
-
-// ===== Tierarzt =====
-
-export async function fetchVets(dogId: string): Promise<VetVisit[]> {
-  return local.fetchVets(dogId);
-}
-
-export async function saveVet(input: Omit<VetVisit, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<VetVisit> {
-  const saved = local.saveVet(input);
-  afterMutation();
-  return saved;
-}
-
-export async function deleteVet(id: string): Promise<void> {
-  local.deleteVet(id);
-  afterMutation();
-}
-
-// ===== Impfungen =====
-
-export async function fetchVaccinations(dogId: string): Promise<Vaccination[]> {
-  return local.fetchVaccinations(dogId);
-}
-
-export async function saveVaccination(input: Omit<Vaccination, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<Vaccination> {
-  const saved = local.saveVaccination(input);
-  afterMutation();
-  return saved;
-}
-
-export async function deleteVaccination(id: string): Promise<void> {
-  local.deleteVaccination(id);
-  afterMutation();
-}
+export const fetchVaccinations = async (dogId: string) => local.fetchVaccinations(dogId);
+export const saveVaccination = withSync(local.saveVaccination);
+export const deleteVaccination = withSync(local.deleteVaccination);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { saveVaccination } from '../api';
 import type { Vaccination } from '../types';
 import { todayLocal } from '../utils';
+import Modal from './Modal';
 
 interface Props {
   dogId: string;
@@ -47,48 +48,42 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-stone-900/50" onClick={onClose} />
-      <div className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{entry ? 'Impfung bearbeiten' : 'Impfung hinzufügen'}</h2>
-          <button className="btn-secondary px-3 py-1.5" onClick={onClose}>Schließen</button>
+    <Modal title={entry ? 'Impfung bearbeiten' : 'Impfung hinzufügen'} onClose={onClose}>
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
+      )}
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Datum</label>
+            <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
+          </div>
+          <div>
+            <label className="label">Nächste Fälligkeit</label>
+            <input type="date" className="input" value={nextDue} onChange={(ev) => setNextDue(ev.target.value)} />
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
-        )}
+        <div>
+          <label className="label">Impfstoff</label>
+          <input className="input" placeholder="z. B. Tollwut, Staupe, Leptospirose" value={name} onChange={(ev) => setName(ev.target.value)} />
+        </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Datum</label>
-              <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
-            </div>
-            <div>
-              <label className="label">Nächste Fälligkeit</label>
-              <input type="date" className="input" value={nextDue} onChange={(ev) => setNextDue(ev.target.value)} />
-            </div>
-          </div>
+        <div>
+          <label className="label">Notiz</label>
+          <textarea className="input min-h-20" placeholder="z. B. Chlamys, Wurmkur…" value={note} onChange={(ev) => setNote(ev.target.value)} />
+        </div>
 
-          <div>
-            <label className="label">Impfstoff</label>
-            <input className="input" placeholder="z. B. Tollwut, Staupe, Leptospirose" value={name} onChange={(ev) => setName(ev.target.value)} />
-          </div>
-
-          <div>
-            <label className="label">Notiz</label>
-            <textarea className="input min-h-20" placeholder="z. B. Chlamys, Wurmkur…" value={note} onChange={(ev) => setNote(ev.target.value)} />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
-              {saving ? 'Speichert…' : 'Speichern'}
-            </button>
-            <button className="btn-secondary" onClick={onClose}>Abbrechen</button>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
+            {saving ? 'Speichert…' : 'Speichern'}
+          </button>
+          <button className="btn-secondary" onClick={onClose}>
+            Abbrechen
+          </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

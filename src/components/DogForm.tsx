@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { saveDogProfile } from '../api';
 import type { DogProfile } from '../types';
+import Modal from './Modal';
 
 interface Props {
   dog: DogProfile | null;
@@ -50,85 +51,75 @@ export default function DogForm({ dog, onClose, onSaved }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-stone-900/50" onClick={onClose} />
-      <div className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{dog ? 'Hund bearbeiten' : 'Neuer Hund'}</h2>
-          <button className="btn-secondary px-3 py-1.5" onClick={onClose}>
-            Schließen
+    <Modal title={dog ? 'Hund bearbeiten' : 'Neuer Hund'} onClose={onClose}>
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <div>
+          <label className="label">Name</label>
+          <input className="input" autoFocus placeholder="z. B. Suse" value={name} onChange={(ev) => setName(ev.target.value)} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Rasse</label>
+            <input className="input" placeholder="z. B. Australian Shepherd" value={rasse} onChange={(ev) => setRasse(ev.target.value)} />
+          </div>
+          <div>
+            <label className="label">Geburtsdatum</label>
+            <input type="date" className="input" value={geburtsdatum} onChange={(ev) => setGeburtsdatum(ev.target.value)} />
+          </div>
+        </div>
+        <div>
+          <label className="label">Geschlecht</label>
+          <div className="flex gap-1.5">
+            {(['w', 'm'] as const).map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setGeschlecht(g)}
+                className={`chip ${geschlecht === g ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-700'}`}
+              >
+                {g === 'w' ? 'Hündin' : 'Rüde'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Chip-Nummer</label>
+            <input className="input" value={chipNr} onChange={(ev) => setChipNr(ev.target.value)} />
+          </div>
+          <div>
+            <label className="label">Register-Nummer</label>
+            <input className="input" value={registerNr} onChange={(ev) => setRegisterNr(ev.target.value)} />
+          </div>
+        </div>
+        <div>
+          <label className="label">Tierarzt</label>
+          <input className="input" placeholder="Name / Praxis" value={tierarzt} onChange={(ev) => setTierarzt(ev.target.value)} />
+        </div>
+        <div>
+          <label className="label">Allergien</label>
+          <input className="input" placeholder="z. B. Huhn, Grasmilben" value={allergien} onChange={(ev) => setAllergien(ev.target.value)} />
+        </div>
+        <div>
+          <label className="label">Besonderheiten</label>
+          <textarea className="input min-h-20" placeholder="z. B. ängstlich bei Gewitter, bevorzugt…" value={besonderheiten} onChange={(ev) => setBesonderheiten(ev.target.value)} />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
+            {saving ? 'Speichert…' : 'Speichern'}
+          </button>
+          <button className="btn-secondary" onClick={onClose}>
+            Abbrechen
           </button>
         </div>
-
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div>
-            <label className="label">Name</label>
-            <input className="input" autoFocus placeholder="z. B. Suse" value={name} onChange={(ev) => setName(ev.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Rasse</label>
-              <input className="input" placeholder="z. B. Australian Shepherd" value={rasse} onChange={(ev) => setRasse(ev.target.value)} />
-            </div>
-            <div>
-              <label className="label">Geburtsdatum</label>
-              <input type="date" className="input" value={geburtsdatum} onChange={(ev) => setGeburtsdatum(ev.target.value)} />
-            </div>
-          </div>
-          <div>
-            <label className="label">Geschlecht</label>
-            <div className="flex gap-1.5">
-              {(['w', 'm'] as const).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGeschlecht(g)}
-                  className={`chip ${geschlecht === g ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-700'}`}
-                >
-                  {g === 'w' ? 'Hündin' : 'Rüde'}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Chip-Nummer</label>
-              <input className="input" value={chipNr} onChange={(ev) => setChipNr(ev.target.value)} />
-            </div>
-            <div>
-              <label className="label">Register-Nummer</label>
-              <input className="input" value={registerNr} onChange={(ev) => setRegisterNr(ev.target.value)} />
-            </div>
-          </div>
-          <div>
-            <label className="label">Tierarzt</label>
-            <input className="input" placeholder="Name / Praxis" value={tierarzt} onChange={(ev) => setTierarzt(ev.target.value)} />
-          </div>
-          <div>
-            <label className="label">Allergien</label>
-            <input className="input" placeholder="z. B. Huhn, Grasmilben" value={allergien} onChange={(ev) => setAllergien(ev.target.value)} />
-          </div>
-          <div>
-            <label className="label">Besonderheiten</label>
-            <textarea className="input min-h-20" placeholder="z. B. ängstlich bei Gewitter, bevorzugt…" value={besonderheiten} onChange={(ev) => setBesonderheiten(ev.target.value)} />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
-              {saving ? 'Speichert…' : 'Speichern'}
-            </button>
-            <button className="btn-secondary" onClick={onClose}>
-              Abbrechen
-            </button>
-          </div>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

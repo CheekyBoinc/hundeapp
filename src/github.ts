@@ -1,4 +1,4 @@
-import type { Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
+import type { AppState, Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
 import { loadState, saveState } from './localStore';
 
 // ===== Konfiguration =====
@@ -76,24 +76,7 @@ function b64decode(s: string): string {
 
 // ===== Zustand =====
 
-export interface SyncState {
-  commands: Command[];
-  entries: Entry[];
-  dogs: DogProfile[];
-  weight: WeightEntry[];
-  stool: StoolEntry[];
-  vet: VetVisit[];
-  vaccinations: Vaccination[];
-  deleted: {
-    commands: string[];
-    entries: string[];
-    dogs: string[];
-    weight: string[];
-    stool: string[];
-    vet: string[];
-    vaccinations: string[];
-  };
-}
+export type SyncState = AppState;
 
 function emptyState(): SyncState {
   return {
@@ -115,6 +98,210 @@ function emptyState(): SyncState {
     }
   };
 }
+
+// ===== Schema-Validierung eingehender (Remote-)Daten =====
+// Kaputte Datensätze werden verworfen statt den Sync abstürzen zu lassen.
+
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v !== null && typeof v === 'object' && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : null;
+}
+
+function asString(v: unknown): string | null {
+  return typeof v === 'string' ? v : null;
+}
+
+function asNumber(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+function asIdList(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+}
+
+function cleanList<T>(v: unknown, clean: (x: unknown) => T | null): T[] {
+  if (!Array.isArray(v)) return [];
+  const out: T[] = [];
+  for (const item of v) {
+    const cleaned = clean(item);
+    if (cleaned) out.push(cleaned);
+  }
+  return out;
+}
+
+function withTimestamps<T extends object>(
+  obj: T,
+  r: Record<string, unknown>
+): T & { created_at: string; updated_at?: string } {
+  const created = asString(r.created_at) ?? new Date().toISOString();
+  const updated = asString(r.updated_at);
+  return { ...obj, created_at: created, ...(updated ? { updated_at: updated } : {}) };
+}
+
+function cleanCommand(v: unknown): Command | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const name = asString(r.name);
+  if (!id || !name) return null;
+  return withTimestamps(
+    {
+      id,
+      dogId: asString(r.dogId),
+      name,
+      beschreibung: asString(r.beschreibung),
+      tipp: asString(r.tipp)
+    },
+    r
+  );
+}
+
+function cleanEntry(v: unknown): Entry | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const date = asString(r.date);
+  if (!id || !date) return null;
+  return withTimestamps(
+    {
+      id,
+      dogId: asString(r.dogId),
+      date,
+      ort: asString(r.ort),
+      was_gemacht: asString(r.was_gemacht),
+      uebungsaufgaben: asString(r.uebungsaufgaben),
+      tipps: asString(r.tipps),
+      erledigt: r.erledigt === true,
+      commands: cleanList(r.commands, cleanCommand)
+    },
+    r
+  );
+}
+
+function cleanDog(v: unknown): DogProfile | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const name = asString(r.name);
+  if (!id || !name) return null;
+  const g = asString(r.geschlecht);
+  const geschlecht: DogProfile['geschlecht'] = g === 'w' || g === 'm' ? g : null;
+  return withTimestamps(
+    {
+      id,
+      name,
+      rasse: asString(r.rasse),
+      geburtsdatum: asString(r.geburtsdatum),
+      geschlecht,
+      chipNr: asString(r.chipNr),
+      registerNr: asString(r.registerNr),
+      tierarzt: asString(r.tierarzt),
+      allergien: asString(r.allergien),
+      besonderheiten: asString(r.besonderheiten)
+    },
+    r
+  );
+}
+
+function cleanWeight(v: unknown): WeightEntry | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const dogId = asString(r.dogId);
+  const date = asString(r.date);
+  const weightKg = asNumber(r.weightKg);
+  if (!id || !dogId || !date || weightKg === null) return null;
+  return withTimestamps({ id, dogId, date, weightKg, note: asString(r.note) }, r);
+}
+
+function cleanStool(v: unknown): StoolEntry | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const dogId = asString(r.dogId);
+  const date = asString(r.date);
+  if (!id || !dogId || !date) return null;
+  const amount = asString(r.amount);
+  const amountValue: StoolEntry['amount'] =
+    amount === 'wenig' || amount === 'normal' || amount === 'viel' ? amount : null;
+  return withTimestamps(
+    {
+      id,
+      dogId,
+      date,
+      consistency: asNumber(r.consistency) ?? 0,
+      color: asString(r.color),
+      amount: amountValue,
+      abnormal: r.abnormal === true,
+      note: asString(r.note)
+    },
+    r
+  );
+}
+
+function cleanVet(v: unknown): VetVisit | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const dogId = asString(r.dogId);
+  const date = asString(r.date);
+  if (!id || !dogId || !date) return null;
+  return withTimestamps(
+    {
+      id,
+      dogId,
+      date,
+      clinic: asString(r.clinic),
+      reason: asString(r.reason),
+      diagnosis: asString(r.diagnosis),
+      treatment: asString(r.treatment),
+      medication: asString(r.medication),
+      followUp: asString(r.followUp),
+      note: asString(r.note)
+    },
+    r
+  );
+}
+
+function cleanVaccination(v: unknown): Vaccination | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const id = asString(r.id);
+  const dogId = asString(r.dogId);
+  const date = asString(r.date);
+  const name = asString(r.name);
+  if (!id || !dogId || !date || !name) return null;
+  return withTimestamps(
+    { id, dogId, date, name, nextDue: asString(r.nextDue), note: asString(r.note) },
+    r
+  );
+}
+
+export function sanitizeState(parsed: unknown): SyncState {
+  const p = asRecord(parsed) ?? {};
+  const d = asRecord(p.deleted) ?? {};
+  return {
+    commands: cleanList(p.commands, cleanCommand),
+    entries: cleanList(p.entries, cleanEntry),
+    dogs: cleanList(p.dogs, cleanDog),
+    weight: cleanList(p.weight, cleanWeight),
+    stool: cleanList(p.stool, cleanStool),
+    vet: cleanList(p.vet, cleanVet),
+    vaccinations: cleanList(p.vaccinations, cleanVaccination),
+    deleted: {
+      commands: asIdList(d.commands),
+      entries: asIdList(d.entries),
+      dogs: asIdList(d.dogs),
+      weight: asIdList(d.weight),
+      stool: asIdList(d.stool),
+      vet: asIdList(d.vet),
+      vaccinations: asIdList(d.vaccinations)
+    }
+  };
+}
+
+// ===== Merge =====
 
 function stampOf(x: { created_at: string; updated_at?: string }): string {
   return x.updated_at ?? x.created_at;
@@ -158,8 +345,16 @@ export function mergeStates(local: SyncState, remote: SyncState): SyncState {
 
   const finalCommands = [...byId.values()].filter((c) => !dCommands.has(c.id));
 
+  // Alias-Ketten transitiv auflösen (A→B, B→C wird zu A→C), Zyklen abgesichert.
   const resolveId = (id: string): string => {
-    const target = alias.get(id) ?? id;
+    let target = id;
+    const seen = new Set<string>([id]);
+    while (alias.has(target)) {
+      const next = alias.get(target) as string;
+      if (seen.has(next)) break;
+      seen.add(next);
+      target = next;
+    }
     return dCommands.has(target) ? id : target;
   };
 
@@ -269,27 +464,9 @@ async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncSta
   if (res.status === 404) return null;
   if (!res.ok) throw new SyncError(friendlyHttpError(res.status, await res.text()));
   const json = await res.json();
-  let state: SyncState = emptyState();
+  let state: SyncState;
   try {
-    const parsed = JSON.parse(b64decode(json.content));
-    state = {
-      commands: Array.isArray(parsed.commands) ? parsed.commands : [],
-      entries: Array.isArray(parsed.entries) ? parsed.entries : [],
-      dogs: Array.isArray(parsed.dogs) ? parsed.dogs : [],
-      weight: Array.isArray(parsed.weight) ? parsed.weight : [],
-      stool: Array.isArray(parsed.stool) ? parsed.stool : [],
-      vet: Array.isArray(parsed.vet) ? parsed.vet : [],
-      vaccinations: Array.isArray(parsed.vaccinations) ? parsed.vaccinations : [],
-      deleted: {
-        commands: Array.isArray(parsed.deleted?.commands) ? parsed.deleted.commands : [],
-        entries: Array.isArray(parsed.deleted?.entries) ? parsed.deleted.entries : [],
-        dogs: Array.isArray(parsed.deleted?.dogs) ? parsed.deleted.dogs : [],
-        weight: Array.isArray(parsed.deleted?.weight) ? parsed.deleted.weight : [],
-        stool: Array.isArray(parsed.deleted?.stool) ? parsed.deleted.stool : [],
-        vet: Array.isArray(parsed.deleted?.vet) ? parsed.deleted.vet : [],
-        vaccinations: Array.isArray(parsed.deleted?.vaccinations) ? parsed.deleted.vaccinations : []
-      }
-    };
+    state = sanitizeState(JSON.parse(b64decode(json.content)));
   } catch {
     throw new SyncError('Die Datei konnte nicht gelesen werden (Formatfehler).');
   }
@@ -319,6 +496,18 @@ export async function validateConfig(cfg: SyncConfig): Promise<void> {
 }
 
 // ===== Sync-Orchestrierung =====
+// Alle Sync-Läufe werden serialisiert, damit sich Push und Pull nie überlappen.
+
+let syncChain: Promise<void> = Promise.resolve();
+
+function serialize<T>(fn: () => Promise<T>): Promise<T> {
+  const result = syncChain.then(fn);
+  syncChain = result.then(
+    () => undefined,
+    () => undefined
+  );
+  return result;
+}
 
 let pushTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -332,57 +521,59 @@ export function schedulePush() {
   }, 1200);
 }
 
+// Nach dem Netzwerk-Roundtrip den aktuellen lokalen Stand erneut einmischen,
+// damit Änderungen, die während des Requests entstanden sind, nicht verloren gehen.
+function persistMerged(pushed: SyncState): void {
+  saveState(mergeStates(loadState(), pushed));
+  notifyChanged();
+}
+
 export async function pushNow(): Promise<void> {
-  const cfg = getConfig();
-  if (!cfg) return;
+  return serialize(async () => {
+    const cfg = getConfig();
+    if (!cfg) return;
 
-  // Bis zu 3 Versuche: Bei 409 (veralteter SHA) neu laden, erneut mergen, mit frischem SHA speichern.
-  let currentRemote: { sha: string; state: SyncState } | null;
-  try {
-    currentRemote = await fetchFile(cfg);
-  } catch (err) {
-    // Kein Zugriff (offline / Kapazitätslimit): lokalen Zustand nicht verändern, still fehlschlagen.
-    throw err;
-  }
-
-  let lastError: unknown;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) {
-      currentRemote = await fetchFile(cfg);
-    }
-    const remote = currentRemote?.state ?? emptyState();
-    const merged = mergeStates(loadState(), remote);
-    if (currentRemote && areEqual(remote, merged)) {
-      // Keine Änderung gegenüber Remote – nur lokale Konvergenz sicherstellen.
-      saveState(merged);
-      notifyChanged();
-      return;
-    }
-    try {
-      await putFile(cfg, merged, currentRemote?.sha);
-      saveState(merged);
-      notifyChanged();
-      return;
-    } catch (err) {
-      lastError = err;
-      if (err instanceof SyncError && /409|Conflict|Konflikt/i.test(err.message)) {
-        continue; // SHA-Konflikt -> neu laden und erneut versuchen
+    // Bis zu 3 Versuche: Bei 409 (veralteter SHA) neu laden, erneut mergen, mit frischem SHA speichern.
+    let currentRemote = await fetchFile(cfg);
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        currentRemote = await fetchFile(cfg);
       }
-      throw err;
+      const remote = currentRemote?.state ?? emptyState();
+      const merged = mergeStates(loadState(), remote);
+      if (currentRemote && areEqual(remote, merged)) {
+        // Keine Änderung gegenüber Remote – nur lokale Konvergenz sicherstellen.
+        persistMerged(merged);
+        return;
+      }
+      try {
+        await putFile(cfg, merged, currentRemote?.sha);
+        persistMerged(merged);
+        return;
+      } catch (err) {
+        lastError = err;
+        if (err instanceof SyncError && /409|Conflict|Konflikt/i.test(err.message)) {
+          continue; // SHA-Konflikt -> neu laden und erneut versuchen
+        }
+        throw err;
+      }
     }
-  }
-  throw lastError;
+    throw lastError;
+  });
 }
 
 export async function pullNow(): Promise<SyncState> {
-  const cfg = getConfig();
-  if (!cfg) return loadState();
-  const remoteFile = await fetchFile(cfg);
-  if (!remoteFile) return loadState();
-  const merged = mergeStates(loadState(), remoteFile.state);
-  saveState(merged);
-  notifyChanged();
-  return merged;
+  return serialize(async () => {
+    const cfg = getConfig();
+    if (!cfg) return loadState();
+    const remoteFile = await fetchFile(cfg);
+    if (!remoteFile) return loadState();
+    const merged = mergeStates(loadState(), remoteFile.state);
+    saveState(merged);
+    notifyChanged();
+    return merged;
+  });
 }
 
 

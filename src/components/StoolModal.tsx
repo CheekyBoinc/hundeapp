@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { saveStool } from '../api';
 import type { StoolEntry } from '../types';
 import { todayLocal } from '../utils';
+import Modal from './Modal';
 
 interface Props {
   dogId: string;
@@ -60,84 +61,76 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-stone-900/50" onClick={onClose} />
-      <div className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{entry ? 'Kot-Eintrag bearbeiten' : 'Kot-Eintrag hinzufügen'}</h2>
-          <button className="btn-secondary px-3 py-1.5" onClick={onClose}>Schließen</button>
+    <Modal title={entry ? 'Kot-Eintrag bearbeiten' : 'Kot-Eintrag hinzufügen'} onClose={onClose}>
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
+      )}
+
+      <div className="space-y-4">
+        <div>
+          <label className="label">Datum</label>
+          <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
-        )}
-
-        <div className="space-y-4">
-          <div>
-            <label className="label">Datum</label>
-            <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
+        <div>
+          <label className="label">Konsistenz (Bristol)</label>
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            {BRISTOL.map((b) => (
+              <button
+                key={b.n}
+                type="button"
+                onClick={() => setConsistency(b.n)}
+                className={`rounded-xl border px-2 py-1.5 text-left text-xs ${
+                  consistency === b.n
+                    ? 'border-orange-400 bg-orange-50 text-orange-900'
+                    : 'border-stone-200 bg-white text-stone-600'
+                }`}
+              >
+                <span className="block font-semibold">{b.n}</span>
+                <span>{b.label}</span>
+              </button>
+            ))}
           </div>
+        </div>
 
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="label">Konsistenz (Bristol)</label>
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-              {BRISTOL.map((b) => (
-                <button
-                  key={b.n}
-                  type="button"
-                  onClick={() => setConsistency(b.n)}
-                  className={`rounded-xl border px-2 py-1.5 text-left text-xs ${
-                    consistency === b.n
-                      ? 'border-orange-400 bg-orange-50 text-orange-900'
-                      : 'border-stone-200 bg-white text-stone-600'
-                  }`}
-                >
-                  <span className="block font-semibold">{b.n}</span>
-                  <span>{b.label}</span>
-                </button>
+            <label className="label">Farbe</label>
+            <select className="input" value={color} onChange={(ev) => setColor(ev.target.value)}>
+              <option value="">–</option>
+              {COLORS.map((c) => (
+                <option key={c} value={c}>{c}</option>
               ))}
-            </div>
+            </select>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Farbe</label>
-              <select className="input" value={color} onChange={(ev) => setColor(ev.target.value)}>
-                <option value="">–</option>
-                {COLORS.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">Menge</label>
-              <select className="input" value={amount ?? ''} onChange={(ev) => setAmount((ev.target.value || null) as typeof amount)}>
-                <option value="">–</option>
-                {AMOUNTS.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="h-5 w-5 accent-orange-500" checked={abnormal} onChange={(ev) => setAbnormal(ev.target.checked)} />
-            Auffällig
-          </label>
-
           <div>
-            <label className="label">Notiz</label>
-            <textarea className="input min-h-20" placeholder="optional" value={note} onChange={(ev) => setNote(ev.target.value)} />
+            <label className="label">Menge</label>
+            <select className="input" value={amount ?? ''} onChange={(ev) => setAmount((ev.target.value || null) as typeof amount)}>
+              <option value="">–</option>
+              {AMOUNTS.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
-              {saving ? 'Speichert…' : 'Speichern'}
-            </button>
-            <button className="btn-secondary" onClick={onClose}>Abbrechen</button>
-          </div>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" className="h-5 w-5 accent-orange-500" checked={abnormal} onChange={(ev) => setAbnormal(ev.target.checked)} />
+          Auffällig
+        </label>
+
+        <div>
+          <label className="label">Notiz</label>
+          <textarea className="input min-h-20" placeholder="optional" value={note} onChange={(ev) => setNote(ev.target.value)} />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
+            {saving ? 'Speichert…' : 'Speichern'}
+          </button>
+          <button className="btn-secondary" onClick={onClose}>Abbrechen</button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
