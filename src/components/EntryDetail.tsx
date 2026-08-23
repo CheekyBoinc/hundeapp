@@ -1,0 +1,130 @@
+import { useState } from 'react';
+import { deleteEntry, toggleEntryDone } from '../api';
+import type { Entry } from '../types';
+import { formatDate } from '../utils';
+
+interface Props {
+  entry: Entry;
+  onClose: () => void;
+  onEdit: () => void;
+  onChanged: () => void;
+}
+
+function Block({ label, text }: { label: string; text: string | null }) {
+  return (
+    <div>
+      <p className="label">{label}</p>
+      {text ? (
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-stone-800">{text}</p>
+      ) : (
+        <p className="text-sm text-stone-400">–</p>
+      )}
+    </div>
+  );
+}
+
+export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleToggle(done: boolean) {
+    setBusy(true);
+    try {
+      await toggleEntryDone(entry.id, done);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm('Eintrag wirklich löschen?')) return;
+    try {
+      await deleteEntry(entry.id);
+      onChanged();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Fehler beim Löschen');
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <div className="absolute inset-0 bg-stone-900/50" onClick={onClose} />
+      <div className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5">
+        <div className="mb-1 flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold">{formatDate(entry.date)}</h2>
+            {entry.erledigt && (
+              <span className="chip bg-emerald-100 text-emerald-800">Erledigt</span>
+            )}
+          </div>
+          <button className="btn-secondary px-3 py-1.5" onClick={onClose}>
+            Schließen
+          </button>
+        </div>
+
+        {entry.ort && <p className="mb-3 text-sm text-stone-500">Ort: {entry.ort}</p>}
+
+        {entry.commands.length > 0 && (
+          <div className="mb-4">
+            <p className="label">Geübte Kommandos</p>
+            <div className="flex flex-wrap gap-1.5">
+              {entry.commands.map((c) => (
+                <span key={c.id} className="chip bg-orange-100 text-orange-900">
+                  {c.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <Block label="Was haben wir gemacht?" text={entry.was_gemacht} />
+          <Block label="Übungsaufgaben" text={entry.uebungsaufgaben} />
+          {entry.tipps ? (
+            <div className="rounded-xl bg-orange-50 px-3.5 py-3">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
+                Tipps / Erklärungen der Trainerin
+              </p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-orange-900">
+                {entry.tipps}
+              </p>
+            </div>
+          ) : (
+            <Block label="Tipps / Erklärungen der Trainerin" text={null} />
+          )}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              className="h-5 w-5 accent-orange-500"
+              checked={entry.erledigt}
+              disabled={busy}
+              onChange={(ev) => handleToggle(ev.target.checked)}
+            />
+            Erledigt
+          </label>
+          <div className="ml-auto flex gap-2">
+            <button className="btn-danger" onClick={handleDelete}>
+              Löschen
+            </button>
+            <button className="btn-primary" onClick={onEdit}>
+              Bearbeiten
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
