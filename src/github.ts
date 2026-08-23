@@ -1,4 +1,4 @@
-import type { Command, Entry } from './types';
+import type { Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
 import { loadState, saveState } from './localStore';
 
 // ===== Konfiguration =====
@@ -79,11 +79,41 @@ function b64decode(s: string): string {
 export interface SyncState {
   commands: Command[];
   entries: Entry[];
-  deleted: { commands: string[]; entries: string[] };
+  dogs: DogProfile[];
+  weight: WeightEntry[];
+  stool: StoolEntry[];
+  vet: VetVisit[];
+  vaccinations: Vaccination[];
+  deleted: {
+    commands: string[];
+    entries: string[];
+    dogs: string[];
+    weight: string[];
+    stool: string[];
+    vet: string[];
+    vaccinations: string[];
+  };
 }
 
 function emptyState(): SyncState {
-  return { commands: [], entries: [], deleted: { commands: [], entries: [] } };
+  return {
+    commands: [],
+    entries: [],
+    dogs: [],
+    weight: [],
+    stool: [],
+    vet: [],
+    vaccinations: [],
+    deleted: {
+      commands: [],
+      entries: [],
+      dogs: [],
+      weight: [],
+      stool: [],
+      vet: [],
+      vaccinations: []
+    }
+  };
 }
 
 function stampOf(x: { created_at: string; updated_at?: string }): string {
@@ -150,12 +180,42 @@ export function mergeStates(local: SyncState, remote: SyncState): SyncState {
         .filter((x): x is Command => Boolean(x))
     }));
 
+  // Generisches Zusammenführen von Listen pro ID; neuerer Stand gewinnt.
+  const mergeList = <T extends { id: string; created_at: string; updated_at?: string }>(
+    localList: T[],
+    remoteList: T[],
+    tomb: Set<string>
+  ): T[] => {
+    const map = new Map<string, T>();
+    for (const item of [...localList, ...remoteList]) {
+      const cur = map.get(item.id);
+      if (!cur || stampOf(item) > stampOf(cur)) map.set(item.id, item);
+    }
+    return [...map.values()].filter((x) => !tomb.has(x.id));
+  };
+
+  const dDogs = new Set([...local.deleted.dogs, ...remote.deleted.dogs]);
+  const dWeight = new Set([...local.deleted.weight, ...remote.deleted.weight]);
+  const dStool = new Set([...local.deleted.stool, ...remote.deleted.stool]);
+  const dVet = new Set([...local.deleted.vet, ...remote.deleted.vet]);
+  const dVax = new Set([...local.deleted.vaccinations, ...remote.deleted.vaccinations]);
+
   return {
     commands: finalCommands,
     entries: finalEntries,
+    dogs: mergeList(local.dogs, remote.dogs, dDogs),
+    weight: mergeList(local.weight, remote.weight, dWeight),
+    stool: mergeList(local.stool, remote.stool, dStool),
+    vet: mergeList(local.vet, remote.vet, dVet),
+    vaccinations: mergeList(local.vaccinations, remote.vaccinations, dVax),
     deleted: {
       commands: [...dCommands],
-      entries: [...dEntries]
+      entries: [...dEntries],
+      dogs: [...dDogs],
+      weight: [...dWeight],
+      stool: [...dStool],
+      vet: [...dVet],
+      vaccinations: [...dVax]
     }
   };
 }
@@ -165,10 +225,24 @@ export function areEqual(a: SyncState, b: SyncState): boolean {
 }
 
 function normalize(s: SyncState): SyncState {
+  const sortById = <T extends { id: string }>(arr: T[]): T[] => [...arr].sort((a, b) => a.id.localeCompare(b.id));
   return {
-    commands: [...s.commands].sort((a, b) => a.id.localeCompare(b.id)),
-    entries: [...s.entries].sort((a, b) => a.id.localeCompare(b.id)),
-    deleted: { commands: [...s.deleted.commands].sort(), entries: [...s.deleted.entries].sort() }
+    commands: sortById(s.commands),
+    entries: sortById(s.entries),
+    dogs: sortById(s.dogs),
+    weight: sortById(s.weight),
+    stool: sortById(s.stool),
+    vet: sortById(s.vet),
+    vaccinations: sortById(s.vaccinations),
+    deleted: {
+      commands: [...s.deleted.commands].sort(),
+      entries: [...s.deleted.entries].sort(),
+      dogs: [...s.deleted.dogs].sort(),
+      weight: [...s.deleted.weight].sort(),
+      stool: [...s.deleted.stool].sort(),
+      vet: [...s.deleted.vet].sort(),
+      vaccinations: [...s.deleted.vaccinations].sort()
+    }
   };
 }
 
@@ -199,7 +273,20 @@ async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncSta
     state = {
       commands: Array.isArray(parsed.commands) ? parsed.commands : [],
       entries: Array.isArray(parsed.entries) ? parsed.entries : [],
-      deleted: parsed.deleted ?? { commands: [], entries: [] }
+      dogs: Array.isArray(parsed.dogs) ? parsed.dogs : [],
+      weight: Array.isArray(parsed.weight) ? parsed.weight : [],
+      stool: Array.isArray(parsed.stool) ? parsed.stool : [],
+      vet: Array.isArray(parsed.vet) ? parsed.vet : [],
+      vaccinations: Array.isArray(parsed.vaccinations) ? parsed.vaccinations : [],
+      deleted: {
+        commands: Array.isArray(parsed.deleted?.commands) ? parsed.deleted.commands : [],
+        entries: Array.isArray(parsed.deleted?.entries) ? parsed.deleted.entries : [],
+        dogs: Array.isArray(parsed.deleted?.dogs) ? parsed.deleted.dogs : [],
+        weight: Array.isArray(parsed.deleted?.weight) ? parsed.deleted.weight : [],
+        stool: Array.isArray(parsed.deleted?.stool) ? parsed.deleted.stool : [],
+        vet: Array.isArray(parsed.deleted?.vet) ? parsed.deleted.vet : [],
+        vaccinations: Array.isArray(parsed.deleted?.vaccinations) ? parsed.deleted.vaccinations : []
+      }
     };
   } catch {
     throw new SyncError('Die Datei konnte nicht gelesen werden (Formatfehler).');

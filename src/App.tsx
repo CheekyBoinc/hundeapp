@@ -3,11 +3,12 @@ import { clearConfig, isConfigured, onChange, pullNow, pushNow, setConfig } from
 import { loadSettings, saveSettings, type Settings } from './settings';
 import EntriesPage from './components/EntriesPage';
 import CommandsPage from './components/CommandsPage';
+import DogsPage from './components/DogsPage';
 import SyncSetup from './components/SyncSetup';
 import SettingsModal from './components/SettingsModal';
 import { PawIcon } from './components/PawIcon';
 
-type Tab = 'eintraege' | 'kommandos';
+type Tab = 'eintraege' | 'kommandos' | 'hunde';
 
 export default function App() {
   const [configured, setConfigured] = useState(isConfigured());
@@ -93,7 +94,8 @@ export default function App() {
 
   const tabs: [Tab, string][] = [
     ['eintraege', 'Einträge'],
-    ['kommandos', 'Kommandos']
+    ['kommandos', 'Kommandos'],
+    ['hunde', 'Hunde']
   ];
 
   const statusDot = {
@@ -205,7 +207,9 @@ export default function App() {
       )}
 
       <main className="mx-auto max-w-5xl px-4 py-4 pb-24">
-        {tab === 'eintraege' ? <EntriesPage /> : <CommandsPage />}
+        {tab === 'eintraege' && <EntriesPage />}
+        {tab === 'kommandos' && <CommandsPage />}
+        {tab === 'hunde' && <DogsPage />}
       </main>
 
       {!settings.navTop && (

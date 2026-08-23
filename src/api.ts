@@ -1,6 +1,6 @@
 import * as local from './localStore';
 import { schedulePush } from './github';
-import type { Command, Entry } from './types';
+import type { Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
 
 export class ApiError extends Error {
   constructor(message: string) {
@@ -66,5 +66,90 @@ export async function toggleEntryDone(id: string, erledigt: boolean): Promise<vo
 
 export async function deleteEntry(id: string): Promise<void> {
   local.deleteEntry(id);
+  afterMutation();
+}
+
+// ===== Hunde =====
+
+export async function fetchDogs(): Promise<DogProfile[]> {
+  return local.fetchDogs();
+}
+
+export async function saveDogProfile(dog: Omit<DogProfile, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<DogProfile> {
+  const saved = local.saveDogProfile(dog);
+  afterMutation();
+  return saved;
+}
+
+export async function deleteDog(id: string): Promise<void> {
+  local.deleteDog(id);
+  afterMutation();
+}
+
+// ===== Gewicht =====
+
+export async function fetchWeights(dogId: string): Promise<WeightEntry[]> {
+  return local.fetchWeights(dogId);
+}
+
+export async function saveWeight(input: Omit<WeightEntry, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<WeightEntry> {
+  const saved = local.saveWeight(input);
+  afterMutation();
+  return saved;
+}
+
+export async function deleteWeight(id: string): Promise<void> {
+  local.deleteWeight(id);
+  afterMutation();
+}
+
+// ===== Kot =====
+
+export async function fetchStools(dogId: string): Promise<StoolEntry[]> {
+  return local.fetchStools(dogId);
+}
+
+export async function saveStool(input: Omit<StoolEntry, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<StoolEntry> {
+  const saved = local.saveStool(input);
+  afterMutation();
+  return saved;
+}
+
+export async function deleteStool(id: string): Promise<void> {
+  local.deleteStool(id);
+  afterMutation();
+}
+
+// ===== Tierarzt =====
+
+export async function fetchVets(dogId: string): Promise<VetVisit[]> {
+  return local.fetchVets(dogId);
+}
+
+export async function saveVet(input: Omit<VetVisit, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<VetVisit> {
+  const saved = local.saveVet(input);
+  afterMutation();
+  return saved;
+}
+
+export async function deleteVet(id: string): Promise<void> {
+  local.deleteVet(id);
+  afterMutation();
+}
+
+// ===== Impfungen =====
+
+export async function fetchVaccinations(dogId: string): Promise<Vaccination[]> {
+  return local.fetchVaccinations(dogId);
+}
+
+export async function saveVaccination(input: Omit<Vaccination, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<Vaccination> {
+  const saved = local.saveVaccination(input);
+  afterMutation();
+  return saved;
+}
+
+export async function deleteVaccination(id: string): Promise<void> {
+  local.deleteVaccination(id);
   afterMutation();
 }

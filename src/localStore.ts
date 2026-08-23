@@ -1,9 +1,19 @@
-import type { Command, Entry } from './types';
+import type { Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
 
 const COMMANDS_KEY = 'hundeapp.commands';
 const ENTRIES_KEY = 'hundeapp.entries';
 const DELETED_COMMANDS_KEY = 'hundeapp.deletedCommands';
 const DELETED_ENTRIES_KEY = 'hundeapp.deletedEntries';
+const DOGS_KEY = 'hundeapp.dogs';
+const WEIGHT_KEY = 'hundeapp.weight';
+const STOOL_KEY = 'hundeapp.stool';
+const VET_KEY = 'hundeapp.vet';
+const VACCINATIONS_KEY = 'hundeapp.vaccinations';
+const DELETED_DOGS_KEY = 'hundeapp.deletedDogs';
+const DELETED_WEIGHT_KEY = 'hundeapp.deletedWeight';
+const DELETED_STOOL_KEY = 'hundeapp.deletedStool';
+const DELETED_VET_KEY = 'hundeapp.deletedVet';
+const DELETED_VACCINATIONS_KEY = 'hundeapp.deletedVaccinations';
 const NOTES_MARKER_KEY = 'hundeapp.notizenEingespielt';
 
 function readJson<T>(key: string, fallback: T): T {
@@ -167,16 +177,39 @@ export function deleteEntry(id: string): void {
 export interface LocalState {
   commands: Command[];
   entries: Entry[];
-  deleted: { commands: string[]; entries: string[] };
+  dogs: DogProfile[];
+  weight: WeightEntry[];
+  stool: StoolEntry[];
+  vet: VetVisit[];
+  vaccinations: Vaccination[];
+  deleted: {
+    commands: string[];
+    entries: string[];
+    dogs: string[];
+    weight: string[];
+    stool: string[];
+    vet: string[];
+    vaccinations: string[];
+  };
 }
 
 export function loadState(): LocalState {
   return {
     commands: readJson<Command[]>(COMMANDS_KEY, []),
     entries: readJson<Entry[]>(ENTRIES_KEY, []),
+    dogs: readJson<DogProfile[]>(DOGS_KEY, []),
+    weight: readJson<WeightEntry[]>(WEIGHT_KEY, []),
+    stool: readJson<StoolEntry[]>(STOOL_KEY, []),
+    vet: readJson<VetVisit[]>(VET_KEY, []),
+    vaccinations: readJson<Vaccination[]>(VACCINATIONS_KEY, []),
     deleted: {
       commands: readJson<string[]>(DELETED_COMMANDS_KEY, []),
-      entries: readJson<string[]>(DELETED_ENTRIES_KEY, [])
+      entries: readJson<string[]>(DELETED_ENTRIES_KEY, []),
+      dogs: readJson<string[]>(DELETED_DOGS_KEY, []),
+      weight: readJson<string[]>(DELETED_WEIGHT_KEY, []),
+      stool: readJson<string[]>(DELETED_STOOL_KEY, []),
+      vet: readJson<string[]>(DELETED_VET_KEY, []),
+      vaccinations: readJson<string[]>(DELETED_VACCINATIONS_KEY, [])
     }
   };
 }
@@ -184,8 +217,159 @@ export function loadState(): LocalState {
 export function saveState(state: LocalState): void {
   writeJson(COMMANDS_KEY, state.commands);
   writeJson(ENTRIES_KEY, state.entries);
+  writeJson(DOGS_KEY, state.dogs);
+  writeJson(WEIGHT_KEY, state.weight);
+  writeJson(STOOL_KEY, state.stool);
+  writeJson(VET_KEY, state.vet);
+  writeJson(VACCINATIONS_KEY, state.vaccinations);
   writeJson(DELETED_COMMANDS_KEY, state.deleted.commands);
   writeJson(DELETED_ENTRIES_KEY, state.deleted.entries);
+  writeJson(DELETED_DOGS_KEY, state.deleted.dogs);
+  writeJson(DELETED_WEIGHT_KEY, state.deleted.weight);
+  writeJson(DELETED_STOOL_KEY, state.deleted.stool);
+  writeJson(DELETED_VET_KEY, state.deleted.vet);
+  writeJson(DELETED_VACCINATIONS_KEY, state.deleted.vaccinations);
+}
+
+// ===== Hunde =====
+
+function addTombstone(key: string, id: string): void {
+  const list = readJson<string[]>(key, []);
+  if (!list.includes(id)) writeJson(key, [...list, id]);
+}
+
+export function fetchDogs(): DogProfile[] {
+  return readJson<DogProfile[]>(DOGS_KEY, []).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+}
+
+export function saveDogProfile(dog: Omit<DogProfile, 'id' | 'created_at' | 'updated_at'> & { id?: string }): DogProfile {
+  const dogs = readJson<DogProfile[]>(DOGS_KEY, []);
+  const existing = dogs.find((d) => d.id === dog.id);
+  if (existing) {
+    Object.assign(existing, dog, { updated_at: now() });
+  } else {
+    dogs.push({ ...dog, id: uuid(), created_at: now(), updated_at: now() });
+  }
+  writeJson(DOGS_KEY, dogs);
+  return dogs.find((d) => d.id === (dog.id ?? '')) ?? dogs[dogs.length - 1];
+}
+
+export function deleteDog(id: string): void {
+  writeJson(DOGS_KEY, readJson<DogProfile[]>(DOGS_KEY, []).filter((d) => d.id !== id));
+  addTombstone(DELETED_DOGS_KEY, id);
+  // Kaskadenlöschung der zugehörigen Einträge
+  const weight = readJson<WeightEntry[]>(WEIGHT_KEY, []).filter((w) => w.dogId !== id);
+  const stool = readJson<StoolEntry[]>(STOOL_KEY, []).filter((s) => s.dogId !== id);
+  const vet = readJson<VetVisit[]>(VET_KEY, []).filter((v) => v.dogId !== id);
+  const vax = readJson<Vaccination[]>(VACCINATIONS_KEY, []).filter((v) => v.dogId !== id);
+  for (const w of readJson<WeightEntry[]>(WEIGHT_KEY, []).filter((x) => x.dogId === id)) addTombstone(DELETED_WEIGHT_KEY, w.id);
+  for (const s of readJson<StoolEntry[]>(STOOL_KEY, []).filter((x) => x.dogId === id)) addTombstone(DELETED_STOOL_KEY, s.id);
+  for (const v of readJson<VetVisit[]>(VET_KEY, []).filter((x) => x.dogId === id)) addTombstone(DELETED_VET_KEY, v.id);
+  for (const v of readJson<Vaccination[]>(VACCINATIONS_KEY, []).filter((x) => x.dogId === id)) addTombstone(DELETED_VACCINATIONS_KEY, v.id);
+  writeJson(WEIGHT_KEY, weight);
+  writeJson(STOOL_KEY, stool);
+  writeJson(VET_KEY, vet);
+  writeJson(VACCINATIONS_KEY, vax);
+}
+
+// ===== Gewicht =====
+
+export function fetchWeights(dogId: string): WeightEntry[] {
+  return readJson<WeightEntry[]>(WEIGHT_KEY, [])
+    .filter((w) => w.dogId === dogId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function saveWeight(input: Omit<WeightEntry, 'id' | 'created_at' | 'updated_at'> & { id?: string }): WeightEntry {
+  const weight = readJson<WeightEntry[]>(WEIGHT_KEY, []);
+  const existing = weight.find((w) => w.id === input.id);
+  if (existing) {
+    Object.assign(existing, input, { updated_at: now() });
+  } else {
+    weight.push({ ...input, id: uuid(), created_at: now(), updated_at: now() });
+  }
+  writeJson(WEIGHT_KEY, weight);
+  return weight.find((w) => w.id === (input.id ?? '')) ?? weight[weight.length - 1];
+}
+
+export function deleteWeight(id: string): void {
+  writeJson(WEIGHT_KEY, readJson<WeightEntry[]>(WEIGHT_KEY, []).filter((w) => w.id !== id));
+  addTombstone(DELETED_WEIGHT_KEY, id);
+}
+
+// ===== Kot =====
+
+export function fetchStools(dogId: string): StoolEntry[] {
+  return readJson<StoolEntry[]>(STOOL_KEY, [])
+    .filter((s) => s.dogId === dogId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function saveStool(input: Omit<StoolEntry, 'id' | 'created_at' | 'updated_at'> & { id?: string }): StoolEntry {
+  const stool = readJson<StoolEntry[]>(STOOL_KEY, []);
+  const existing = stool.find((s) => s.id === input.id);
+  if (existing) {
+    Object.assign(existing, input, { updated_at: now() });
+  } else {
+    stool.push({ ...input, id: uuid(), created_at: now(), updated_at: now() });
+  }
+  writeJson(STOOL_KEY, stool);
+  return stool.find((s) => s.id === (input.id ?? '')) ?? stool[stool.length - 1];
+}
+
+export function deleteStool(id: string): void {
+  writeJson(STOOL_KEY, readJson<StoolEntry[]>(STOOL_KEY, []).filter((s) => s.id !== id));
+  addTombstone(DELETED_STOOL_KEY, id);
+}
+
+// ===== Tierarzt =====
+
+export function fetchVets(dogId: string): VetVisit[] {
+  return readJson<VetVisit[]>(VET_KEY, [])
+    .filter((v) => v.dogId === dogId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function saveVet(input: Omit<VetVisit, 'id' | 'created_at' | 'updated_at'> & { id?: string }): VetVisit {
+  const vet = readJson<VetVisit[]>(VET_KEY, []);
+  const existing = vet.find((v) => v.id === input.id);
+  if (existing) {
+    Object.assign(existing, input, { updated_at: now() });
+  } else {
+    vet.push({ ...input, id: uuid(), created_at: now(), updated_at: now() });
+  }
+  writeJson(VET_KEY, vet);
+  return vet.find((v) => v.id === (input.id ?? '')) ?? vet[vet.length - 1];
+}
+
+export function deleteVet(id: string): void {
+  writeJson(VET_KEY, readJson<VetVisit[]>(VET_KEY, []).filter((v) => v.id !== id));
+  addTombstone(DELETED_VET_KEY, id);
+}
+
+// ===== Impfungen =====
+
+export function fetchVaccinations(dogId: string): Vaccination[] {
+  return readJson<Vaccination[]>(VACCINATIONS_KEY, [])
+    .filter((v) => v.dogId === dogId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function saveVaccination(input: Omit<Vaccination, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Vaccination {
+  const vax = readJson<Vaccination[]>(VACCINATIONS_KEY, []);
+  const existing = vax.find((v) => v.id === input.id);
+  if (existing) {
+    Object.assign(existing, input, { updated_at: now() });
+  } else {
+    vax.push({ ...input, id: uuid(), created_at: now(), updated_at: now() });
+  }
+  writeJson(VACCINATIONS_KEY, vax);
+  return vax.find((v) => v.id === (input.id ?? '')) ?? vax[vax.length - 1];
+}
+
+export function deleteVaccination(id: string): void {
+  writeJson(VACCINATIONS_KEY, readJson<Vaccination[]>(VACCINATIONS_KEY, []).filter((v) => v.id !== id));
+  addTombstone(DELETED_VACCINATIONS_KEY, id);
 }
 
 // ===== Start-Notizen (deterministische IDs, damit beide Geräte identisch seeden) =====
