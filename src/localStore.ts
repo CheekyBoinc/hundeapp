@@ -40,11 +40,14 @@ function now(): string {
 }
 
 export function fetchCommands(): Command[] {
-  return readJson<Command[]>(COMMANDS_KEY, []).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  return readJson<Command[]>(COMMANDS_KEY, [])
+    .map((c) => ({ ...c, dogId: c.dogId ?? null }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
 }
 
 export function saveCommand(cmd: {
   id?: string;
+  dogId?: string | null;
   name: string;
   beschreibung?: string | null;
   tipp?: string | null;
@@ -59,12 +62,14 @@ export function saveCommand(cmd: {
 
   if (existing) {
     existing.name = name;
+    existing.dogId = cmd.dogId ?? existing.dogId;
     existing.beschreibung = cmd.beschreibung ?? null;
     existing.tipp = cmd.tipp ?? null;
     existing.updated_at = now();
   } else {
     commands.push({
       id: uuid(),
+      dogId: cmd.dogId ?? null,
       name,
       beschreibung: cmd.beschreibung ?? null,
       tipp: cmd.tipp ?? null,
@@ -101,15 +106,18 @@ export function deleteCommand(id: string): void {
 }
 
 export function fetchEntries(): Entry[] {
-  return readJson<Entry[]>(ENTRIES_KEY, []).sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-    return (a.created_at || '').localeCompare(b.created_at || '');
-  });
+  return readJson<Entry[]>(ENTRIES_KEY, [])
+    .map((e) => ({ ...e, dogId: e.dogId ?? null }))
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return (a.created_at || '').localeCompare(b.created_at || '');
+    });
 }
 
 export function saveEntry(
   input: {
     id?: string;
+    dogId?: string | null;
     date: string;
     ort: string | null;
     was_gemacht: string | null;
@@ -128,6 +136,7 @@ export function saveEntry(
 
   const existing = entries.find((e) => e.id === input.id);
   if (existing) {
+    existing.dogId = input.dogId ?? existing.dogId;
     existing.date = input.date;
     existing.ort = input.ort;
     existing.was_gemacht = input.was_gemacht;
@@ -139,6 +148,7 @@ export function saveEntry(
   } else {
     entries.push({
       id: uuid(),
+      dogId: input.dogId ?? null,
       date: input.date,
       ort: input.ort,
       was_gemacht: input.was_gemacht,
@@ -270,6 +280,13 @@ export function deleteDog(id: string): void {
   writeJson(STOOL_KEY, stool);
   writeJson(VET_KEY, vet);
   writeJson(VACCINATIONS_KEY, vax);
+  // Kommandos und Einträge des Hundes werden "allgemein" (dogId = null), damit Trainingsdaten erhalten bleiben
+  const commands = readJson<Command[]>(COMMANDS_KEY, []);
+  for (const c of commands) if (c.dogId === id) { c.dogId = null; c.updated_at = now(); }
+  writeJson(COMMANDS_KEY, commands);
+  const entries = readJson<Entry[]>(ENTRIES_KEY, []);
+  for (const e of entries) if (e.dogId === id) { e.dogId = null; e.updated_at = now(); }
+  writeJson(ENTRIES_KEY, entries);
 }
 
 // ===== Gewicht =====
@@ -376,6 +393,7 @@ export function deleteVaccination(id: string): void {
 
 interface NoteCommand {
   id: string;
+  dogId: string | null;
   name: string;
   beschreibung: string | null;
   tipp: string | null;
@@ -384,6 +402,7 @@ interface NoteCommand {
 
 interface NoteEntry {
   id: string;
+  dogId: string | null;
   date: string;
   ort: string;
   was_gemacht: string;
@@ -397,6 +416,7 @@ interface NoteEntry {
 const NOTE_COMMANDS: NoteCommand[] = [
   {
     id: 'seed-cmd-sitz',
+    dogId: null,
     name: 'Sitz',
     beschreibung: 'Handzeichen: Erhobener Finger.',
     tipp: null,
@@ -404,6 +424,7 @@ const NOTE_COMMANDS: NoteCommand[] = [
   },
   {
     id: 'seed-cmd-platz',
+    dogId: null,
     name: 'Platz',
     beschreibung: 'Handzeichen: Flache Hand nach unten und eindeutig nach unten bewegen.',
     tipp: 'Noch nicht geübt.',
@@ -411,6 +432,7 @@ const NOTE_COMMANDS: NoteCommand[] = [
   },
   {
     id: 'seed-cmd-bleib',
+    dogId: null,
     name: 'Bleib',
     beschreibung: 'Handzeichen: Flache Hand nach vorne ausgestreckt (wie ein Stopp-Zeichen).',
     tipp: 'Suse darf die Position (Sitz, Steh oder Liegen) frei wählen. Wichtig: Vorher niemals das Kommando „Sitz“ oder „Platz“ geben – sonst muss sie zwingend in genau dieser Position verharren.',
@@ -418,6 +440,7 @@ const NOTE_COMMANDS: NoteCommand[] = [
   },
   {
     id: 'seed-cmd-komm',
+    dogId: null,
     name: 'Komm',
     beschreibung: 'Bedeutung: Herankommen bzw. zielstrebig auf dich zulaufen.',
     tipp: null,
@@ -425,6 +448,7 @@ const NOTE_COMMANDS: NoteCommand[] = [
   },
   {
     id: 'seed-cmd-stups',
+    dogId: null,
     name: 'Stups',
     beschreibung: 'Bedeutung/Ausführung: Suse soll mit der Nase gegen deine Handfläche stupsen.',
     tipp: 'Wird beim Heranrufen genutzt, damit sie gezielt bei dir ankommt und abstoppt, statt an dir vorbeizurennen.',
@@ -432,6 +456,7 @@ const NOTE_COMMANDS: NoteCommand[] = [
   },
   {
     id: 'seed-cmd-fuss',
+    dogId: null,
     name: 'Fuß',
     beschreibung: 'Bedeutung: Direkt am Bein mitlaufen (immer auf der rechten Seite).',
     tipp: null,
@@ -442,6 +467,7 @@ const NOTE_COMMANDS: NoteCommand[] = [
 const NOTE_ENTRIES: NoteEntry[] = [
   {
     id: 'seed-entry-2026-08-11',
+    dogId: null,
     date: '2026-08-11',
     ort: 'Hundeplatz',
     was_gemacht:
@@ -456,6 +482,7 @@ const NOTE_ENTRIES: NoteEntry[] = [
   },
   {
     id: 'seed-entry-2026-08-18',
+    dogId: null,
     date: '2026-08-18',
     ort: 'Halle',
     was_gemacht:

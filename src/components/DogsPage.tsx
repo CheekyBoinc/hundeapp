@@ -33,13 +33,17 @@ export default function DogsPage() {
       const d = await fetchDogs();
       setDogs(d);
       setError(null);
-      if (selectedId && !d.some((x) => x.id === selectedId)) setSelectedId(null);
+      setSelectedId((prev) => {
+        if (d.length === 0) return null;
+        if (prev && d.some((x) => x.id === prev)) return prev;
+        return d[0].id;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
     } finally {
       setLoading(false);
     }
-  }, [selectedId]);
+  }, []);
 
   useEffect(() => {
     load();

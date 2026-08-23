@@ -1,5 +1,6 @@
 export interface Command {
   id: string;
+  dogId: string | null;
   name: string;
   beschreibung: string | null;
   tipp: string | null;
@@ -9,6 +10,7 @@ export interface Command {
 
 export interface Entry {
   id: string;
+  dogId: string | null;
   date: string;
   ort: string | null;
   was_gemacht: string | null;

@@ -1,20 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { deleteCommand, fetchCommands } from '../api';
+import { deleteCommand, fetchCommands, fetchDogs } from '../api';
 import { useLiveReload } from '../hooks';
-import type { Command } from '../types';
+import type { Command, DogProfile } from '../types';
 import CommandModal from './CommandModal';
 
 export default function CommandsPage() {
   const [commands, setCommands] = useState<Command[]>([]);
+  const [dogs, setDogs] = useState<DogProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [dogFilter, setDogFilter] = useState('all');
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Command | null>(null);
 
   const load = useCallback(async () => {
     try {
-      setCommands(await fetchCommands());
+      const [c, d] = await Promise.all([fetchCommands(), fetchDogs()]);
+      setCommands(c);
+      setDogs(d);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
@@ -31,11 +35,13 @@ export default function CommandsPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return commands;
-    return commands.filter((c) =>
-      `${c.name} ${c.beschreibung ?? ''} ${c.tipp ?? ''}`.toLowerCase().includes(q)
-    );
-  }, [commands, search]);
+    return commands.filter((c) => {
+      if (dogFilter === 'none' && c.dogId !== null) return false;
+      if (dogFilter !== 'all' && dogFilter !== 'none' && c.dogId !== dogFilter) return false;
+      if (q && !`${c.name} ${c.beschreibung ?? ''} ${c.tipp ?? ''}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [commands, search, dogFilter]);
 
   async function handleDelete(c: Command) {
     if (!window.confirm(`Kommando „${c.name}" wirklich löschen?`)) return;
@@ -60,6 +66,24 @@ export default function CommandsPage() {
           Neues Kommando
         </button>
       </div>
+
+      {dogs.length > 0 && (
+        <div className="mb-4">
+          <select
+            className="input"
+            value={dogFilter}
+            onChange={(ev) => setDogFilter(ev.target.value)}
+          >
+            <option value="all">Alle Hunde</option>
+            <option value="none">Ohne Hund</option>
+            {dogs.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -87,7 +111,14 @@ export default function CommandsPage() {
           {filtered.map((c) => (
             <div key={c.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
               <div className="mb-1 flex items-start justify-between gap-2">
-                <h3 className="text-base font-bold">{c.name}</h3>
+                <div>
+                  <h3 className="text-base font-bold">{c.name}</h3>
+                  {c.dogId && (
+                    <span className="chip bg-stone-100 text-stone-600">
+                      {dogs.find((d) => d.id === c.dogId)?.name ?? 'Hund'}
+                    </span>
+                  )}
+                </div>
                 <div className="flex shrink-0 gap-1">
                   <button
                     className="text-xs font-medium text-stone-400 hover:text-orange-600"
@@ -118,6 +149,8 @@ export default function CommandsPage() {
       {(creating || editing) && (
         <CommandModal
           command={editing}
+          dogs={dogs}
+          defaultDogId={dogFilter !== 'all' && dogFilter !== 'none' ? dogFilter : null}
           onClose={() => {
             setCreating(false);
             setEditing(null);

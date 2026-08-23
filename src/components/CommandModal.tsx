@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { deleteCommand, saveCommand, translate } from '../api';
-import type { Command } from '../types';
+import type { Command, DogProfile } from '../types';
 
 interface Props {
   command: Command | null;
+  dogs: DogProfile[];
+  defaultDogId?: string | null;
   onClose: () => void;
   onChanged: () => void;
 }
 
-export default function CommandModal({ command, onClose, onChanged }: Props) {
+export default function CommandModal({ command, dogs, defaultDogId, onClose, onChanged }: Props) {
   const [name, setName] = useState(command?.name ?? '');
+  const [dogId, setDogId] = useState<string>(command?.dogId ?? defaultDogId ?? '');
   const [beschreibung, setBeschreibung] = useState(command?.beschreibung ?? '');
   const [tipp, setTipp] = useState(command?.tipp ?? '');
   const [saving, setSaving] = useState(false);
@@ -26,6 +29,7 @@ export default function CommandModal({ command, onClose, onChanged }: Props) {
     try {
       await saveCommand({
         id: command?.id,
+        dogId: dogId || null,
         name: trimmed,
         beschreibung: beschreibung.trim() || null,
         tipp: tipp.trim() || null
@@ -80,6 +84,20 @@ export default function CommandModal({ command, onClose, onChanged }: Props) {
               onChange={(ev) => setName(ev.target.value)}
             />
           </div>
+
+          {dogs.length > 0 && (
+            <div>
+              <label className="label">Hund</label>
+              <select className="input" value={dogId} onChange={(ev) => setDogId(ev.target.value)}>
+                <option value="">Ohne Hund</option>
+                {dogs.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="label">Genaue Bezeichnung / Beschreibung</label>

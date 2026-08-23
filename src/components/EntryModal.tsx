@@ -1,17 +1,20 @@
 import { useState, type FormEvent } from 'react';
 import { deleteEntry, saveCommand, saveEntry, translate } from '../api';
-import type { Command, Entry } from '../types';
+import type { Command, DogProfile, Entry } from '../types';
 import { todayLocal } from '../utils';
 
 interface Props {
   entry: Entry | null;
   commands: Command[];
+  dogs: DogProfile[];
+  defaultDogId?: string | null;
   onClose: () => void;
   onChanged: () => void;
 }
 
-export default function EntryModal({ entry, commands: commandsProp, onClose, onChanged }: Props) {
+export default function EntryModal({ entry, commands: commandsProp, dogs, defaultDogId, onClose, onChanged }: Props) {
   const [date, setDate] = useState(entry?.date ?? todayLocal());
+  const [dogId, setDogId] = useState<string>(entry?.dogId ?? defaultDogId ?? '');
   const [ort, setOrt] = useState(entry?.ort ?? '');
   const [wasGemacht, setWasGemacht] = useState(entry?.was_gemacht ?? '');
   const [aufgaben, setAufgaben] = useState(entry?.uebungsaufgaben ?? '');
@@ -66,6 +69,7 @@ export default function EntryModal({ entry, commands: commandsProp, onClose, onC
       await saveEntry(
         {
           id: entry?.id,
+          dogId: dogId || null,
           date,
           ort: ort.trim() || null,
           was_gemacht: wasGemacht.trim() || null,
@@ -143,6 +147,20 @@ export default function EntryModal({ entry, commands: commandsProp, onClose, onC
               </datalist>
             </div>
           </div>
+
+          {dogs.length > 0 && (
+            <div>
+              <label className="label">Hund</label>
+              <select className="input" value={dogId} onChange={(ev) => setDogId(ev.target.value)}>
+                <option value="">Ohne Hund</option>
+                {dogs.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="label">Kommandos (geübt)</label>

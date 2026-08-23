@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchCommands, fetchEntries, toggleEntryDone } from '../api';
+import { fetchCommands, fetchDogs, fetchEntries, toggleEntryDone } from '../api';
 import { useLiveReload } from '../hooks';
-import type { Command, Entry } from '../types';
+import type { Command, DogProfile, Entry } from '../types';
 import { formatDate, preview } from '../utils';
 import EntryDetail from './EntryDetail';
 import EntryModal from './EntryModal';
@@ -9,9 +9,11 @@ import EntryModal from './EntryModal';
 export default function EntriesPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [commands, setCommands] = useState<Command[]>([]);
+  const [dogs, setDogs] = useState<DogProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [dogFilter, setDogFilter] = useState('all');
   const [commandFilter, setCommandFilter] = useState('');
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
@@ -19,9 +21,10 @@ export default function EntriesPage() {
 
   const load = useCallback(async () => {
     try {
-      const [e, c] = await Promise.all([fetchEntries(), fetchCommands()]);
+      const [e, c, d] = await Promise.all([fetchEntries(), fetchCommands(), fetchDogs()]);
       setEntries(e);
       setCommands(c);
+      setDogs(d);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
@@ -39,6 +42,8 @@ export default function EntriesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return entries.filter((e) => {
+      if (dogFilter === 'none' && e.dogId !== null) return false;
+      if (dogFilter !== 'all' && dogFilter !== 'none' && e.dogId !== dogFilter) return false;
       if (commandFilter && !e.commands.some((c) => c.id === commandFilter)) return false;
       if (!q) return true;
       const hay = [
@@ -54,7 +59,7 @@ export default function EntriesPage() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [entries, search, commandFilter]);
+  }, [entries, search, dogFilter, commandFilter]);
 
   return (
     <div>
@@ -69,6 +74,24 @@ export default function EntriesPage() {
           Neuer Eintrag
         </button>
       </div>
+
+      {dogs.length > 0 && (
+        <div className="mb-3">
+          <select
+            className="input"
+            value={dogFilter}
+            onChange={(ev) => setDogFilter(ev.target.value)}
+          >
+            <option value="all">Alle Hunde</option>
+            <option value="none">Ohne Hund</option>
+            {dogs.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="mb-4">
         <select
@@ -217,6 +240,8 @@ export default function EntriesPage() {
         <EntryModal
           entry={editing}
           commands={commands}
+          dogs={dogs}
+          defaultDogId={dogFilter !== 'all' && dogFilter !== 'none' ? dogFilter : null}
           onClose={() => {
             setCreating(false);
             setEditing(null);
