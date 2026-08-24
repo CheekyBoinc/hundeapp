@@ -88,7 +88,7 @@ export default function VaccinationTab({ dogId }: Props) {
                   <div className="flex items-center gap-2">
                     {st === 'overdue' && <span className="chip bg-red-100 text-red-800">Überfällig</span>}
                     {st === 'soon' && <span className="chip bg-amber-100 text-amber-800">Fällig bald</span>}
-                    <button className="text-xs font-medium text-stone-400 hover:text-orange-600" onClick={() => setEditing(e)}>Bearbeiten</button>
+                    <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
                     <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>
                   </div>
                 </div>

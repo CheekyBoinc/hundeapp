@@ -81,7 +81,7 @@ export default function DogForm({ dog, onClose, onSaved }: Props) {
                 key={g}
                 type="button"
                 onClick={() => setGeschlecht(g)}
-                className={`chip ${geschlecht === g ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-700'}`}
+                className={`chip ${geschlecht === g ? 'bg-accent text-white' : 'bg-stone-100 text-stone-700'}`}
               >
                 {g === 'w' ? 'Hündin' : 'Rüde'}
               </button>

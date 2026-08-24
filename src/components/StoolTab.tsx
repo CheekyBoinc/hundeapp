@@ -88,12 +88,12 @@ export default function StoolTab({ dogId }: Props) {
                 <span className="font-semibold">{formatDateShort(e.date)}</span>
                 <div className="flex items-center gap-2">
                   {e.abnormal && <span className="chip bg-red-100 text-red-800">Auffällig</span>}
-                  <button className="text-xs font-medium text-stone-400 hover:text-orange-600" onClick={() => setEditing(e)}>Bearbeiten</button>
+                  <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
                   <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {e.consistency > 0 && <span className="chip bg-stone-100 text-stone-700">Konsistenz {e.consistency} – {BristolLabel(e.consistency)}</span>}
+                {e.consistency > 0 && <span className="chip bg-stone-100 text-stone-700">Konsistenz {e.consistency}: {BristolLabel(e.consistency)}</span>}
                 {e.color && <span className="chip bg-stone-100 text-stone-700">Farbe: {e.color}</span>}
                 {e.amount && <span className="chip bg-stone-100 text-stone-700">Menge: {e.amount}</span>}
               </div>

@@ -20,7 +20,7 @@ function Toggle({ label, hint, value, onToggle }: { label: string; hint?: string
       </span>
       <span
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          value ? 'bg-orange-500' : 'bg-stone-300'
+          value ? 'bg-accent' : 'bg-stone-300'
         }`}
       >
         <span

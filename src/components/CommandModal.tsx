@@ -93,7 +93,7 @@ export default function CommandModal({ command, dogs, defaultDogId, onClose, onC
           <label className="label">Genaue Bezeichnung / Beschreibung</label>
           <textarea
             className="input min-h-24"
-            placeholder="z. B. „Sitz“ – gesprochen, dazu Handzeichen: flache Hand nach unten…"
+            placeholder="z. B. „Sitz“: gesprochen, dazu Handzeichen: flache Hand nach unten…"
             value={beschreibung}
             onChange={(ev) => setBeschreibung(ev.target.value)}
           />

@@ -16,7 +16,7 @@ function Block({ label, text }: { label: string; text: string | null }) {
     <div>
       <p className="label">{label}</p>
       {text ? (
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-stone-800">{text}</p>
+        <p className="prose-serif whitespace-pre-wrap text-sm leading-relaxed text-stone-800">{text}</p>
       ) : (
         <p className="text-sm text-stone-400">–</p>
       )}
@@ -68,7 +68,7 @@ export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props
           <p className="label">Geübte Kommandos</p>
           <div className="flex flex-wrap gap-1.5">
             {entry.commands.map((c) => (
-              <span key={c.id} className="chip bg-orange-100 text-orange-900">
+              <span key={c.id} className="chip bg-accent-soft text-accent-dark">
                 {c.name}
               </span>
             ))}
@@ -86,11 +86,11 @@ export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props
         <Block label="Was haben wir gemacht?" text={entry.was_gemacht} />
         <Block label="Übungsaufgaben" text={entry.uebungsaufgaben} />
         {entry.tipps ? (
-          <div className="rounded-xl bg-orange-50 px-3.5 py-3">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
+          <div className="rounded-xl bg-accent-tint px-3.5 py-3">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent-strong">
               Tipps / Erklärungen der Trainerin
             </p>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-orange-900">
+            <p className="prose-serif whitespace-pre-wrap text-sm leading-relaxed text-accent-dark">
               {entry.tipps}
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props
         <label className="flex items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
-            className="h-5 w-5 accent-orange-500"
+            className="h-5 w-5 accent-accent"
             checked={entry.erledigt}
             disabled={busy}
             onChange={(ev) => handleToggle(ev.target.checked)}

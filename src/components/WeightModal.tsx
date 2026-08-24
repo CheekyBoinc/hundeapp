@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { saveWeight } from '../api';
+import { useFormSave } from '../hooks';
 import type { WeightEntry } from '../types';
 import { todayLocal } from '../utils';
 import Modal from './Modal';
@@ -22,42 +23,42 @@ export default function WeightModal({ dogId, entry, onClose, onSaved }: Props) {
   const [date, setDate] = useState(entry?.date ?? todayLocal());
   const [weight, setWeight] = useState(entry ? String(entry.weightKg).replace('.', ',') : '');
   const [note, setNote] = useState(entry?.note ?? '');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSave() {
-    const kg = parseFloatDE(weight);
-    if (!date) {
-      setError('Bitte ein Datum auswählen.');
-      return;
-    }
-    if (kg === null || kg <= 0) {
-      setError('Bitte ein gültiges Gewicht in kg angeben.');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
+  const [inputError, setInputError] = useState<string | null>(null);
+  const { saving, error, run } = useFormSave(
+    async () => {
       await saveWeight({
         id: entry?.id,
         dogId,
         date,
-        weightKg: kg,
+        weightKg: parseFloatDE(weight)!,
         note: note.trim() || null
       });
+    },
+    () => {
       onSaved();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
-      setSaving(false);
     }
+  );
+
+  function handleSave() {
+    const kg = parseFloatDE(weight);
+    if (!date) {
+      setInputError('Bitte ein Datum auswählen.');
+      return;
+    }
+    if (kg === null || kg <= 0) {
+      setInputError('Bitte ein gültiges Gewicht in kg angeben.');
+      return;
+    }
+    setInputError(null);
+    run();
   }
 
   return (
     <Modal title={entry ? 'Gewicht bearbeiten' : 'Gewicht hinzufügen'} onClose={onClose}>
-      {error && (
+      {(error || inputError) && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
-          {error}
+          {error ?? inputError}
         </div>
       )}
 

@@ -35,12 +35,12 @@ export default function SyncSetup({ onDone, onSkip }: Props) {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-orange-100 via-orange-50 to-stone-50 px-4 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-accent-soft via-accent-tint to-stone-50 px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold">Hundeapp</h1>
           <p className="mt-1 text-sm text-stone-600">
-            Euer gemeinsames Trainingstagebuch – jetzt Synchronisierung einrichten
+            Euer gemeinsames Trainingstagebuch. Jetzt Synchronisierung einrichten
           </p>
         </div>
 

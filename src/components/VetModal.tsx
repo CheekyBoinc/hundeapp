@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { saveVet } from '../api';
+import { useFormSave } from '../hooks';
 import type { VetVisit } from '../types';
 import { todayLocal } from '../utils';
 import Modal from './Modal';
@@ -20,17 +21,9 @@ export default function VetModal({ dogId, entry, onClose, onSaved }: Props) {
   const [medication, setMedication] = useState(entry?.medication ?? '');
   const [followUp, setFollowUp] = useState(entry?.followUp ?? '');
   const [note, setNote] = useState(entry?.note ?? '');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSave() {
-    if (!date) {
-      setError('Bitte ein Datum auswählen.');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
+  const [inputError, setInputError] = useState<string | null>(null);
+  const { saving, error, run } = useFormSave(
+    async () => {
       await saveVet({
         id: entry?.id,
         dogId,
@@ -43,18 +36,26 @@ export default function VetModal({ dogId, entry, onClose, onSaved }: Props) {
         followUp: followUp || null,
         note: note.trim() || null
       });
+    },
+    () => {
       onSaved();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
-      setSaving(false);
     }
+  );
+
+  function handleSave() {
+    if (!date) {
+      setInputError('Bitte ein Datum auswählen.');
+      return;
+    }
+    setInputError(null);
+    run();
   }
 
   return (
     <Modal title={entry ? 'Tierarztbesuch bearbeiten' : 'Tierarztbesuch hinzufügen'} onClose={onClose}>
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
+      {(error || inputError) && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error ?? inputError}</div>
       )}
 
       <div className="space-y-3">

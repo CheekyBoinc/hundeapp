@@ -27,9 +27,9 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 w-full rounded-xl bg-stone-50">
-      <polyline points={points} fill="none" stroke="#ea7c3a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {entries.map((e) => (
-        <circle key={e.id} cx={X(e.date)} cy={Y(e.weightKg)} r="4" fill="#ea7c3a" />
+        <circle key={e.id} cx={X(e.date)} cy={Y(e.weightKg)} r="4" fill="var(--color-accent)" />
       ))}
       <text x={pad} y={pad - 8} className="fill-stone-400 text-[10px]">{formatKg(maxY)}</text>
       <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">{formatKg(minY)}</text>
@@ -118,7 +118,7 @@ export default function WeightTab({ dogId }: Props) {
             {[...entries].reverse().map((e, i) => (
               <div
                 key={e.id}
-                className={`flex items-center justify-between gap-2 border-b border-stone-100 px-4 py-2.5 last:border-0 ${i === 0 ? 'bg-orange-50/40' : ''}`}
+                className={`flex items-center justify-between gap-2 border-b border-stone-100 px-4 py-2.5 last:border-0 ${i === 0 ? 'bg-accent-tint/40' : ''}`}
               >
                 <div>
                   <p className="text-sm font-medium">{formatDateShort(e.date)}</p>
@@ -126,7 +126,7 @@ export default function WeightTab({ dogId }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
-                  <button className="text-xs font-medium text-stone-400 hover:text-orange-600" onClick={() => setEditing(e)}>Bearbeiten</button>
+                  <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
                   <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>
                 </div>
               </div>

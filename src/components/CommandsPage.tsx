@@ -121,7 +121,7 @@ export default function CommandsPage() {
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <button
-                    className="text-xs font-medium text-stone-400 hover:text-orange-600"
+                    className="text-xs font-medium text-stone-400 hover:text-accent-strong"
                     onClick={() => setEditing(c)}
                   >
                     Bearbeiten
@@ -134,9 +134,9 @@ export default function CommandsPage() {
                   </button>
                 </div>
               </div>
-              {c.beschreibung && <p className="text-sm text-stone-700">{c.beschreibung}</p>}
+              {c.beschreibung && <p className="prose-serif text-sm text-stone-700">{c.beschreibung}</p>}
               {c.tipp && (
-                <p className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-sm text-orange-900">
+                <p className="prose-serif mt-2 rounded-xl bg-accent-tint px-3 py-2 text-sm text-accent-dark">
                   <span className="font-semibold">Tipp: </span>
                   {c.tipp}
                 </p>

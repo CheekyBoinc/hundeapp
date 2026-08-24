@@ -147,7 +147,7 @@ export default function EntriesPage() {
                 {filtered.map((e) => (
                   <tr
                     key={e.id}
-                    className={`cursor-pointer border-b border-stone-100 align-top last:border-0 hover:bg-orange-50/60 ${
+                    className={`cursor-pointer border-b border-stone-100 align-top last:border-0 hover:bg-accent-tint/60 ${
                       e.erledigt ? 'opacity-60' : ''
                     }`}
                     onClick={() => setDetailId(e)}
@@ -158,19 +158,19 @@ export default function EntriesPage() {
                       <div className="flex max-w-44 flex-wrap gap-1">
                         {e.commands.length === 0 && <span className="text-stone-400">–</span>}
                         {e.commands.map((c) => (
-                          <span key={c.id} className="chip bg-orange-100 text-orange-900">
+                          <span key={c.id} className="chip bg-accent-soft text-accent-dark">
                             {c.name}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="max-w-72 px-3 py-3">
-                      <p className="truncate text-stone-600">{preview(e.was_gemacht)}</p>
+                      <p className="prose-serif truncate text-stone-600">{preview(e.was_gemacht)}</p>
                     </td>
                     <td className="px-3 py-3">
                       <input
                         type="checkbox"
-                        className="h-5 w-5 accent-orange-500"
+                        className="h-5 w-5 accent-accent"
                         checked={e.erledigt}
                         onClick={(ev) => ev.stopPropagation()}
                         onChange={(ev) => toggleEntryDone(e.id, ev.target.checked).then(load)}
@@ -208,14 +208,14 @@ export default function EntriesPage() {
                 {e.commands.length > 0 && (
                   <div className="mb-2 flex flex-wrap gap-1">
                     {e.commands.map((c) => (
-                      <span key={c.id} className="chip bg-orange-100 text-orange-900">
+                      <span key={c.id} className="chip bg-accent-soft text-accent-dark">
                         {c.name}
                       </span>
                     ))}
                   </div>
                 )}
                 {e.was_gemacht && (
-                  <p className="line-clamp-2 text-sm text-stone-600">{e.was_gemacht}</p>
+                  <p className="prose-serif line-clamp-2 text-sm text-stone-600">{e.was_gemacht}</p>
                 )}
                 <p className="mt-2 text-xs font-medium text-stone-400">Antippen für Details</p>
               </div>

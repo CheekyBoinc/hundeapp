@@ -1,11 +1,28 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader Variable", "Newsreader", ui-serif, Georgia, serif;
+
+  /* Markenfarbe Terracotta – der einzige Akzent; alle Orange-Varianten
+     laufen über diese Tokens statt über Tailwinds Orange-Palette. */
+  --color-accent: #ea7c3a;
+  --color-accent-strong: #d3641f;
+  --color-accent-deep: #b5561a;
+  --color-accent-dark: #7c2d12;
+  --color-accent-soft: #ffedd5;
+  --color-accent-tint: #fff7ed;
+  --color-accent-mid: #fb923c;
+  --color-accent-ring: #fed7aa;
+  --color-surface: #faf7f2;
+}
+
 @layer components {
   .input {
-    @apply w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200;
+    @apply w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-accent-mid focus:outline-none focus:ring-2 focus:ring-accent-ring;
   }
   .btn-primary {
-    @apply rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50;
+    @apply rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-strong active:bg-accent-deep disabled:opacity-50;
   }
   .btn-secondary {
     @apply rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100;
@@ -28,6 +45,9 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+/* Erzählende Fließtexte (Trainingsberichte, Tipps, Beschreibungen) im
+   Tagebuch-Serif – unterscheidet die App von einer generischen Dashboard-UI. */
+.prose-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
 }

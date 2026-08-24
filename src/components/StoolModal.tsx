@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { saveStool } from '../api';
+import { useFormSave } from '../hooks';
 import type { StoolEntry } from '../types';
 import { todayLocal } from '../utils';
 import Modal from './Modal';
@@ -31,17 +32,9 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
   const [amount, setAmount] = useState<'wenig' | 'normal' | 'viel' | null>(entry?.amount ?? null);
   const [abnormal, setAbnormal] = useState(entry?.abnormal ?? false);
   const [note, setNote] = useState(entry?.note ?? '');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSave() {
-    if (!date) {
-      setError('Bitte ein Datum auswählen.');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
+  const [inputError, setInputError] = useState<string | null>(null);
+  const { saving, error, run } = useFormSave(
+    async () => {
       await saveStool({
         id: entry?.id,
         dogId,
@@ -52,18 +45,26 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
         abnormal,
         note: note.trim() || null
       });
+    },
+    () => {
       onSaved();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
-      setSaving(false);
     }
+  );
+
+  function handleSave() {
+    if (!date) {
+      setInputError('Bitte ein Datum auswählen.');
+      return;
+    }
+    setInputError(null);
+    run();
   }
 
   return (
     <Modal title={entry ? 'Kot-Eintrag bearbeiten' : 'Kot-Eintrag hinzufügen'} onClose={onClose}>
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
+      {(error || inputError) && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error ?? inputError}</div>
       )}
 
       <div className="space-y-4">
@@ -82,7 +83,7 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
                 onClick={() => setConsistency(b.n)}
                 className={`rounded-xl border px-2 py-1.5 text-left text-xs ${
                   consistency === b.n
-                    ? 'border-orange-400 bg-orange-50 text-orange-900'
+                    ? 'border-accent-mid bg-accent-tint text-accent-dark'
                     : 'border-stone-200 bg-white text-stone-600'
                 }`}
               >
@@ -115,7 +116,7 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
         </div>
 
         <label className="flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" className="h-5 w-5 accent-orange-500" checked={abnormal} onChange={(ev) => setAbnormal(ev.target.checked)} />
+          <input type="checkbox" className="h-5 w-5 accent-accent" checked={abnormal} onChange={(ev) => setAbnormal(ev.target.checked)} />
           Auffällig
         </label>
 

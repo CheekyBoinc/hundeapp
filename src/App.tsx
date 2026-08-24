@@ -111,7 +111,7 @@ export default function App() {
           key={id}
           onClick={() => setTab(id)}
           className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold ${
-            tab === id ? 'bg-orange-100 text-orange-900' : 'text-stone-500 hover:bg-stone-100'
+            tab === id ? 'bg-accent-soft text-accent-dark' : 'text-stone-500 hover:bg-stone-100'
           }`}
         >
           {label}
@@ -123,7 +123,7 @@ export default function App() {
   const headerInner = (
     <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 text-white">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white">
           <PawIcon className="h-6 w-6" />
         </div>
         {settings.headerText && (
@@ -176,13 +176,13 @@ export default function App() {
     <div className="min-h-dvh bg-stone-50 text-stone-900">
       {settings.navTop ? (
         <div className="sticky top-0 z-20">
-          <header className="border-b border-stone-200 bg-[#faf7f2]/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+          <header className="border-b border-stone-200 bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur">
             {headerInner}
           </header>
           <nav className="border-b border-stone-200 bg-white/95 backdrop-blur">{navButtons}</nav>
         </div>
       ) : (
-        <header className="sticky top-0 z-20 border-b border-stone-200 bg-[#faf7f2]/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-stone-200 bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur">
           {headerInner}
         </header>
       )}

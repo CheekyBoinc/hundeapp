@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { saveVaccination } from '../api';
+import { useFormSave } from '../hooks';
 import type { Vaccination } from '../types';
 import { todayLocal } from '../utils';
 import Modal from './Modal';
@@ -16,21 +17,9 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
   const [name, setName] = useState(entry?.name ?? '');
   const [nextDue, setNextDue] = useState(entry?.nextDue ?? '');
   const [note, setNote] = useState(entry?.note ?? '');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSave() {
-    if (!date) {
-      setError('Bitte ein Datum auswählen.');
-      return;
-    }
-    if (!name.trim()) {
-      setError('Bitte einen Impfstoff angeben.');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
+  const [inputError, setInputError] = useState<string | null>(null);
+  const { saving, error, run } = useFormSave(
+    async () => {
       await saveVaccination({
         id: entry?.id,
         dogId,
@@ -39,18 +28,30 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
         nextDue: nextDue || null,
         note: note.trim() || null
       });
+    },
+    () => {
       onSaved();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
-      setSaving(false);
     }
+  );
+
+  function handleSave() {
+    if (!date) {
+      setInputError('Bitte ein Datum auswählen.');
+      return;
+    }
+    if (!name.trim()) {
+      setInputError('Bitte einen Impfstoff angeben.');
+      return;
+    }
+    setInputError(null);
+    run();
   }
 
   return (
     <Modal title={entry ? 'Impfung bearbeiten' : 'Impfung hinzufügen'} onClose={onClose}>
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
+      {(error || inputError) && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error ?? inputError}</div>
       )}
 
       <div className="space-y-4">

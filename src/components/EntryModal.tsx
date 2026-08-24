@@ -171,7 +171,7 @@ export default function EntryModal({ entry, commands: commandsProp, dogs, defaul
                     onClick={() => toggleCommand(c.id)}
                     className={
                       on
-                        ? 'chip bg-orange-500 text-white'
+                        ? 'chip bg-accent text-white'
                         : 'chip bg-stone-100 text-stone-700'
                     }
                   >
@@ -231,7 +231,7 @@ export default function EntryModal({ entry, commands: commandsProp, dogs, defaul
         <label className="flex items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
-            className="h-5 w-5 accent-orange-500"
+            className="h-5 w-5 accent-accent"
             checked={erledigt}
             onChange={(ev) => setErledigt(ev.target.checked)}
           />

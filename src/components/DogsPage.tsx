@@ -112,7 +112,7 @@ export default function DogsPage() {
                   key={id}
                   onClick={() => setSubTab(id)}
                   className={`shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold ${
-                    subTab === id ? 'bg-orange-100 text-orange-900' : 'text-stone-500 hover:bg-stone-100'
+                    subTab === id ? 'bg-accent-soft text-accent-dark' : 'text-stone-500 hover:bg-stone-100'
                   }`}
                 >
                   {label}
