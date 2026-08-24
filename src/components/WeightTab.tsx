@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { deleteWeight, fetchWeights } from '../api';
 import { useLiveReload } from '../hooks';
-import type { WeightEntry } from '../types';
+import { classifyWeight, findBreedRange, formatRange, STATUS_LABEL, type BreedRange, type WeightStatus } from '../breeds';
+import type { DogProfile, WeightEntry } from '../types';
 import { formatDateShort, formatKg } from '../utils';
 import WeightModal from './WeightModal';
 
 interface Props {
-  dogId: string;
+  dog: DogProfile;
 }
 
 function WeightChart({ entries }: { entries: WeightEntry[] }) {
@@ -39,12 +40,31 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
   );
 }
 
-export default function WeightTab({ dogId }: Props) {
+const STATUS_CHIP_CLASS: Record<WeightStatus, string> = {
+  norm: 'bg-emerald-100 text-emerald-800',
+  under: 'bg-amber-100 text-amber-800',
+  over: 'bg-red-100 text-red-800'
+};
+
+function statusChip(weightKg: number, range: BreedRange | null) {
+  const status = classifyWeight(weightKg, range);
+  if (!status || !range) return null;
+  return (
+    <span className={`chip ${STATUS_CHIP_CLASS[status]}`}>
+      {STATUS_LABEL[status]} ({formatRange(range)})
+    </span>
+  );
+}
+
+export default function WeightTab({ dog }: Props) {
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<WeightEntry | null>(null);
+
+  const breedRange = findBreedRange(dog.rasse);
+  const dogId = dog.id;
 
   const load = useCallback(async () => {
     try {
@@ -84,6 +104,7 @@ export default function WeightTab({ dogId }: Props) {
           {latest && (
             <p className="text-lg font-bold">{formatKg(latest.weightKg)}</p>
           )}
+          {latest && statusChip(latest.weightKg, breedRange)}
           {diff !== null && (
             <p className={`text-xs font-medium ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
               {diff >= 0 ? '+' : ''}
@@ -124,7 +145,8 @@ export default function WeightTab({ dogId }: Props) {
                   <p className="text-sm font-medium">{formatDateShort(e.date)}</p>
                   {e.note && <p className="text-xs text-stone-500">{e.note}</p>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {statusChip(e.weightKg, breedRange)}
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
                   <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
                   <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>

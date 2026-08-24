@@ -131,7 +131,7 @@ export default function DogsPage() {
           )}
 
           {selected && subTab === 'profil' && <DogProfileTab dog={selected} onEdit={() => setEditingDog(selected)} />}
-          {selected && subTab === 'gewicht' && <WeightTab dogId={selected.id} />}
+          {selected && subTab === 'gewicht' && <WeightTab dog={selected} />}
           {selected && subTab === 'kot' && <StoolTab dogId={selected.id} />}
           {selected && subTab === 'tierarzt' && <VetTab dogId={selected.id} />}
           {selected && subTab === 'impfungen' && <VaccinationTab dogId={selected.id} />}
