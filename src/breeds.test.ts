@@ -16,6 +16,12 @@ describe('findBreedRange', () => {
     expect(findBreedRange('  Labrador  ')).toEqual({ minKg: 25, maxKg: 36 });
   });
 
+  it('erkennt Corgi inklusive Mix-Schreibweise', () => {
+    expect(findBreedRange('Corgi')).toEqual({ minKg: 10, maxKg: 15 });
+    expect(findBreedRange('corgi mix')).toEqual({ minKg: 10, maxKg: 15 });
+    expect(findBreedRange('Welsh Corgi')).toEqual({ minKg: 10, maxKg: 15 });
+  });
+
   it('liefert null bei unbekannter oder leerer Rasse', () => {
     expect(findBreedRange('Shar Pei')).toBeNull();
     expect(findBreedRange('')).toBeNull();

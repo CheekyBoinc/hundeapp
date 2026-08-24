@@ -22,6 +22,7 @@ export const BREEDS: BreedEntry[] = [
   { names: ['Jack Russell Terrier', 'jack russell'], range: { minKg: 5, maxKg: 8 } },
   { names: ['Beagle'], range: { minKg: 9, maxKg: 11 } },
   { names: ['Dackel', 'dachshund', 'teckel'], range: { minKg: 4, maxKg: 9 } },
+  { names: ['Welsh Corgi', 'corgi', 'welsh corgi', 'corgi mix', 'cardigan'], range: { minKg: 10, maxKg: 15 } },
   { names: ['Cocker Spaniel', 'cocker'], range: { minKg: 10, maxKg: 15 } },
   { names: ['Malteser', 'maltese'], range: { minKg: 2, maxKg: 4 } },
   { names: ['Zwergpudel', 'pudel', 'poodle', 'zwergpudel'], range: { minKg: 3, maxKg: 6 } },
