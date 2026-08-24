@@ -20,11 +20,16 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
   const minX = xs[0];
   const maxX = xs[xs.length - 1];
 
-  // Y-Skala deckt Daten und Idealbereich ab, damit das Band immer sichtbar ist.
+  // Y-Skala deckt Daten und Idealbereich ab (plus Luft), damit das Band immer
+  // sichtbar ist und nichts am Rand klebt.
   const lowest = Math.min(...ys, range?.minKg ?? Infinity);
   const highest = Math.max(...ys, range?.maxKg ?? -Infinity);
   const spanY = highest - lowest || 1;
-  const Y = (v: number) => height - pad - ((v - lowest) / spanY) * (height - pad * 2);
+  const margin = spanY * 0.06;
+  const low = lowest - margin;
+  const high = highest + margin;
+  const scale = high - low || 1;
+  const Y = (v: number) => height - pad - ((v - low) / scale) * (height - pad * 2);
   const X = (d: string) => pad + ((new Date(d).getTime() - new Date(minX).getTime()) / Math.max(1, new Date(maxX).getTime() - new Date(minX).getTime())) * (width - pad * 2);
   const points = entries.map((e) => `${X(e.date)},${Y(e.weightKg)}`).join(' ');
 
@@ -32,24 +37,31 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
   const bandBottom = range ? Y(range.minKg) : 0;
   const bandX = pad;
   const bandWidth = width - pad * 2;
+  // Halo hinter Achsen-Beschriftungen, damit sie über dem Band lesbar bleiben.
+  const halo = { paintOrder: 'stroke' as const, stroke: '#fafaf9', strokeWidth: 3 };
+  // Label liegt innerhalb des Bandes; ist das Band zu dünn, rutscht es über die Oberkante.
+  const bandHeight = bandBottom - bandTop;
+  const labelY = bandHeight >= 22 ? bandTop + 14 : Math.max(10, bandTop - 5);
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 w-full rounded-xl bg-stone-50">
       {range && (
         <>
-          <rect x={bandX} y={bandTop} width={bandWidth} height={bandBottom - bandTop} fill="#d1fae5" className="opacity-60" />
-          <line x1={bandX} y1={bandTop} x2={bandX + bandWidth} y2={bandTop} stroke="#059669" strokeWidth="1.5" strokeDasharray="5 4" />
-          <line x1={bandX} y1={bandBottom} x2={bandX + bandWidth} y2={bandBottom} stroke="#059669" strokeWidth="1.5" strokeDasharray="5 4" />
-          <text x={bandX + 6} y={bandTop - 4} className="fill-emerald-700 text-[10px] font-semibold">Ideal: {formatRange(range)}</text>
+          <rect x={bandX} y={bandTop} width={bandWidth} height={bandHeight} fill="#d1fae5" opacity={0.5} />
+          <line x1={bandX} y1={bandTop} x2={bandX + bandWidth} y2={bandTop} stroke="#10b981" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.7" />
+          <line x1={bandX} y1={bandBottom} x2={bandX + bandWidth} y2={bandBottom} stroke="#10b981" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.7" />
+          <text x={bandX + 6} y={labelY} className="fill-emerald-700 text-[10px] font-semibold" {...halo}>
+            Ideal: {formatRange(range)}
+          </text>
         </>
       )}
       <polyline points={points} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {entries.map((e) => (
         <circle key={e.id} cx={X(e.date)} cy={Y(e.weightKg)} r="4" fill="var(--color-accent)" />
       ))}
-      <text x={pad} y={pad - 8} className="fill-stone-400 text-[10px]">{formatKg(highest)}</text>
-      <text x={pad} y={height - pad - 8} className="fill-stone-400 text-[10px]">{formatKg(lowest)}</text>
-      <text x={width - pad} y={height - 6} className="fill-stone-400 text-[10px]" textAnchor="end">{formatDateShort(maxX)}</text>
+      <text x={pad} y={pad - 8} className="fill-stone-500 text-[10px]" {...halo}>{formatKg(high)}</text>
+      <text x={pad} y={height - pad - 8} className="fill-stone-500 text-[10px]" {...halo}>{formatKg(low)}</text>
+      <text x={width - pad} y={height - 6} className="fill-stone-500 text-[10px]" textAnchor="end">{formatDateShort(maxX)}</text>
       <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">{formatDateShort(minX)}</text>
     </svg>
   );
@@ -68,6 +80,25 @@ function statusChip(weightKg: number, range: BreedRange | null) {
     <span className={`chip ${STATUS_CHIP_CLASS[status]}`}>
       {STATUS_LABEL[status]} ({formatRange(range)})
     </span>
+  );
+}
+
+// Kompakte Status-Icons für die Liste: roter Pfeil hoch = Übergewicht,
+// grüner Haken = Idealbereich, roter Pfeil runter = Untergewicht.
+function statusIcon(weightKg: number, range: BreedRange | null) {
+  const status = classifyWeight(weightKg, range);
+  if (!status) return null;
+  if (status === 'norm') {
+    return (
+      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Im Idealbereich">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-red-500" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label={status === 'over' ? 'Übergewicht' : 'Untergewicht'}>
+      {status === 'over' ? <path d="M12 19V5M5 12l7-7 7 7" /> : <path d="M12 5v14M19 12l-7 7-7-7" />}
+    </svg>
   );
 }
 
@@ -161,7 +192,7 @@ export default function WeightTab({ dog }: Props) {
                   {e.note && <p className="text-xs text-stone-500">{e.note}</p>}
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  {statusChip(e.weightKg, breedRange)}
+                  {statusIcon(e.weightKg, breedRange)}
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
                   <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
                   <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>
