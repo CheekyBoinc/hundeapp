@@ -32,7 +32,7 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
         <circle key={e.id} cx={X(e.date)} cy={Y(e.weightKg)} r="4" fill="var(--color-accent)" />
       ))}
       <text x={pad} y={pad - 8} className="fill-stone-400 text-[10px]">{formatKg(maxY)}</text>
-      <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">{formatKg(minY)}</text>
+      <text x={pad} y={height - pad - 8} className="fill-stone-400 text-[10px]">{formatKg(minY)}</text>
       <text x={width - pad} y={height - 6} className="fill-stone-400 text-[10px]" textAnchor="end">{formatDateShort(maxX)}</text>
       <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">{formatDateShort(minX)}</text>
     </svg>
