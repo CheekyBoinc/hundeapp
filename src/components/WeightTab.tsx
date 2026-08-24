@@ -10,7 +10,7 @@ interface Props {
   dog: DogProfile;
 }
 
-function WeightChart({ entries }: { entries: WeightEntry[] }) {
+function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedRange | null }) {
   if (entries.length < 2) return null;
   const width = 560;
   const height = 140;
@@ -19,21 +19,36 @@ function WeightChart({ entries }: { entries: WeightEntry[] }) {
   const ys = entries.map((e) => e.weightKg);
   const minX = xs[0];
   const maxX = xs[xs.length - 1];
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const spanY = maxY - minY || 1;
+
+  // Y-Skala deckt Daten und Idealbereich ab, damit das Band immer sichtbar ist.
+  const lowest = Math.min(...ys, range?.minKg ?? Infinity);
+  const highest = Math.max(...ys, range?.maxKg ?? -Infinity);
+  const spanY = highest - lowest || 1;
+  const Y = (v: number) => height - pad - ((v - lowest) / spanY) * (height - pad * 2);
   const X = (d: string) => pad + ((new Date(d).getTime() - new Date(minX).getTime()) / Math.max(1, new Date(maxX).getTime() - new Date(minX).getTime())) * (width - pad * 2);
-  const Y = (v: number) => height - pad - ((v - minY) / spanY) * (height - pad * 2);
   const points = entries.map((e) => `${X(e.date)},${Y(e.weightKg)}`).join(' ');
+
+  const bandTop = range ? Y(range.maxKg) : 0;
+  const bandBottom = range ? Y(range.minKg) : 0;
+  const bandX = pad;
+  const bandWidth = width - pad * 2;
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 w-full rounded-xl bg-stone-50">
+      {range && (
+        <>
+          <rect x={bandX} y={bandTop} width={bandWidth} height={bandBottom - bandTop} fill="#d1fae5" className="opacity-60" />
+          <line x1={bandX} y1={bandTop} x2={bandX + bandWidth} y2={bandTop} stroke="#059669" strokeWidth="1.5" strokeDasharray="5 4" />
+          <line x1={bandX} y1={bandBottom} x2={bandX + bandWidth} y2={bandBottom} stroke="#059669" strokeWidth="1.5" strokeDasharray="5 4" />
+          <text x={bandX + 6} y={bandTop - 4} className="fill-emerald-700 text-[10px] font-semibold">Ideal: {formatRange(range)}</text>
+        </>
+      )}
       <polyline points={points} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {entries.map((e) => (
         <circle key={e.id} cx={X(e.date)} cy={Y(e.weightKg)} r="4" fill="var(--color-accent)" />
       ))}
-      <text x={pad} y={pad - 8} className="fill-stone-400 text-[10px]">{formatKg(maxY)}</text>
-      <text x={pad} y={height - pad - 8} className="fill-stone-400 text-[10px]">{formatKg(minY)}</text>
+      <text x={pad} y={pad - 8} className="fill-stone-400 text-[10px]">{formatKg(highest)}</text>
+      <text x={pad} y={height - pad - 8} className="fill-stone-400 text-[10px]">{formatKg(lowest)}</text>
       <text x={width - pad} y={height - 6} className="fill-stone-400 text-[10px]" textAnchor="end">{formatDateShort(maxX)}</text>
       <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">{formatDateShort(minX)}</text>
     </svg>
@@ -134,7 +149,7 @@ export default function WeightTab({ dog }: Props) {
         </div>
       ) : (
         <>
-          {entries.length >= 2 && <WeightChart entries={entries} />}
+          {entries.length >= 2 && <WeightChart entries={entries} range={breedRange} />}
           <div className="mt-3 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
             {[...entries].reverse().map((e, i) => (
               <div
