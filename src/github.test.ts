@@ -7,7 +7,15 @@ const T2 = '2026-08-02T10:00:00.000Z';
 const T3 = '2026-08-03T10:00:00.000Z';
 
 function cmd(id: string, name: string, stamp: string): Command {
-  return { id, dogId: null, name, beschreibung: null, tipp: null, created_at: stamp, updated_at: stamp };
+  return {
+    id,
+    dogId: null,
+    name,
+    beschreibung: null,
+    tipp: null,
+    created_at: stamp,
+    updated_at: stamp
+  };
 }
 
 function entry(id: string, commands: Command[], stamp = T1): Entry {
@@ -35,7 +43,15 @@ function base(): SyncState {
     stool: [],
     vet: [],
     vaccinations: [],
-    deleted: { commands: [], entries: [], dogs: [], weight: [], stool: [], vet: [], vaccinations: [] }
+    deleted: {
+      commands: [],
+      entries: [],
+      dogs: [],
+      weight: [],
+      stool: [],
+      vet: [],
+      vaccinations: []
+    }
   };
 }
 
@@ -163,7 +179,9 @@ describe('sanitizeState', () => {
 
   it('filtert ungültige Enum-Werte, Zahlen und Tombstone-IDs', () => {
     const state = sanitizeState({
-      stool: [{ id: 's1', dogId: 'd1', date: '2026-08-20', amount: 'riesig', consistency: 'weich' }],
+      stool: [
+        { id: 's1', dogId: 'd1', date: '2026-08-20', amount: 'riesig', consistency: 'weich' }
+      ],
       deleted: { commands: ['a', 42, 'b'] }
     });
     expect(state.stool[0].amount).toBeNull();

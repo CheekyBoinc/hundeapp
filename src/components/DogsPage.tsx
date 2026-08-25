@@ -72,7 +72,8 @@ export default function DogsPage() {
         <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center">
           <p className="font-semibold text-stone-700">Noch kein Hund angelegt</p>
           <p className="mt-1 text-sm text-stone-500">
-            Lege deinen ersten Hund an, um Profil, Gewicht, Kot, Tierarzt und Impfungen zu verwalten.
+            Lege deinen ersten Hund an, um Profil, Gewicht, Kot, Tierarzt und Impfungen zu
+            verwalten.
           </p>
           <button className="btn-primary mt-4" onClick={() => setAddingDog(true)}>
             Hund hinzufügen
@@ -97,7 +98,7 @@ export default function DogsPage() {
             </button>
             {selected && (
               <button
-                className="shrink-0 rounded-lg px-2 py-1.5 text-xs font-medium text-stone-400 hover:text-red-600"
+                className="tap-target shrink-0 rounded-lg px-2 py-1.5 text-xs font-medium text-stone-400 hover:text-red-600"
                 onClick={() => handleDelete(selected)}
               >
                 Löschen
@@ -112,7 +113,9 @@ export default function DogsPage() {
                   key={id}
                   onClick={() => setSubTab(id)}
                   className={`shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold ${
-                    subTab === id ? 'bg-accent-soft text-accent-dark' : 'text-stone-500 hover:bg-stone-100'
+                    subTab === id
+                      ? 'bg-accent-soft text-accent-dark'
+                      : 'text-stone-500 hover:bg-stone-100'
                   }`}
                 >
                   {label}
@@ -130,7 +133,9 @@ export default function DogsPage() {
             </div>
           )}
 
-          {selected && subTab === 'profil' && <DogProfileTab dog={selected} onEdit={() => setEditingDog(selected)} />}
+          {selected && subTab === 'profil' && (
+            <DogProfileTab dog={selected} onEdit={() => setEditingDog(selected)} />
+          )}
           {selected && subTab === 'gewicht' && <WeightTab dog={selected} />}
           {selected && subTab === 'kot' && <StoolTab dogId={selected.id} />}
           {selected && subTab === 'tierarzt' && <VetTab dogId={selected.id} />}

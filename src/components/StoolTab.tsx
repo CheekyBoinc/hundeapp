@@ -59,13 +59,17 @@ export default function StoolTab({ dogId }: Props) {
   return (
     <div>
       <div className="mb-3">
-        <button className="btn-primary" onClick={() => setAdding(true)}>Kot-Eintrag hinzufügen</button>
+        <button className="btn-primary" onClick={() => setAdding(true)}>
+          Kot-Eintrag hinzufügen
+        </button>
       </div>
 
       {error && (
         <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>Erneut versuchen</button>
+          <button className="shrink-0 font-semibold underline" onClick={load}>
+            Erneut versuchen
+          </button>
         </div>
       )}
 
@@ -74,8 +78,12 @@ export default function StoolTab({ dogId }: Props) {
       ) : entries.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-10 text-center">
           <p className="font-semibold text-stone-700">Keine Kot-Einträge</p>
-          <p className="mt-1 text-sm text-stone-500">Trage Beobachtungen ein, um den Verdauungsverlauf im Blick zu behalten.</p>
-          <button className="btn-primary mt-4" onClick={() => setAdding(true)}>Kot-Eintrag hinzufügen</button>
+          <p className="mt-1 text-sm text-stone-500">
+            Trage Beobachtungen ein, um den Verdauungsverlauf im Blick zu behalten.
+          </p>
+          <button className="btn-primary mt-4" onClick={() => setAdding(true)}>
+            Kot-Eintrag hinzufügen
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -88,14 +96,32 @@ export default function StoolTab({ dogId }: Props) {
                 <span className="font-semibold">{formatDateShort(e.date)}</span>
                 <div className="flex items-center gap-2">
                   {e.abnormal && <span className="chip bg-red-100 text-red-800">Auffällig</span>}
-                  <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
-                  <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>
+                  <button
+                    className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"
+                    onClick={() => setEditing(e)}
+                  >
+                    Bearbeiten
+                  </button>
+                  <button
+                    className="tap-target text-xs font-medium text-stone-400 hover:text-red-600"
+                    onClick={() => handleDelete(e)}
+                  >
+                    Löschen
+                  </button>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {e.consistency > 0 && <span className="chip bg-stone-100 text-stone-700">Konsistenz {e.consistency}: {BristolLabel(e.consistency)}</span>}
-                {e.color && <span className="chip bg-stone-100 text-stone-700">Farbe: {e.color}</span>}
-                {e.amount && <span className="chip bg-stone-100 text-stone-700">Menge: {e.amount}</span>}
+                {e.consistency > 0 && (
+                  <span className="chip bg-stone-100 text-stone-700">
+                    Konsistenz {e.consistency}: {BristolLabel(e.consistency)}
+                  </span>
+                )}
+                {e.color && (
+                  <span className="chip bg-stone-100 text-stone-700">Farbe: {e.color}</span>
+                )}
+                {e.amount && (
+                  <span className="chip bg-stone-100 text-stone-700">Menge: {e.amount}</span>
+                )}
               </div>
               {e.note && <p className="mt-2 text-sm text-stone-600">{e.note}</p>}
             </div>
@@ -107,7 +133,10 @@ export default function StoolTab({ dogId }: Props) {
         <StoolModal
           dogId={dogId}
           entry={editing}
-          onClose={() => { setAdding(false); setEditing(null); }}
+          onClose={() => {
+            setAdding(false);
+            setEditing(null);
+          }}
           onSaved={load}
         />
       )}

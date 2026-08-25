@@ -5,7 +5,10 @@ const STORAGE_PREFIX = 'hundeapp.';
 
 export function useLiveReload(reload: () => void) {
   const reloadRef = useRef(reload);
-  reloadRef.current = reload;
+
+  useEffect(() => {
+    reloadRef.current = reload;
+  }, [reload]);
 
   useEffect(() => {
     const fire = () => reloadRef.current();

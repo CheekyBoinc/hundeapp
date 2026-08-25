@@ -64,13 +64,20 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
   return (
     <Modal title={entry ? 'Kot-Eintrag bearbeiten' : 'Kot-Eintrag hinzufügen'} onClose={onClose}>
       {(error || inputError) && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error ?? inputError}</div>
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          {error ?? inputError}
+        </div>
       )}
 
       <div className="space-y-4">
         <div>
           <label className="label">Datum</label>
-          <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
+          <input
+            type="date"
+            className="input"
+            value={date}
+            onChange={(ev) => setDate(ev.target.value)}
+          />
         </div>
 
         <div>
@@ -100,36 +107,56 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
             <select className="input" value={color} onChange={(ev) => setColor(ev.target.value)}>
               <option value="">–</option>
               {COLORS.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <label className="label">Menge</label>
-            <select className="input" value={amount ?? ''} onChange={(ev) => setAmount((ev.target.value || null) as typeof amount)}>
+            <select
+              className="input"
+              value={amount ?? ''}
+              onChange={(ev) => setAmount((ev.target.value || null) as typeof amount)}
+            >
               <option value="">–</option>
               {AMOUNTS.map((a) => (
-                <option key={a} value={a}>{a}</option>
+                <option key={a} value={a}>
+                  {a}
+                </option>
               ))}
             </select>
           </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" className="h-5 w-5 accent-accent" checked={abnormal} onChange={(ev) => setAbnormal(ev.target.checked)} />
+          <input
+            type="checkbox"
+            className="h-5 w-5 accent-accent"
+            checked={abnormal}
+            onChange={(ev) => setAbnormal(ev.target.checked)}
+          />
           Auffällig
         </label>
 
         <div>
           <label className="label">Notiz</label>
-          <textarea className="input min-h-20" placeholder="optional" value={note} onChange={(ev) => setNote(ev.target.value)} />
+          <textarea
+            className="input min-h-20"
+            placeholder="optional"
+            value={note}
+            onChange={(ev) => setNote(ev.target.value)}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-2">
           <button className="btn-primary flex-1" onClick={handleSave} disabled={saving}>
             {saving ? 'Speichert…' : 'Speichern'}
           </button>
-          <button className="btn-secondary" onClick={onClose}>Abbrechen</button>
+          <button className="btn-secondary" onClick={onClose}>
+            Abbrechen
+          </button>
         </div>
       </div>
     </Modal>

@@ -17,12 +17,24 @@ export const BREEDS: BreedEntry[] = [
   { names: ['Australian Shepherd', 'aus', 'australian shepherd'], range: { minKg: 18, maxKg: 27 } },
   { names: ['Labrador Retriever', 'labrador'], range: { minKg: 25, maxKg: 36 } },
   { names: ['Golden Retriever', 'golden'], range: { minKg: 25, maxKg: 34 } },
-  { names: ['Deutscher Schäferhund', 'schäferhund', 'schaeferhund', 'gsd', 'deutscher schaeferhund'], range: { minKg: 22, maxKg: 40 } },
+  {
+    names: [
+      'Deutscher Schäferhund',
+      'schäferhund',
+      'schaeferhund',
+      'gsd',
+      'deutscher schaeferhund'
+    ],
+    range: { minKg: 22, maxKg: 40 }
+  },
   { names: ['Border Collie', 'border'], range: { minKg: 14, maxKg: 20 } },
   { names: ['Jack Russell Terrier', 'jack russell'], range: { minKg: 5, maxKg: 8 } },
   { names: ['Beagle'], range: { minKg: 9, maxKg: 11 } },
   { names: ['Dackel', 'dachshund', 'teckel'], range: { minKg: 4, maxKg: 9 } },
-  { names: ['Welsh Corgi', 'corgi', 'welsh corgi', 'corgi mix', 'cardigan'], range: { minKg: 10, maxKg: 15 } },
+  {
+    names: ['Welsh Corgi', 'corgi', 'welsh corgi', 'corgi mix', 'cardigan'],
+    range: { minKg: 10, maxKg: 15 }
+  },
   { names: ['Cocker Spaniel', 'cocker'], range: { minKg: 10, maxKg: 15 } },
   { names: ['Malteser', 'maltese'], range: { minKg: 2, maxKg: 4 } },
   { names: ['Zwergpudel', 'pudel', 'poodle', 'zwergpudel'], range: { minKg: 3, maxKg: 6 } },

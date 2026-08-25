@@ -53,16 +53,26 @@ export default function VetModal({ dogId, entry, onClose, onSaved }: Props) {
   }
 
   return (
-    <Modal title={entry ? 'Tierarztbesuch bearbeiten' : 'Tierarztbesuch hinzufügen'} onClose={onClose}>
+    <Modal
+      title={entry ? 'Tierarztbesuch bearbeiten' : 'Tierarztbesuch hinzufügen'}
+      onClose={onClose}
+    >
       {(error || inputError) && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error ?? inputError}</div>
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          {error ?? inputError}
+        </div>
       )}
 
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Datum</label>
-            <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
+            <input
+              type="date"
+              className="input"
+              value={date}
+              onChange={(ev) => setDate(ev.target.value)}
+            />
           </div>
           <div>
             <label className="label">Praxis</label>
@@ -72,27 +82,53 @@ export default function VetModal({ dogId, entry, onClose, onSaved }: Props) {
 
         <div>
           <label className="label">Grund</label>
-          <input className="input" placeholder="z. B. Impfung, Kontrolle, Notfall" value={reason} onChange={(ev) => setReason(ev.target.value)} />
+          <input
+            className="input"
+            placeholder="z. B. Impfung, Kontrolle, Notfall"
+            value={reason}
+            onChange={(ev) => setReason(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Befund</label>
-          <input className="input" value={diagnosis} onChange={(ev) => setDiagnosis(ev.target.value)} />
+          <input
+            className="input"
+            value={diagnosis}
+            onChange={(ev) => setDiagnosis(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Behandlung</label>
-          <textarea className="input min-h-16" value={treatment} onChange={(ev) => setTreatment(ev.target.value)} />
+          <textarea
+            className="input min-h-16"
+            value={treatment}
+            onChange={(ev) => setTreatment(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Medikamente</label>
-          <textarea className="input min-h-16" value={medication} onChange={(ev) => setMedication(ev.target.value)} />
+          <textarea
+            className="input min-h-16"
+            value={medication}
+            onChange={(ev) => setMedication(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Folgetermin</label>
-          <input type="date" className="input" value={followUp} onChange={(ev) => setFollowUp(ev.target.value)} />
+          <input
+            type="date"
+            className="input"
+            value={followUp}
+            onChange={(ev) => setFollowUp(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Notiz</label>
-          <textarea className="input min-h-16" value={note} onChange={(ev) => setNote(ev.target.value)} />
+          <textarea
+            className="input min-h-16"
+            value={note}
+            onChange={(ev) => setNote(ev.target.value)}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-2">

@@ -152,7 +152,9 @@ export default function EntriesPage() {
                     }`}
                     onClick={() => setDetailId(e)}
                   >
-                    <td className="whitespace-nowrap px-3 py-3 font-medium">{formatDate(e.date)}</td>
+                    <td className="whitespace-nowrap px-3 py-3 font-medium">
+                      {formatDate(e.date)}
+                    </td>
                     <td className="px-3 py-3">{e.ort ?? '–'}</td>
                     <td className="px-3 py-3">
                       <div className="flex max-w-44 flex-wrap gap-1">
@@ -165,7 +167,9 @@ export default function EntriesPage() {
                       </div>
                     </td>
                     <td className="max-w-72 px-3 py-3">
-                      <p className="prose-serif truncate text-stone-600">{preview(e.was_gemacht)}</p>
+                      <p className="prose-serif truncate text-stone-600">
+                        {preview(e.was_gemacht)}
+                      </p>
                     </td>
                     <td className="px-3 py-3">
                       <input
@@ -176,9 +180,7 @@ export default function EntriesPage() {
                         onChange={(ev) => toggleEntryDone(e.id, ev.target.checked).then(load)}
                       />
                     </td>
-                    <td className="px-3 py-3 text-right text-xs text-stone-400">
-                      Details
-                    </td>
+                    <td className="px-3 py-3 text-right text-xs text-stone-400">Details</td>
                   </tr>
                 ))}
               </tbody>

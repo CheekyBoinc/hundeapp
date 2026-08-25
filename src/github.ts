@@ -1,4 +1,13 @@
-import type { AppState, Command, DogProfile, Entry, StoolEntry, Vaccination, VetVisit, WeightEntry } from './types';
+import type {
+  AppState,
+  Command,
+  DogProfile,
+  Entry,
+  StoolEntry,
+  Vaccination,
+  VetVisit,
+  WeightEntry
+} from './types';
 import { loadState, saveState } from './localStore';
 
 // ===== Konfiguration =====
@@ -437,7 +446,8 @@ export function areEqual(a: SyncState, b: SyncState): boolean {
 }
 
 function normalize(s: SyncState): SyncState {
-  const sortById = <T extends { id: string }>(arr: T[]): T[] => [...arr].sort((a, b) => a.id.localeCompare(b.id));
+  const sortById = <T extends { id: string }>(arr: T[]): T[] =>
+    [...arr].sort((a, b) => a.id.localeCompare(b.id));
   return {
     commands: sortById(s.commands),
     entries: sortById(s.entries),
@@ -645,7 +655,6 @@ export async function pullNow(): Promise<SyncState> {
     return merged;
   });
 }
-
 
 // ===== Change-Events =====
 

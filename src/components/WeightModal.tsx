@@ -66,7 +66,12 @@ export default function WeightModal({ dogId, entry, onClose, onSaved }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Datum</label>
-            <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
+            <input
+              type="date"
+              className="input"
+              value={date}
+              onChange={(ev) => setDate(ev.target.value)}
+            />
           </div>
           <div>
             <label className="label">Gewicht (kg)</label>
@@ -82,7 +87,12 @@ export default function WeightModal({ dogId, entry, onClose, onSaved }: Props) {
 
         <div>
           <label className="label">Notiz</label>
-          <textarea className="input min-h-20" placeholder="optional" value={note} onChange={(ev) => setNote(ev.target.value)} />
+          <textarea
+            className="input min-h-20"
+            placeholder="optional"
+            value={note}
+            onChange={(ev) => setNote(ev.target.value)}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-2">

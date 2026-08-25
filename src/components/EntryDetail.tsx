@@ -16,7 +16,9 @@ function Block({ label, text }: { label: string; text: string | null }) {
     <div>
       <p className="label">{label}</p>
       {text ? (
-        <p className="prose-serif whitespace-pre-wrap text-sm leading-relaxed text-stone-800">{text}</p>
+        <p className="prose-serif whitespace-pre-wrap text-sm leading-relaxed text-stone-800">
+          {text}
+        </p>
       ) : (
         <p className="text-sm text-stone-400">–</p>
       )}

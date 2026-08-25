@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { deleteWeight, fetchWeights } from '../api';
 import { useLiveReload } from '../hooks';
-import { classifyWeight, findBreedRange, formatRange, STATUS_LABEL, type BreedRange, type WeightStatus } from '../breeds';
+import {
+  classifyWeight,
+  findBreedRange,
+  formatRange,
+  STATUS_LABEL,
+  type BreedRange,
+  type WeightStatus
+} from '../breeds';
 import type { DogProfile, WeightEntry } from '../types';
 import { formatDateShort, formatKg } from '../utils';
 import WeightModal from './WeightModal';
@@ -30,7 +37,11 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
   const high = highest + margin;
   const scale = high - low || 1;
   const Y = (v: number) => height - pad - ((v - low) / scale) * (height - pad * 2);
-  const X = (d: string) => pad + ((new Date(d).getTime() - new Date(minX).getTime()) / Math.max(1, new Date(maxX).getTime() - new Date(minX).getTime())) * (width - pad * 2);
+  const X = (d: string) =>
+    pad +
+    ((new Date(d).getTime() - new Date(minX).getTime()) /
+      Math.max(1, new Date(maxX).getTime() - new Date(minX).getTime())) *
+      (width - pad * 2);
   const points = entries.map((e) => `${X(e.date)},${Y(e.weightKg)}`).join(' ');
 
   const bandTop = range ? Y(range.maxKg) : 0;
@@ -47,22 +58,67 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
     <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 w-full rounded-xl bg-stone-50">
       {range && (
         <>
-          <rect x={bandX} y={bandTop} width={bandWidth} height={bandHeight} fill="#d1fae5" opacity={0.5} />
-          <line x1={bandX} y1={bandTop} x2={bandX + bandWidth} y2={bandTop} stroke="#10b981" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.7" />
-          <line x1={bandX} y1={bandBottom} x2={bandX + bandWidth} y2={bandBottom} stroke="#10b981" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.7" />
-          <text x={bandX + 6} y={labelY} className="fill-emerald-700 text-[10px] font-semibold" {...halo}>
+          <rect
+            x={bandX}
+            y={bandTop}
+            width={bandWidth}
+            height={bandHeight}
+            fill="#d1fae5"
+            opacity={0.5}
+          />
+          <line
+            x1={bandX}
+            y1={bandTop}
+            x2={bandX + bandWidth}
+            y2={bandTop}
+            stroke="#10b981"
+            strokeWidth="1.5"
+            strokeDasharray="6 4"
+            opacity="0.7"
+          />
+          <line
+            x1={bandX}
+            y1={bandBottom}
+            x2={bandX + bandWidth}
+            y2={bandBottom}
+            stroke="#10b981"
+            strokeWidth="1.5"
+            strokeDasharray="6 4"
+            opacity="0.7"
+          />
+          <text
+            x={bandX + 6}
+            y={labelY}
+            className="fill-emerald-700 text-[10px] font-semibold"
+            {...halo}
+          >
             Ideal: {formatRange(range)}
           </text>
         </>
       )}
-      <polyline points={points} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--color-accent)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       {entries.map((e) => (
         <circle key={e.id} cx={X(e.date)} cy={Y(e.weightKg)} r="4" fill="var(--color-accent)" />
       ))}
-      <text x={pad} y={pad - 8} className="fill-stone-500 text-[10px]" {...halo}>{formatKg(high)}</text>
-      <text x={pad} y={height - pad - 8} className="fill-stone-500 text-[10px]" {...halo}>{formatKg(low)}</text>
-      <text x={width - pad} y={height - 6} className="fill-stone-500 text-[10px]" textAnchor="end">{formatDateShort(maxX)}</text>
-      <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">{formatDateShort(minX)}</text>
+      <text x={pad} y={pad - 8} className="fill-stone-500 text-[10px]" {...halo}>
+        {formatKg(high)}
+      </text>
+      <text x={pad} y={height - pad - 8} className="fill-stone-500 text-[10px]" {...halo}>
+        {formatKg(low)}
+      </text>
+      <text x={width - pad} y={height - 6} className="fill-stone-500 text-[10px]" textAnchor="end">
+        {formatDateShort(maxX)}
+      </text>
+      <text x={pad} y={height - 6} className="fill-stone-400 text-[10px]">
+        {formatDateShort(minX)}
+      </text>
     </svg>
   );
 }
@@ -90,14 +146,38 @@ function statusIcon(weightKg: number, range: BreedRange | null) {
   if (!status) return null;
   if (status === 'norm') {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Im Idealbereich">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4 shrink-0 text-emerald-600"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        role="img"
+        aria-label="Im Idealbereich"
+      >
         <path d="M20 6L9 17l-5-5" />
       </svg>
     );
   }
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-red-500" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label={status === 'over' ? 'Übergewicht' : 'Untergewicht'}>
-      {status === 'over' ? <path d="M12 19V5M5 12l7-7 7 7" /> : <path d="M12 5v14M19 12l-7 7-7-7" />}
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4 shrink-0 text-red-500"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="img"
+      aria-label={status === 'over' ? 'Übergewicht' : 'Untergewicht'}
+    >
+      {status === 'over' ? (
+        <path d="M12 19V5M5 12l7-7 7 7" />
+      ) : (
+        <path d="M12 5v14M19 12l-7 7-7-7" />
+      )}
     </svg>
   );
 }
@@ -147,9 +227,7 @@ export default function WeightTab({ dog }: Props) {
     <div>
       <div className="mb-3 flex items-center gap-2">
         <div className="flex-1">
-          {latest && (
-            <p className="text-lg font-bold">{formatKg(latest.weightKg)}</p>
-          )}
+          {latest && <p className="text-lg font-bold">{formatKg(latest.weightKg)}</p>}
           {latest && statusChip(latest.weightKg, breedRange)}
           {diff !== null && (
             <p className={`text-xs font-medium ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -166,7 +244,9 @@ export default function WeightTab({ dog }: Props) {
       {error && (
         <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>Erneut versuchen</button>
+          <button className="shrink-0 font-semibold underline" onClick={load}>
+            Erneut versuchen
+          </button>
         </div>
       )}
 
@@ -175,8 +255,12 @@ export default function WeightTab({ dog }: Props) {
       ) : entries.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-10 text-center">
           <p className="font-semibold text-stone-700">Keine Gewichtseinträge</p>
-          <p className="mt-1 text-sm text-stone-500">Trage das erste Gewicht ein, um den Verlauf zu sehen.</p>
-          <button className="btn-primary mt-4" onClick={() => setAdding(true)}>Gewicht hinzufügen</button>
+          <p className="mt-1 text-sm text-stone-500">
+            Trage das erste Gewicht ein, um den Verlauf zu sehen.
+          </p>
+          <button className="btn-primary mt-4" onClick={() => setAdding(true)}>
+            Gewicht hinzufügen
+          </button>
         </div>
       ) : (
         <>
@@ -194,8 +278,18 @@ export default function WeightTab({ dog }: Props) {
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {statusIcon(e.weightKg, breedRange)}
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
-                  <button className="text-xs font-medium text-stone-400 hover:text-accent-strong" onClick={() => setEditing(e)}>Bearbeiten</button>
-                  <button className="text-xs font-medium text-stone-400 hover:text-red-600" onClick={() => handleDelete(e)}>Löschen</button>
+                  <button
+                    className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"
+                    onClick={() => setEditing(e)}
+                  >
+                    Bearbeiten
+                  </button>
+                  <button
+                    className="tap-target text-xs font-medium text-stone-400 hover:text-red-600"
+                    onClick={() => handleDelete(e)}
+                  >
+                    Löschen
+                  </button>
                 </div>
               </div>
             ))}
@@ -207,7 +301,10 @@ export default function WeightTab({ dog }: Props) {
         <WeightModal
           dogId={dogId}
           entry={editing}
-          onClose={() => { setAdding(false); setEditing(null); }}
+          onClose={() => {
+            setAdding(false);
+            setEditing(null);
+          }}
           onSaved={load}
         />
       )}

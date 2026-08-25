@@ -44,7 +44,10 @@ export default function SyncSetup({ onDone, onSkip }: Props) {
           </p>
         </div>
 
-        <form onSubmit={submit} className="space-y-4 rounded-3xl border border-stone-200 bg-white p-6 shadow-lg">
+        <form
+          onSubmit={submit}
+          className="space-y-4 rounded-3xl border border-stone-200 bg-white p-6 shadow-lg"
+        >
           <div>
             <label className="label">GitHub-Benutzername</label>
             <input
@@ -76,8 +79,8 @@ export default function SyncSetup({ onDone, onSkip }: Props) {
             />
             <p className="mt-1.5 text-xs text-stone-500">
               Erstellt ihr auf github.com unter Settings → Developer settings → Personal access
-              tokens → Fine-grained tokens. Gilt nur für das Repo oben, Berechtigung „Contents:
-              Read & Write“.
+              tokens → Fine-grained tokens. Gilt nur für das Repo oben, Berechtigung „Contents: Read
+              & Write“.
             </p>
           </div>
 

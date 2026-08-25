@@ -13,7 +13,14 @@ interface Props {
   onChanged: () => void;
 }
 
-export default function EntryModal({ entry, commands: commandsProp, dogs, defaultDogId, onClose, onChanged }: Props) {
+export default function EntryModal({
+  entry,
+  commands: commandsProp,
+  dogs,
+  defaultDogId,
+  onClose,
+  onChanged
+}: Props) {
   const [date, setDate] = useState(entry?.date ?? todayLocal());
   const [dogId, setDogId] = useState<string>(entry?.dogId ?? defaultDogId ?? '');
   const [ort, setOrt] = useState(entry?.ort ?? '');
@@ -170,9 +177,7 @@ export default function EntryModal({ entry, commands: commandsProp, dogs, defaul
                     type="button"
                     onClick={() => toggleCommand(c.id)}
                     className={
-                      on
-                        ? 'chip bg-accent text-white'
-                        : 'chip bg-stone-100 text-stone-700'
+                      on ? 'chip bg-accent text-white' : 'chip bg-stone-100 text-stone-700'
                     }
                   >
                     {c.name}

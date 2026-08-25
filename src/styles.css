@@ -1,8 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Newsreader Variable", "Newsreader", ui-serif, Georgia, serif;
+  --font-sans:
+    'Bricolage Grotesque Variable', 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Newsreader Variable', 'Newsreader', ui-serif, Georgia, serif;
 
   /* Markenfarbe Terracotta – der einzige Akzent; alle Orange-Varianten
      laufen über diese Tokens statt über Tailwinds Orange-Palette. */
@@ -39,6 +40,17 @@
   .badge {
     @apply inline-block rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600;
   }
+}
+
+/* Vergrößert die Trefferfläche kleiner Text-Buttons auf mindestens 44×44 px,
+   ohne das Layout zu verändern (Pseudo-Element hinter dem Text). */
+.tap-target {
+  position: relative;
+}
+.tap-target::before {
+  content: '';
+  position: absolute;
+  inset: -10px -6px;
 }
 
 html {

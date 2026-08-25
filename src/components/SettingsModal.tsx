@@ -7,7 +7,17 @@ interface Props {
   onClose: () => void;
 }
 
-function Toggle({ label, hint, value, onToggle }: { label: string; hint?: string; value: boolean; onToggle: () => void }) {
+function Toggle({
+  label,
+  hint,
+  value,
+  onToggle
+}: {
+  label: string;
+  hint?: string;
+  value: boolean;
+  onToggle: () => void;
+}) {
   return (
     <button
       type="button"

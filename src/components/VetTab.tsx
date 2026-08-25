@@ -54,13 +54,17 @@ export default function VetTab({ dogId }: Props) {
   return (
     <div>
       <div className="mb-3">
-        <button className="btn-primary" onClick={() => setAdding(true)}>Tierarztbesuch hinzufügen</button>
+        <button className="btn-primary" onClick={() => setAdding(true)}>
+          Tierarztbesuch hinzufügen
+        </button>
       </div>
 
       {error && (
         <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>Erneut versuchen</button>
+          <button className="shrink-0 font-semibold underline" onClick={load}>
+            Erneut versuchen
+          </button>
         </div>
       )}
 
@@ -69,8 +73,12 @@ export default function VetTab({ dogId }: Props) {
       ) : entries.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-10 text-center">
           <p className="font-semibold text-stone-700">Keine Tierarztbesuche</p>
-          <p className="mt-1 text-sm text-stone-500">Dokumentiere hier Besuche, Befunde und Folgetermine.</p>
-          <button className="btn-primary mt-4" onClick={() => setAdding(true)}>Tierarztbesuch hinzufügen</button>
+          <p className="mt-1 text-sm text-stone-500">
+            Dokumentiere hier Besuche, Befunde und Folgetermine.
+          </p>
+          <button className="btn-primary mt-4" onClick={() => setAdding(true)}>
+            Tierarztbesuch hinzufügen
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -101,12 +109,25 @@ export default function VetTab({ dogId }: Props) {
             <VetRow label="Befund" value={detail.diagnosis} />
             <VetRow label="Behandlung" value={detail.treatment} />
             <VetRow label="Medikamente" value={detail.medication} />
-            <VetRow label="Folgetermin" value={detail.followUp ? formatDateShort(detail.followUp) : null} />
+            <VetRow
+              label="Folgetermin"
+              value={detail.followUp ? formatDateShort(detail.followUp) : null}
+            />
             <VetRow label="Notiz" value={detail.note} />
           </div>
           <div className="mt-5 flex justify-end gap-2">
-            <button className="btn-danger" onClick={() => handleDelete(detail)}>Löschen</button>
-            <button className="btn-primary" onClick={() => { setEditing(detail); setDetail(null); }}>Bearbeiten</button>
+            <button className="btn-danger" onClick={() => handleDelete(detail)}>
+              Löschen
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => {
+                setEditing(detail);
+                setDetail(null);
+              }}
+            >
+              Bearbeiten
+            </button>
           </div>
         </Modal>
       )}
@@ -115,7 +136,10 @@ export default function VetTab({ dogId }: Props) {
         <VetModal
           dogId={dogId}
           entry={editing}
-          onClose={() => { setAdding(false); setEditing(null); }}
+          onClose={() => {
+            setAdding(false);
+            setEditing(null);
+          }}
           onSaved={load}
         />
       )}

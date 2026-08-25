@@ -51,29 +51,51 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
   return (
     <Modal title={entry ? 'Impfung bearbeiten' : 'Impfung hinzufügen'} onClose={onClose}>
       {(error || inputError) && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error ?? inputError}</div>
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          {error ?? inputError}
+        </div>
       )}
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Datum</label>
-            <input type="date" className="input" value={date} onChange={(ev) => setDate(ev.target.value)} />
+            <input
+              type="date"
+              className="input"
+              value={date}
+              onChange={(ev) => setDate(ev.target.value)}
+            />
           </div>
           <div>
             <label className="label">Nächste Fälligkeit</label>
-            <input type="date" className="input" value={nextDue} onChange={(ev) => setNextDue(ev.target.value)} />
+            <input
+              type="date"
+              className="input"
+              value={nextDue}
+              onChange={(ev) => setNextDue(ev.target.value)}
+            />
           </div>
         </div>
 
         <div>
           <label className="label">Impfstoff</label>
-          <input className="input" placeholder="z. B. Tollwut, Staupe, Leptospirose" value={name} onChange={(ev) => setName(ev.target.value)} />
+          <input
+            className="input"
+            placeholder="z. B. Tollwut, Staupe, Leptospirose"
+            value={name}
+            onChange={(ev) => setName(ev.target.value)}
+          />
         </div>
 
         <div>
           <label className="label">Notiz</label>
-          <textarea className="input min-h-20" placeholder="z. B. Chlamys, Wurmkur…" value={note} onChange={(ev) => setNote(ev.target.value)} />
+          <textarea
+            className="input min-h-20"
+            placeholder="z. B. Chlamys, Wurmkur…"
+            value={note}
+            onChange={(ev) => setNote(ev.target.value)}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-2">

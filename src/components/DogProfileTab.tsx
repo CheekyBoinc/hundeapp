@@ -27,8 +27,14 @@ export default function DogProfileTab({ dog, onEdit }: Props) {
 
       <div>
         <Row label="Rasse" value={dog.rasse} />
-        <Row label="Geburtsdatum" value={dog.geburtsdatum ? formatDateShort(dog.geburtsdatum) : null} />
-        <Row label="Geschlecht" value={dog.geschlecht === 'w' ? 'Hündin' : dog.geschlecht === 'm' ? 'Rüde' : null} />
+        <Row
+          label="Geburtsdatum"
+          value={dog.geburtsdatum ? formatDateShort(dog.geburtsdatum) : null}
+        />
+        <Row
+          label="Geschlecht"
+          value={dog.geschlecht === 'w' ? 'Hündin' : dog.geschlecht === 'm' ? 'Rüde' : null}
+        />
         <Row label="Chip-Nummer" value={dog.chipNr} />
         <Row label="Register-Nummer" value={dog.registerNr} />
         <Row label="Tierarzt" value={dog.tierarzt} />

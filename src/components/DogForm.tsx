@@ -61,16 +61,32 @@ export default function DogForm({ dog, onClose, onSaved }: Props) {
       <div className="space-y-3">
         <div>
           <label className="label">Name</label>
-          <input className="input" autoFocus placeholder="z. B. Suse" value={name} onChange={(ev) => setName(ev.target.value)} />
+          <input
+            className="input"
+            autoFocus
+            placeholder="z. B. Suse"
+            value={name}
+            onChange={(ev) => setName(ev.target.value)}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Rasse</label>
-            <input className="input" placeholder="z. B. Australian Shepherd" value={rasse} onChange={(ev) => setRasse(ev.target.value)} />
+            <input
+              className="input"
+              placeholder="z. B. Australian Shepherd"
+              value={rasse}
+              onChange={(ev) => setRasse(ev.target.value)}
+            />
           </div>
           <div>
             <label className="label">Geburtsdatum</label>
-            <input type="date" className="input" value={geburtsdatum} onChange={(ev) => setGeburtsdatum(ev.target.value)} />
+            <input
+              type="date"
+              className="input"
+              value={geburtsdatum}
+              onChange={(ev) => setGeburtsdatum(ev.target.value)}
+            />
           </div>
         </div>
         <div>
@@ -95,20 +111,39 @@ export default function DogForm({ dog, onClose, onSaved }: Props) {
           </div>
           <div>
             <label className="label">Register-Nummer</label>
-            <input className="input" value={registerNr} onChange={(ev) => setRegisterNr(ev.target.value)} />
+            <input
+              className="input"
+              value={registerNr}
+              onChange={(ev) => setRegisterNr(ev.target.value)}
+            />
           </div>
         </div>
         <div>
           <label className="label">Tierarzt</label>
-          <input className="input" placeholder="Name / Praxis" value={tierarzt} onChange={(ev) => setTierarzt(ev.target.value)} />
+          <input
+            className="input"
+            placeholder="Name / Praxis"
+            value={tierarzt}
+            onChange={(ev) => setTierarzt(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Allergien</label>
-          <input className="input" placeholder="z. B. Huhn, Grasmilben" value={allergien} onChange={(ev) => setAllergien(ev.target.value)} />
+          <input
+            className="input"
+            placeholder="z. B. Huhn, Grasmilben"
+            value={allergien}
+            onChange={(ev) => setAllergien(ev.target.value)}
+          />
         </div>
         <div>
           <label className="label">Besonderheiten</label>
-          <textarea className="input min-h-20" placeholder="z. B. ängstlich bei Gewitter, bevorzugt…" value={besonderheiten} onChange={(ev) => setBesonderheiten(ev.target.value)} />
+          <textarea
+            className="input min-h-20"
+            placeholder="z. B. ängstlich bei Gewitter, bevorzugt…"
+            value={besonderheiten}
+            onChange={(ev) => setBesonderheiten(ev.target.value)}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-2">
