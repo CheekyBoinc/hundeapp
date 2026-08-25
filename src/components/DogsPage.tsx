@@ -8,6 +8,7 @@ import WeightTab from './WeightTab';
 import StoolTab from './StoolTab';
 import VetTab from './VetTab';
 import VaccinationTab from './VaccinationTab';
+import ExportMenu from './ExportMenu';
 
 type SubTab = 'profil' | 'gewicht' | 'kot' | 'tierarzt' | 'impfungen';
 
@@ -27,6 +28,7 @@ export default function DogsPage() {
   const [subTab, setSubTab] = useState<SubTab>('profil');
   const [addingDog, setAddingDog] = useState(false);
   const [editingDog, setEditingDog] = useState<DogProfile | null>(null);
+  const [showExport, setShowExport] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -97,12 +99,21 @@ export default function DogsPage() {
               + Hund
             </button>
             {selected && (
-              <button
-                className="tap-target shrink-0 rounded-lg px-2 py-1.5 text-xs font-medium text-stone-400 hover:text-red-600"
-                onClick={() => handleDelete(selected)}
-              >
-                Löschen
-              </button>
+              <>
+                <button
+                  className="btn-secondary shrink-0"
+                  onClick={() => setShowExport(true)}
+                  title="Daten exportieren"
+                >
+                  Export
+                </button>
+                <button
+                  className="tap-target shrink-0 rounded-lg px-2 py-1.5 text-xs font-medium text-stone-400 hover:text-red-600"
+                  onClick={() => handleDelete(selected)}
+                >
+                  Löschen
+                </button>
+              </>
             )}
           </div>
 
@@ -156,6 +167,8 @@ export default function DogsPage() {
           }}
         />
       )}
+
+      {showExport && selected && <ExportMenu dog={selected} onClose={() => setShowExport(false)} />}
     </div>
   );
 }

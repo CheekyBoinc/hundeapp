@@ -9,12 +9,22 @@ import {
   type BreedRange,
   type WeightStatus
 } from '../breeds';
+import { findGrowth, rangeAt } from '../growth';
 import type { DogProfile, WeightEntry } from '../types';
 import { formatDateShort, formatKg } from '../utils';
 import WeightModal from './WeightModal';
 
 interface Props {
   dog: DogProfile;
+}
+
+function ageInMonths(geburtsdatum: string | null): number | null {
+  if (!geburtsdatum) return null;
+  const birth = new Date(`${geburtsdatum}T00:00:00`);
+  const now = new Date();
+  const months =
+    (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  return months >= 0 ? months : null;
 }
 
 function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedRange | null }) {
@@ -129,12 +139,13 @@ const STATUS_CHIP_CLASS: Record<WeightStatus, string> = {
   over: 'bg-red-100 text-red-800'
 };
 
-function statusChip(weightKg: number, range: BreedRange | null) {
+function statusChip(weightKg: number, range: BreedRange | null, growth = false) {
   const status = classifyWeight(weightKg, range);
   if (!status || !range) return null;
+  const label = growth ? 'Wachstumsbereich' : STATUS_LABEL[status];
   return (
     <span className={`chip ${STATUS_CHIP_CLASS[status]}`}>
-      {STATUS_LABEL[status]} ({formatRange(range)})
+      {label} ({formatRange(range)})
     </span>
   );
 }
@@ -192,6 +203,14 @@ export default function WeightTab({ dog }: Props) {
   const breedRange = findBreedRange(dog.rasse);
   const dogId = dog.id;
 
+  const ageMonths = ageInMonths(dog.geburtsdatum);
+  const growth = findGrowth(dog.rasse);
+  const isPuppy =
+    ageMonths !== null && growth !== null && ageMonths <= growth[growth.length - 1].months;
+  // Für Jungtiere das altersabhängige Band verwenden, sonst die adult-Spanne.
+  const activeRange: BreedRange | null =
+    isPuppy && ageMonths !== null ? rangeAt(ageMonths, growth!) : breedRange;
+
   const load = useCallback(async () => {
     try {
       setEntries(await fetchWeights(dogId));
@@ -228,7 +247,12 @@ export default function WeightTab({ dog }: Props) {
       <div className="mb-3 flex items-center gap-2">
         <div className="flex-1">
           {latest && <p className="text-lg font-bold">{formatKg(latest.weightKg)}</p>}
-          {latest && statusChip(latest.weightKg, breedRange)}
+          {latest && statusChip(latest.weightKg, activeRange, isPuppy)}
+          {isPuppy && latest && (
+            <p className="text-xs text-stone-500">
+              Wachstumsbereich (Alter: {Math.round(ageMonths!)} Monate)
+            </p>
+          )}
           {diff !== null && (
             <p className={`text-xs font-medium ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
               {diff >= 0 ? '+' : ''}
@@ -264,7 +288,7 @@ export default function WeightTab({ dog }: Props) {
         </div>
       ) : (
         <>
-          {entries.length >= 2 && <WeightChart entries={entries} range={breedRange} />}
+          {entries.length >= 2 && <WeightChart entries={entries} range={activeRange} />}
           <div className="mt-3 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
             {[...entries].reverse().map((e, i) => (
               <div
@@ -276,7 +300,7 @@ export default function WeightTab({ dog }: Props) {
                   {e.note && <p className="text-xs text-stone-500">{e.note}</p>}
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  {statusIcon(e.weightKg, breedRange)}
+                  {statusIcon(e.weightKg, activeRange)}
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
                   <button
                     className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"

@@ -4,11 +4,12 @@ import { loadSettings, saveSettings, type Settings } from './settings';
 import EntriesPage from './components/EntriesPage';
 import CommandsPage from './components/CommandsPage';
 import DogsPage from './components/DogsPage';
+import CalendarPage from './components/CalendarPage';
 import SyncSetup from './components/SyncSetup';
 import SettingsModal from './components/SettingsModal';
 import { PawIcon } from './components/PawIcon';
 
-type Tab = 'eintraege' | 'kommandos' | 'hunde';
+type Tab = 'eintraege' | 'kommandos' | 'hunde' | 'kalender';
 
 export default function App() {
   const [configured, setConfigured] = useState(isConfigured());
@@ -107,7 +108,8 @@ export default function App() {
   const tabs: [Tab, string][] = [
     ['eintraege', 'Einträge'],
     ['kommandos', 'Kommandos'],
-    ['hunde', 'Hunde']
+    ['hunde', 'Hunde'],
+    ['kalender', 'Kalender']
   ];
 
   const statusDot = {
@@ -235,6 +237,7 @@ export default function App() {
         {tab === 'eintraege' && <EntriesPage />}
         {tab === 'kommandos' && <CommandsPage />}
         {tab === 'hunde' && <DogsPage />}
+        {tab === 'kalender' && <CalendarPage />}
       </main>
 
       {!settings.navTop && (
