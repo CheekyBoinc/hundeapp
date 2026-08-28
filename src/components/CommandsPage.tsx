@@ -195,7 +195,11 @@ export default function CommandsPage() {
                 ) : (
                   <p className="text-xs text-stone-500">
                     Noch nie geübt
-                    {idle && <span className="ml-1.5 chip bg-amber-100 text-amber-800">?</span>}
+                    {idle && (
+                      <span className="ml-1.5 chip bg-amber-100 text-amber-800">
+                        nicht trainiert
+                      </span>
+                    )}
                   </p>
                 )}
                 {c.beschreibung && (

@@ -1,6 +1,7 @@
 // Altersabhängige Richtgewichte (Welpen-Jugend) nach Rasse. Die Werte sind
-// gerundete Orientierungswerte; der erste Name ist die kanonische Schreibweise,
-// weitere sind Aliase für das freie Rassen-Feld im Hundeprofil.
+// von mir geschätzte Orientierungswerte und NICHT aus verifizierten FCI-/Studien-
+// Quellen übernommen. Vor einer fachlichen Verwendung prüfen. Der erste Name ist
+// die kanonische Schreibweise, weitere sind Aliase für das freie Rassen-Feld.
 import type { WeightStatus } from './breeds';
 
 export interface GrowthPoint {
@@ -134,17 +135,17 @@ export function findGrowth(rasse: string | null): GrowthPoint[] | null {
 }
 
 // Lineare Interpolation zwischen den Stützpunkten. Liefert null, wenn das Alter
-// außerhalb des hinterlegten Bereichs liegt (z. B. erwachsen).
+// außerhalb des hinterlegten Bereichs liegt (jünger als der erste Punkt oder
+// älter als der letzte Punkt = erwachsen).
 export function classifyGrowth(
   weightKg: number,
   ageMonths: number,
   points: GrowthPoint[]
 ): WeightStatus | null {
-  const segment = segmentFor(ageMonths, points);
-  if (!segment) return null;
-  const { minKg, maxKg } = rangeAt(ageMonths, points);
-  if (weightKg < minKg) return 'under';
-  if (weightKg > maxKg) return 'over';
+  const range = rangeAt(ageMonths, points);
+  if (!range) return null;
+  if (weightKg < range.minKg) return 'under';
+  if (weightKg > range.maxKg) return 'over';
   return 'norm';
 }
 
@@ -158,12 +159,9 @@ function segmentFor(ageMonths: number, points: GrowthPoint[]): GrowthPoint | nul
 export function rangeAt(
   ageMonths: number,
   points: GrowthPoint[]
-): { minKg: number; maxKg: number } {
+): { minKg: number; maxKg: number } | null {
   const segment = segmentFor(ageMonths, points);
-  if (!segment) {
-    const last = points[points.length - 1];
-    return { minKg: last.minKg, maxKg: last.maxKg };
-  }
+  if (!segment) return null;
   const idx = points.indexOf(segment);
   const next = points[idx + 1];
   const t = next ? (ageMonths - segment.months) / (next.months - segment.months) : 1;

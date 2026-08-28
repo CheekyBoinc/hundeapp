@@ -22,7 +22,9 @@ export function masteryStats(entries: Entry[]): Map<string, CommandMastery> {
 export function daysSince(date: string | null): number | null {
   if (!date) return null;
   const d = new Date(`${date}T00:00:00`);
-  const today = new Date(new Date().toDateString());
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = (today.getTime() - d.getTime()) / 86400000;
   return Number.isFinite(diff) ? Math.round(diff) : null;
 }

@@ -142,7 +142,7 @@ const STATUS_CHIP_CLASS: Record<WeightStatus, string> = {
 function statusChip(weightKg: number, range: BreedRange | null, growth = false) {
   const status = classifyWeight(weightKg, range);
   if (!status || !range) return null;
-  const label = growth ? 'Wachstumsbereich' : STATUS_LABEL[status];
+  const label = growth ? `${STATUS_LABEL[status]} im Wachstumsbereich` : STATUS_LABEL[status];
   return (
     <span className={`chip ${STATUS_CHIP_CLASS[status]}`}>
       {label} ({formatRange(range)})
@@ -205,11 +205,10 @@ export default function WeightTab({ dog }: Props) {
 
   const ageMonths = ageInMonths(dog.geburtsdatum);
   const growth = findGrowth(dog.rasse);
-  const isPuppy =
-    ageMonths !== null && growth !== null && ageMonths <= growth[growth.length - 1].months;
+  const growthRange = ageMonths !== null && growth !== null ? rangeAt(ageMonths, growth) : null;
+  const isPuppy = growthRange !== null;
   // Für Jungtiere das altersabhängige Band verwenden, sonst die adult-Spanne.
-  const activeRange: BreedRange | null =
-    isPuppy && ageMonths !== null ? rangeAt(ageMonths, growth!) : breedRange;
+  const activeRange: BreedRange | null = growthRange ?? breedRange;
 
   const load = useCallback(async () => {
     try {

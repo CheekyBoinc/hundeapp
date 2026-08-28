@@ -1,5 +1,3 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import type { Command, DogProfile, Entry, WeightEntry } from './types';
 import { formatDateShort, formatKg } from './utils';
 
@@ -34,9 +32,12 @@ export function downloadCSV(filename: string, rows: Record<string, unknown>[]): 
   URL.revokeObjectURL(url);
 }
 
-// ===== PDF =====
+// ===== PDF (jspdf wird erst beim ersten Export geladen) =====
 
-function pdfHeader(doc: jsPDF, dog: DogProfile) {
+type JsPDF = import('jspdf').jsPDF;
+type AutoTable = (doc: JsPDF, opts: Record<string, unknown>) => void;
+
+function pdfHeader(doc: JsPDF, dog: DogProfile) {
   doc.setFontSize(18);
   doc.setTextColor('#292524');
   doc.text(`Trainingstagebuch: ${dog.name}`, 14, 18);
@@ -50,13 +51,19 @@ function pdfHeader(doc: jsPDF, dog: DogProfile) {
   doc.line(14, 29, 196, 29);
 }
 
-function pdfSection(doc: jsPDF, title: string, y: number) {
+function pdfSection(doc: JsPDF, title: string, y: number) {
   doc.setFontSize(13);
   doc.setTextColor('#292524');
   doc.text(title, 14, y);
 }
 
-function pdfTable(doc: jsPDF, y: number, head: string[], body: (string | number)[][]): number {
+function pdfTable(
+  autoTable: AutoTable,
+  doc: JsPDF,
+  y: number,
+  head: string[],
+  body: (string | number)[][]
+): number {
   autoTable(doc, {
     startY: y,
     head: [head],
@@ -65,15 +72,20 @@ function pdfTable(doc: jsPDF, y: number, head: string[], body: (string | number)
     headStyles: { fillColor: '#faf7f2', textColor: '#292524', fontStyle: 'bold' },
     margin: { left: 14, right: 14 }
   });
-  return (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y;
+  return (doc as JsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y;
 }
 
-export function downloadPDF(
+export async function downloadPDF(
   dog: DogProfile,
   entries: Entry[],
   commands: Command[],
   weights: WeightEntry[]
-): void {
+): Promise<void> {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ]);
+
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   pdfHeader(doc, dog);
 
@@ -83,6 +95,7 @@ export function downloadPDF(
   if (entries.length > 0) {
     pdfSection(doc, 'Trainingseinträge', y);
     y = pdfTable(
+      autoTable,
       doc,
       y + 6,
       ['Datum', 'Ort', 'Kommandos', 'Was gemacht', 'Tipps'],
@@ -100,6 +113,7 @@ export function downloadPDF(
   if (commands.length > 0) {
     pdfSection(doc, 'Kommandos', y);
     y = pdfTable(
+      autoTable,
       doc,
       y + 6,
       ['Kommando', 'Beschreibung', 'Tipp'],
@@ -111,6 +125,7 @@ export function downloadPDF(
   if (weights.length > 0) {
     pdfSection(doc, 'Gewicht', y);
     pdfTable(
+      autoTable,
       doc,
       y + 6,
       ['Datum', 'Gewicht', 'Notiz'],

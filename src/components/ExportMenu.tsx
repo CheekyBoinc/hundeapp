@@ -37,8 +37,8 @@ export default function ExportMenu({ dog, onClose }: Props) {
           fetchWeights(dog.id)
         ]);
         if (cancelled) return;
-        setEntries(e.filter((x) => x.dogId === dog.id || x.dogId === null));
-        setCommands(c.filter((x) => x.dogId === dog.id || x.dogId === null));
+        setEntries(e);
+        setCommands(c);
         setWeights(w);
       } catch {
         /* still – ExportButtons bleiben dann schlicht weg */
@@ -52,10 +52,10 @@ export default function ExportMenu({ dog, onClose }: Props) {
   const dogEntries = entries.filter((e) => e.dogId === dog.id || e.dogId === null);
   const dogCommands = commands.filter((c) => c.dogId === dog.id || c.dogId === null);
 
-  function run(fn: () => void) {
+  async function run(fn: () => void | Promise<void>) {
     setBusy(true);
     try {
-      fn();
+      await fn();
     } finally {
       setBusy(false);
     }

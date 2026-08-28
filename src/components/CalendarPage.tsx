@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchEntries, fetchDogs } from '../api';
+import { fetchCommands, fetchEntries, fetchDogs } from '../api';
 import { useLiveReload } from '../hooks';
-import type { DogProfile, Entry } from '../types';
+import type { Command, DogProfile, Entry } from '../types';
 import { formatDateShort } from '../utils';
 import EntryDetail from './EntryDetail';
+import EntryModal from './EntryModal';
 import Modal from './Modal';
 
 const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -33,7 +34,6 @@ function addMonths(date: Date, n: number): Date {
 type DayCell = {
   date: string; // YYYY-MM-DD
   dayOfMonth: number;
-  inMonth: boolean;
 };
 
 type GridCell = DayCell | null;
@@ -49,8 +49,7 @@ function buildMonthGrid(monthDate: Date): GridCell[] {
     const date = new Date(first.getFullYear(), first.getMonth(), d);
     cells.push({
       date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
-      dayOfMonth: d,
-      inMonth: true
+      dayOfMonth: d
     });
   }
   while (cells.length % 7 !== 0) cells.push(null);
@@ -60,17 +59,20 @@ function buildMonthGrid(monthDate: Date): GridCell[] {
 export default function CalendarPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dogs, setDogs] = useState<DogProfile[]>([]);
+  const [commands, setCommands] = useState<Command[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [detail, setDetail] = useState<Entry | null>(null);
+  const [editing, setEditing] = useState<Entry | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [e, d] = await Promise.all([fetchEntries(), fetchDogs()]);
+      const [e, d, c] = await Promise.all([fetchEntries(), fetchDogs(), fetchCommands()]);
       setEntries(e);
       setDogs(d);
+      setCommands(c);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
@@ -244,9 +246,19 @@ export default function CalendarPage() {
               onClose={() => setDetail(null)}
               onChanged={load}
               onEdit={() => {
+                setEditing(detail);
                 setDetail(null);
-                setSelectedDate(null);
               }}
+            />
+          )}
+
+          {editing && (
+            <EntryModal
+              entry={editing}
+              commands={commands}
+              dogs={dogs}
+              onClose={() => setEditing(null)}
+              onChanged={load}
             />
           )}
         </>
