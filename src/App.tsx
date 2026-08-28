@@ -190,6 +190,28 @@ export default function App() {
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
         </button>
+        <a
+          href="https://ko-fi.com/cloudplay"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+          title="Unterstützen über Ko-fi"
+          aria-label="Unterstützen über Ko-fi"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M7 11h10v3a5 5 0 0 1-5 5h0a5 5 0 0 1-5-5v-3z" />
+            <path d="M17 12h1.5a2 2 0 0 1 0 4H17" />
+            <path d="M12 8.5c-1.6-1.9-4.2-1.5-5 .4-.6 1.5.2 3 1.8 4 1.5.9 3.2 1.5 3.2 1.5s1.7-.6 3.2-1.5c1.6-1 2.4-2.5 1.8-4-.8-1.9-3.4-2.3-5-.4z" />
+          </svg>
+        </a>
       </div>
     </div>
   );
