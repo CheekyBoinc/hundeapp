@@ -194,22 +194,17 @@ export default function App() {
           href="https://ko-fi.com/cloudplay"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#29abe0] text-white hover:bg-[#1f96c7]"
           title="Unterstützen über Ko-fi"
           aria-label="Unterstützen über Ko-fi"
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M7 11h10v3a5 5 0 0 1-5 5h0a5 5 0 0 1-5-5v-3z" />
-            <path d="M17 12h1.5a2 2 0 0 1 0 4H17" />
-            <path d="M12 8.5c-1.6-1.9-4.2-1.5-5 .4-.6 1.5.2 3 1.8 4 1.5.9 3.2 1.5 3.2 1.5s1.7-.6 3.2-1.5c1.6-1 2.4-2.5 1.8-4-.8-1.9-3.4-2.3-5-.4z" />
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+            <path d="M4 9.5h11v3.5a5.5 5.5 0 0 1-11 0V9.5z" fill="currentColor" />
+            <path d="M15 10.5h1.7a2.3 2.3 0 0 1 0 4.6H15z" fill="currentColor" />
+            <path
+              d="M12 14.9s-2.7-1.8-3.2-3.3c-.4-1.2.6-2.3 1.8-2.1.5.1 1 .3 1.4.8.4-.5.9-.7 1.4-.8 1.2-.2 2.2.9 1.8 2.1-.5 1.5-3.2 3.3-3.2 3.3z"
+              fill="#29abe0"
+            />
           </svg>
         </a>
       </div>
