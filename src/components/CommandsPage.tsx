@@ -6,6 +6,7 @@ import type { Command, DogProfile, Entry } from '../types';
 import { formatDateShort } from '../utils';
 import CommandModal from './CommandModal';
 import { PawIcon } from './PawIcon';
+import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
 
 const IDLE_DAYS = 30;
 
@@ -191,19 +192,13 @@ export default function CommandsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"
-                      onClick={() => setEditing(c)}
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      className="tap-target text-xs font-medium text-stone-400 hover:text-red-600"
-                      onClick={() => handleDelete(c)}
-                    >
-                      Löschen
-                    </button>
+                  <div className="-mr-2 -mt-2 flex shrink-0">
+                    <IconButton label="Bearbeiten" onClick={() => setEditing(c)}>
+                      <PencilIcon className="h-5 w-5" />
+                    </IconButton>
+                    <IconButton label="Löschen" danger onClick={() => handleDelete(c)}>
+                      <TrashIcon className="h-5 w-5" />
+                    </IconButton>
                   </div>
                 </div>
                 {s && s.count > 0 ? (

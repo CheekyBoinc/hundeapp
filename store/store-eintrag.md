@@ -98,6 +98,13 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.2.3
+
+<de-DE>
+Rasse als Auswahlliste mit über 70 Rassen, gerundete Richtwerte beim Gewicht,
+Kot-, Tierarzt- und Impf-Einträge im Feldbuch-Stil mit Datumsmarke.
+</de-DE>
+
 ## Versionshinweise für Release 1.2.2
 
 (identisch mit 1.2.1; neuer Versionscode, weil 4 bereits hochgeladen war)

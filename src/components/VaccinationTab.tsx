@@ -4,6 +4,8 @@ import { useLiveReload } from '../hooks';
 import type { Vaccination } from '../types';
 import { formatDateShort } from '../utils';
 import VaccinationModal from './VaccinationModal';
+import DateStamp from './DateStamp';
+import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
 
 interface Props {
   dogId: string;
@@ -87,39 +89,41 @@ export default function VaccinationTab({ dogId }: Props) {
           {[...entries].reverse().map((e) => {
             const st = dueState(e.nextDue);
             return (
-              <div
+              <article
                 key={e.id}
-                className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
+                className="flex gap-3 rounded-2xl border border-stone-200 bg-white p-3.5 shadow-sm"
               >
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="font-semibold">{e.name}</span>
-                  <div className="flex items-center gap-2">
+                <DateStamp date={e.date} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 truncate text-base font-bold leading-tight tracking-tight">
+                      {e.name}
+                    </p>
+                    <span className="-mr-2 -mt-2 flex shrink-0 items-center gap-1">
+                      <IconButton label="Bearbeiten" onClick={() => setEditing(e)}>
+                        <PencilIcon className="h-5 w-5" />
+                      </IconButton>
+                      <IconButton label="Löschen" danger onClick={() => handleDelete(e)}>
+                        <TrashIcon className="h-5 w-5" />
+                      </IconButton>
+                    </span>
+                  </div>
+                  <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
+                    <span>
+                      {e.nextDue
+                        ? `Nächste Fälligkeit ${formatDateShort(e.nextDue)}`
+                        : 'Keine Fälligkeit hinterlegt'}
+                    </span>
                     {st === 'overdue' && (
                       <span className="chip bg-red-100 text-red-800">Überfällig</span>
                     )}
                     {st === 'soon' && (
                       <span className="chip bg-amber-100 text-amber-800">Fällig bald</span>
                     )}
-                    <button
-                      className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"
-                      onClick={() => setEditing(e)}
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      className="tap-target text-xs font-medium text-stone-400 hover:text-red-600"
-                      onClick={() => handleDelete(e)}
-                    >
-                      Löschen
-                    </button>
-                  </div>
+                  </p>
+                  {e.note && <p className="prose-serif mt-1.5 text-sm text-stone-700">{e.note}</p>}
                 </div>
-                <p className="text-sm text-stone-600">
-                  Geimpft: {formatDateShort(e.date)}
-                  {e.nextDue && ` · Fällig: ${formatDateShort(e.nextDue)}`}
-                </p>
-                {e.note && <p className="mt-1 text-sm text-stone-500">{e.note}</p>}
-              </div>
+              </article>
             );
           })}
         </div>

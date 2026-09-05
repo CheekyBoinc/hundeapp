@@ -5,6 +5,8 @@ import type { VetVisit } from '../types';
 import { formatDateShort } from '../utils';
 import Modal from './Modal';
 import VetModal from './VetModal';
+import DateStamp from './DateStamp';
+import { ChevronRightIcon } from './NavIcons';
 
 interface Props {
   dogId: string;
@@ -83,20 +85,39 @@ export default function VetTab({ dogId }: Props) {
       ) : (
         <div className="space-y-2">
           {[...entries].reverse().map((e) => (
-            <div
+            <article
               key={e.id}
-              className="cursor-pointer rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
+              className="flex cursor-pointer gap-3 rounded-2xl border border-stone-200 bg-white p-3.5 shadow-sm"
               onClick={() => setDetail(e)}
             >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="font-semibold">{formatDateShort(e.date)}</span>
-                {e.clinic && <span className="badge">{e.clinic}</span>}
+              <DateStamp date={e.date} size="sm" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-bold leading-tight tracking-tight">
+                      {e.reason ?? 'Tierarztbesuch'}
+                    </p>
+                    {e.clinic && <p className="text-xs text-stone-500">{e.clinic}</p>}
+                  </div>
+                  <ChevronRightIcon className="h-4 w-4 shrink-0 text-stone-400" />
+                </div>
+                {e.diagnosis && (
+                  <p className="prose-serif mt-1.5 line-clamp-2 text-sm text-stone-700">
+                    {e.diagnosis}
+                  </p>
+                )}
+                {e.followUp && (
+                  <p
+                    className={`mt-1.5 text-xs font-medium ${
+                      isOverdue(e.followUp) ? 'text-red-700' : 'text-stone-500'
+                    }`}
+                  >
+                    Folgetermin {formatDateShort(e.followUp)}
+                    {isOverdue(e.followUp) && ' · überfällig'}
+                  </p>
+                )}
               </div>
-              {e.reason && <p className="text-sm text-stone-700">{e.reason}</p>}
-              {isOverdue(e.followUp) && (
-                <p className="mt-1 text-xs font-medium text-amber-700">Folgetermin überfällig</p>
-              )}
-            </div>
+            </article>
           ))}
         </div>
       )}

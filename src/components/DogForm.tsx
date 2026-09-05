@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { saveDogProfile } from '../api';
 import type { DogProfile } from '../types';
 import Modal from './Modal';
+import { BREED_NAMES } from '../breeds';
+
+const OTHER = '__andere__';
 
 interface Props {
   dog: DogProfile | null;
@@ -12,6 +15,11 @@ interface Props {
 export default function DogForm({ dog, onClose, onSaved }: Props) {
   const [name, setName] = useState(dog?.name ?? '');
   const [rasse, setRasse] = useState(dog?.rasse ?? '');
+  // Auswahlliste: bekannte Rasse, „Andere" mit Freitext, oder leer.
+  const [rasseWahl, setRasseWahl] = useState<string>(() => {
+    if (!dog?.rasse) return '';
+    return BREED_NAMES.includes(dog.rasse) ? dog.rasse : OTHER;
+  });
   const [geburtsdatum, setGeburtsdatum] = useState(dog?.geburtsdatum ?? '');
   const [geschlecht, setGeschlecht] = useState<'w' | 'm' | ''>(dog?.geschlecht ?? '');
   const [chipNr, setChipNr] = useState(dog?.chipNr ?? '');
@@ -72,12 +80,32 @@ export default function DogForm({ dog, onClose, onSaved }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Rasse</label>
-            <input
+            <select
               className="input"
-              placeholder="z. B. Australian Shepherd"
-              value={rasse}
-              onChange={(ev) => setRasse(ev.target.value)}
-            />
+              value={rasseWahl}
+              onChange={(ev) => {
+                const v = ev.target.value;
+                setRasseWahl(v);
+                setRasse(v === OTHER ? '' : v);
+              }}
+            >
+              <option value="">Bitte wählen</option>
+              {BREED_NAMES.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+              <option value={OTHER}>Andere Rasse …</option>
+            </select>
+            {rasseWahl === OTHER && (
+              <input
+                className="input mt-2"
+                placeholder="Rasse eingeben"
+                autoFocus
+                value={rasse}
+                onChange={(ev) => setRasse(ev.target.value)}
+              />
+            )}
           </div>
           <div>
             <label className="label">Geburtsdatum</label>
