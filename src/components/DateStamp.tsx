@@ -13,7 +13,7 @@ export default function DateStamp({ date, size = 'md' }: Props) {
   const md = size === 'md';
   return (
     <div
-      className={`flex shrink-0 flex-col items-center justify-center border-r border-dashed border-accent-mid/60 pr-3 text-center ${
+      className={`flex shrink-0 flex-col items-center justify-center self-start border-r border-dashed border-accent-mid/60 py-1 pr-3 text-center ${
         md ? 'w-14' : 'w-12'
       }`}
       aria-label={`${weekday} ${day}. ${month}`}

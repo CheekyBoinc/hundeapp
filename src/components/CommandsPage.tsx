@@ -18,10 +18,10 @@ function MasteryDots({ level }: { level: 0 | 1 | 2 | 3 }) {
         ? 'bg-stone-100 text-stone-500'
         : 'bg-accent-soft text-accent-dark';
   return (
-    <span className={`chip inline-flex items-center gap-1.5 ${tone}`}>
-      <span className="flex items-center gap-0.5" aria-hidden="true">
+    <span className={`chip inline-flex items-center gap-2 py-1 ${tone}`}>
+      <span className="flex items-center gap-1" aria-hidden="true">
         {[1, 2, 3].map((n) => (
-          <PawIcon key={n} className={`h-3 w-3 ${n <= level ? '' : 'opacity-25'}`} />
+          <PawIcon key={n} className={`h-4 w-4 ${n <= level ? '' : 'opacity-25'}`} />
         ))}
       </span>
       {MASTERY_LABEL[level]}
