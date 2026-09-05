@@ -129,3 +129,24 @@ das Web-Projekt und das signierte Bundle und legt es unter `store/` ab. Danach
 die Änderung an `build.gradle` committen und das Bundle in der Play Console
 hochladen. Icons und Splash-Screens erzeugt `npm run assets` aus dem
 Pfoten-Icon.
+
+## iOS-App (App Store)
+
+Dieselbe Capacitor-Basis wie bei Android. Voraussetzung: Xcode aus dem Mac
+App Store, einmal geöffnet (Lizenz und Komponenten bestätigt) und als
+Kommandozeilen-Xcode gesetzt:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+```bash
+npm run ios     # Web-Build, nach ios/ kopieren, Xcode öffnen
+```
+
+Version und Build-Nummer stehen in Xcode unter „App → General" (Marketing
+Version, Build) bzw. in `ios/App/App.xcodeproj/project.pbxproj`. Für TestFlight
+und App Store in Xcode „Product → Archive" und über den Organizer hochladen;
+Signatur und Profile verwaltet Xcode automatisch, sobald die Apple-ID unter
+„Settings → Accounts" hinterlegt ist. Das Paket nutzt Swift Package Manager,
+CocoaPods wird nicht benötigt.
