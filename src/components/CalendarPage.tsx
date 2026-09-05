@@ -3,6 +3,7 @@ import { fetchAllVaccinations, fetchAllVets, fetchCommands, fetchDogs, fetchEntr
 import { formatDaysLeft, upcomingItems } from '../upcoming';
 import { todayLocal } from '../utils';
 import { ChevronRightIcon } from './NavIcons';
+import { PawIcon } from './PawIcon';
 import { useLiveReload } from '../hooks';
 import type { Command, DogProfile, Entry, Vaccination, VetVisit } from '../types';
 import { formatDateShort } from '../utils';
@@ -141,25 +142,25 @@ export default function CalendarPage() {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold">
+        <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
           {MONTHS[month.getMonth()]} {month.getFullYear()}
         </h2>
         <div className="flex items-center gap-1">
           <button
-            className="btn-secondary px-2.5 py-1.5 text-sm"
+            className="btn-secondary min-w-11 px-3 py-1.5 text-sm"
             onClick={() => setMonth(addMonths(month, -1))}
             aria-label="Vorheriger Monat"
           >
             ‹
           </button>
           <button
-            className="btn-secondary px-2.5 py-1.5 text-sm"
+            className="btn-secondary min-w-11 px-3 py-1.5 text-sm"
             onClick={() => setMonth(startOfMonth(new Date()))}
           >
             Heute
           </button>
           <button
-            className="btn-secondary px-2.5 py-1.5 text-sm"
+            className="btn-secondary min-w-11 px-3 py-1.5 text-sm"
             onClick={() => setMonth(addMonths(month, 1))}
             aria-label="Nächster Monat"
           >
@@ -209,8 +210,8 @@ export default function CalendarPage() {
                   >
                     <span>{cell.dayOfMonth}</span>
                     {hasEntries && (
-                      <span
-                        className={`mt-0.5 h-1.5 w-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-accent/60'}`}
+                      <PawIcon
+                        className={`mt-0.5 h-2.5 w-2.5 ${isToday ? 'text-white' : 'text-accent'}`}
                       />
                     )}
                   </button>
@@ -329,7 +330,7 @@ export default function CalendarPage() {
                         {e.commands.length > 0 && (
                           <div className="mt-1 flex flex-wrap gap-1">
                             {e.commands.map((c) => (
-                              <span key={c.id} className="chip bg-accent-soft text-accent-dark">
+                              <span key={c.id} className="stamp">
                                 {c.name}
                               </span>
                             ))}

@@ -48,3 +48,14 @@ export function formatAge(geburtsdatum: string | null, today = new Date()): stri
   if (rest === 0) return y;
   return `${y} ${m}`;
 }
+
+// Bausteine für die Datumsmarke: "Sa", "29", "Aug".
+export function dateParts(date: string): { weekday: string; day: string; month: string } {
+  const d = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return { weekday: '', day: '–', month: '' };
+  return {
+    weekday: d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', ''),
+    day: String(d.getDate()),
+    month: d.toLocaleDateString('de-DE', { month: 'short' }).replace('.', '')
+  };
+}

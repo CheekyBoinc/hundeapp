@@ -70,7 +70,7 @@ export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props
           <p className="label">Geübte Kommandos</p>
           <div className="flex flex-wrap gap-1.5">
             {entry.commands.map((c) => (
-              <span key={c.id} className="chip bg-accent-soft text-accent-dark">
+              <span key={c.id} className="stamp">
                 {c.name}
               </span>
             ))}
@@ -88,13 +88,9 @@ export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props
         <Block label="Was haben wir gemacht?" text={entry.was_gemacht} />
         <Block label="Übungsaufgaben" text={entry.uebungsaufgaben} />
         {entry.tipps ? (
-          <div className="rounded-xl bg-accent-tint px-3.5 py-3">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent-strong">
-              Tipps / Erklärungen der Trainerin
-            </p>
-            <p className="prose-serif whitespace-pre-wrap text-sm leading-relaxed text-accent-dark">
-              {entry.tipps}
-            </p>
+          <div>
+            <p className="label">Tipps / Erklärungen der Trainerin</p>
+            <p className="margin-note whitespace-pre-wrap">{entry.tipps}</p>
           </div>
         ) : (
           <Block label="Tipps / Erklärungen der Trainerin" text={null} />
@@ -102,10 +98,10 @@ export default function EntryDetail({ entry, onClose, onEdit, onChanged }: Props
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 text-sm font-medium">
+        <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium">
           <input
             type="checkbox"
-            className="h-5 w-5 accent-accent"
+            className="h-6 w-6 accent-accent"
             checked={entry.erledigt}
             disabled={busy}
             onChange={(ev) => handleToggle(ev.target.checked)}

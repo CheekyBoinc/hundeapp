@@ -130,7 +130,7 @@ export default function DogsPage({ activeDogId, onActiveDogChange }: Props) {
                 <button
                   key={id}
                   onClick={() => setSubTab(id)}
-                  className={`shrink-0 rounded-xl px-3 py-1.5 text-sm font-semibold ${
+                  className={`shrink-0 rounded-xl px-3.5 py-2.5 text-sm font-semibold ${
                     subTab === id
                       ? 'bg-accent-soft text-accent-dark'
                       : 'text-stone-500 hover:bg-stone-100'
