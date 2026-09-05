@@ -7,7 +7,11 @@ import '@fontsource-variable/newsreader';
 import App from './App';
 import { getConfig, initConfig } from './github';
 import { seedDemoIfEmpty } from './localStore';
+import { loadSettings } from './settings';
+import { applyTheme } from './theme';
 import './styles.css';
+
+applyTheme(loadSettings().theme);
 
 // In der nativen App liegen alle Dateien bereits im Paket; der Service Worker
 // würde dort nur veraltete Stände zwischenspeichern.

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Settings } from '../settings';
+import type { ThemeSetting } from '../theme';
 import { exportBackup, formatCounts, importBackup, readBackupFile } from '../backup';
 import { Capacitor } from '@capacitor/core';
 import Modal from './Modal';
@@ -48,6 +49,54 @@ function Toggle({
         />
       </span>
     </button>
+  );
+}
+
+const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Hell' },
+  { value: 'dark', label: 'Dunkel' }
+];
+
+function ThemePicker({
+  value,
+  onChange
+}: {
+  value: ThemeSetting;
+  onChange: (t: ThemeSetting) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+      <span className="block text-sm font-medium text-stone-800">Design</span>
+      <span className="mt-0.5 block text-xs text-stone-500">
+        „System" folgt der Einstellung deines Handys.
+      </span>
+      <div
+        role="radiogroup"
+        aria-label="Design"
+        className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-stone-100 p-1"
+      >
+        {THEME_OPTIONS.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(o.value)}
+              className={`min-h-10 rounded-lg text-sm font-semibold transition-colors ${
+                active
+                  ? 'bg-white text-accent-dark shadow-sm'
+                  : 'text-stone-600 hover:text-stone-800'
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -124,6 +173,10 @@ export default function SettingsModal({
     <Modal title="Einstellungen" onClose={onClose}>
       <div className="space-y-5">
         <Section title="Darstellung">
+          <ThemePicker
+            value={settings.theme}
+            onChange={(t) => onChange({ ...settings, theme: t })}
+          />
           <Toggle
             label="Buttons oben anzeigen"
             hint="Einträge / Kommandos oben statt unten"

@@ -12,6 +12,7 @@ import {
   setConfig
 } from './github';
 import { loadSettings, saveSettings, type Settings } from './settings';
+import { applyTheme } from './theme';
 import { discardUntouchedDemoData } from './localStore';
 import { fetchDogs } from './api';
 import { useLiveReload } from './hooks';
@@ -58,6 +59,7 @@ export default function App() {
   const handleSettings = useCallback((s: Settings) => {
     setSettings(s);
     saveSettings(s);
+    applyTheme(s.theme);
   }, []);
 
   // Hunde für die Kopfzeile; der aktive Hund wird in den Einstellungen gemerkt.

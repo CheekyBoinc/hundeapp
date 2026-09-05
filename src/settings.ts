@@ -1,8 +1,12 @@
 const KEY = 'hundeapp.settings';
 
+import type { ThemeSetting } from './theme';
+
 export interface Settings {
   navTop: boolean;
   headerText: boolean;
+  // Hell, dunkel oder wie das System.
+  theme: ThemeSetting;
   // Hund, der in der Kopfzeile steht und auf der Hunde-Seite vorausgewählt ist.
   activeDogId: string | null;
 }
@@ -10,6 +14,7 @@ export interface Settings {
 const DEFAULTS: Settings = {
   navTop: false,
   headerText: true,
+  theme: 'system',
   activeDogId: null
 };
 

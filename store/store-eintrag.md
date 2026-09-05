@@ -101,9 +101,9 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 ## Versionshinweise für Release 1.2.1
 
 <de-DE>
-Neues App-Symbol: die Hundemarke. Feinschliff am Feldbuch-Look: ruhigere
-Eintragskarten, besser lesbare Pfoten beim Übungsstand, mehr Tiefe im
-Dunkelmodus.
+Neues App-Symbol: die Hundemarke. Design wählbar: System, Hell oder Dunkel.
+Feinschliff am Feldbuch-Look: ruhigere Eintragskarten, besser lesbare Pfoten
+beim Übungsstand, mehr Tiefe im Dunkelmodus.
 </de-DE>
 
 ## Versionshinweise für Release 1.2
