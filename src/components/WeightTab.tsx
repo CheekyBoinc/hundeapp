@@ -13,6 +13,7 @@ import { findGrowth, rangeAt } from '../growth';
 import type { DogProfile, WeightEntry } from '../types';
 import { formatDateShort, formatKg } from '../utils';
 import WeightModal from './WeightModal';
+import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
 
 interface Props {
   dog: DogProfile;
@@ -141,15 +142,10 @@ const STATUS_CHIP_CLASS: Record<WeightStatus, string> = {
   over: 'bg-red-100 text-red-800'
 };
 
-function statusChip(weightKg: number, range: BreedRange | null, growth = false) {
+function statusChip(weightKg: number, range: BreedRange | null) {
   const status = classifyWeight(weightKg, range);
   if (!status || !range) return null;
-  const label = growth ? `${STATUS_LABEL[status]} im Wachstumsbereich` : STATUS_LABEL[status];
-  return (
-    <span className={`chip ${STATUS_CHIP_CLASS[status]}`}>
-      {label} ({formatRange(range)})
-    </span>
-  );
+  return <span className={`chip ${STATUS_CHIP_CLASS[status]}`}>{STATUS_LABEL[status]}</span>;
 }
 
 // Kompakte Status-Icons für die Liste: roter Pfeil hoch = Übergewicht,
@@ -254,10 +250,12 @@ export default function WeightTab({ dog }: Props) {
       <div className="mb-3 flex items-center gap-2">
         <div className="flex-1">
           {latest && <p className="text-lg font-bold">{formatKg(latest.weightKg)}</p>}
-          {latest && statusChip(latest.weightKg, latestRange.range, latestRange.growth)}
-          {latest && latestRange.growth && latestAgeMonths !== null && (
-            <p className="text-xs text-stone-500">
-              Wachstumsbereich (Alter: {latestAgeMonths} Monate)
+          {latest && statusChip(latest.weightKg, latestRange.range)}
+          {latest && latestRange.range && (
+            <p className="mt-1 text-xs text-stone-500">
+              {latestRange.growth && latestAgeMonths !== null
+                ? `Richtwert mit ${latestAgeMonths} Monaten: ${formatRange(latestRange.range)}`
+                : `Richtwert für die Rasse: ${formatRange(latestRange.range)}`}
             </p>
           )}
           {diff !== null && (
@@ -309,18 +307,12 @@ export default function WeightTab({ dog }: Props) {
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {statusIcon(e.weightKg, rangeForDate(e.date).range)}
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
-                  <button
-                    className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"
-                    onClick={() => setEditing(e)}
-                  >
-                    Bearbeiten
-                  </button>
-                  <button
-                    className="tap-target text-xs font-medium text-stone-400 hover:text-red-600"
-                    onClick={() => handleDelete(e)}
-                  >
-                    Löschen
-                  </button>
+                  <IconButton label="Bearbeiten" onClick={() => setEditing(e)}>
+                    <PencilIcon className="h-5 w-5" />
+                  </IconButton>
+                  <IconButton label="Löschen" danger onClick={() => handleDelete(e)}>
+                    <TrashIcon className="h-5 w-5" />
+                  </IconButton>
                 </div>
               </div>
             ))}

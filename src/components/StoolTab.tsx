@@ -4,6 +4,8 @@ import { useLiveReload } from '../hooks';
 import type { StoolEntry } from '../types';
 import { formatDateShort } from '../utils';
 import StoolModal from './StoolModal';
+import DateStamp from './DateStamp';
+import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
 
 interface Props {
   dogId: string;
@@ -87,45 +89,49 @@ export default function StoolTab({ dogId }: Props) {
         </div>
       ) : (
         <div className="space-y-2">
-          {[...entries].reverse().map((e) => (
-            <div
-              key={e.id}
-              className={`rounded-2xl border bg-white p-4 shadow-sm ${e.abnormal ? 'border-red-200' : 'border-stone-200'}`}
-            >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="font-semibold">{formatDateShort(e.date)}</span>
-                <div className="flex items-center gap-2">
-                  {e.abnormal && <span className="chip bg-red-100 text-red-800">Auffällig</span>}
-                  <button
-                    className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"
-                    onClick={() => setEditing(e)}
-                  >
-                    Bearbeiten
-                  </button>
-                  <button
-                    className="tap-target text-xs font-medium text-stone-400 hover:text-red-600"
-                    onClick={() => handleDelete(e)}
-                  >
-                    Löschen
-                  </button>
+          {[...entries].reverse().map((e) => {
+            const title = e.consistency > 0 ? BristolLabel(e.consistency) : 'Kot-Eintrag';
+            return (
+              <article
+                key={e.id}
+                className={`flex gap-3 rounded-2xl border bg-white p-3.5 shadow-sm ${
+                  e.abnormal ? 'border-red-200' : 'border-stone-200'
+                }`}
+              >
+                <DateStamp date={e.date} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 truncate text-base font-bold leading-tight tracking-tight">
+                      {title.charAt(0).toUpperCase() + title.slice(1)}
+                    </p>
+                    <span className="-mr-2 -mt-2 flex shrink-0 items-center gap-1">
+                      <IconButton label="Bearbeiten" onClick={() => setEditing(e)}>
+                        <PencilIcon className="h-5 w-5" />
+                      </IconButton>
+                      <IconButton label="Löschen" danger onClick={() => handleDelete(e)}>
+                        <TrashIcon className="h-5 w-5" />
+                      </IconButton>
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {e.abnormal && <span className="chip bg-red-100 text-red-800">Auffällig</span>}
+                    {e.consistency > 0 && (
+                      <span className="chip bg-stone-100 text-stone-700">
+                        Bristol {e.consistency}
+                      </span>
+                    )}
+                    {e.color && (
+                      <span className="chip bg-stone-100 text-stone-700">Farbe: {e.color}</span>
+                    )}
+                    {e.amount && (
+                      <span className="chip bg-stone-100 text-stone-700">Menge: {e.amount}</span>
+                    )}
+                  </div>
+                  {e.note && <p className="prose-serif mt-2 text-sm text-stone-700">{e.note}</p>}
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {e.consistency > 0 && (
-                  <span className="chip bg-stone-100 text-stone-700">
-                    Konsistenz {e.consistency}: {BristolLabel(e.consistency)}
-                  </span>
-                )}
-                {e.color && (
-                  <span className="chip bg-stone-100 text-stone-700">Farbe: {e.color}</span>
-                )}
-                {e.amount && (
-                  <span className="chip bg-stone-100 text-stone-700">Menge: {e.amount}</span>
-                )}
-              </div>
-              {e.note && <p className="mt-2 text-sm text-stone-600">{e.note}</p>}
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
 

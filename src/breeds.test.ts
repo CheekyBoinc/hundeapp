@@ -55,6 +55,12 @@ describe('formatRange', () => {
   it('formatiert die Spanne als kg-Bereich', () => {
     expect(formatRange({ minKg: 18, maxKg: 27 })).toBe('18–27 kg');
   });
+
+  it('rundet interpolierte Werte auf eine Nachkommastelle', () => {
+    expect(formatRange({ minKg: 23.666666666666668, maxKg: 35.83333333333336 })).toBe(
+      '23,7–35,8 kg'
+    );
+  });
 });
 
 describe('STATUS_LABEL', () => {

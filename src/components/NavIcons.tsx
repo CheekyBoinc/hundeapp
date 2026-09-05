@@ -81,3 +81,51 @@ export function CoffeeIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function PencilIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z" />
+      <path d="M13.5 6.5l3 3" />
+    </svg>
+  );
+}
+
+export function TrashIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 7h16M10 11v6M14 11v6" />
+      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+// Kompakter Icon-Button für Bearbeiten/Löschen in Listen (44 px Trefferfläche).
+export function IconButton({
+  label,
+  onClick,
+  danger = false,
+  children
+}: {
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 ${
+        danger
+          ? 'hover:bg-red-50 hover:text-red-600'
+          : 'hover:bg-stone-100 hover:text-accent-strong'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
