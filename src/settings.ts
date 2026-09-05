@@ -3,11 +3,14 @@ const KEY = 'hundeapp.settings';
 export interface Settings {
   navTop: boolean;
   headerText: boolean;
+  // Hund, der in der Kopfzeile steht und auf der Hunde-Seite vorausgewählt ist.
+  activeDogId: string | null;
 }
 
 const DEFAULTS: Settings = {
   navTop: false,
-  headerText: true
+  headerText: true,
+  activeDogId: null
 };
 
 export function loadSettings(): Settings {

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchCommands, fetchEntries, fetchDogs } from '../api';
+import { fetchAllVaccinations, fetchAllVets, fetchCommands, fetchDogs, fetchEntries } from '../api';
+import { formatDaysLeft, upcomingItems } from '../upcoming';
+import { todayLocal } from '../utils';
+import { ChevronRightIcon } from './NavIcons';
 import { useLiveReload } from '../hooks';
-import type { Command, DogProfile, Entry } from '../types';
+import type { Command, DogProfile, Entry, Vaccination, VetVisit } from '../types';
 import { formatDateShort } from '../utils';
 import EntryDetail from './EntryDetail';
 import EntryModal from './EntryModal';
@@ -60,6 +63,8 @@ export default function CalendarPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dogs, setDogs] = useState<DogProfile[]>([]);
   const [commands, setCommands] = useState<Command[]>([]);
+  const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
+  const [vets, setVets] = useState<VetVisit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -69,10 +74,18 @@ export default function CalendarPage() {
 
   const load = useCallback(async () => {
     try {
-      const [e, d, c] = await Promise.all([fetchEntries(), fetchDogs(), fetchCommands()]);
+      const [e, d, c, vax, vt] = await Promise.all([
+        fetchEntries(),
+        fetchDogs(),
+        fetchCommands(),
+        fetchAllVaccinations(),
+        fetchAllVets()
+      ]);
       setEntries(e);
       setDogs(d);
       setCommands(c);
+      setVaccinations(vax);
+      setVets(vt);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
@@ -111,10 +124,19 @@ export default function CalendarPage() {
   const dayEntries = selectedDate ? (entriesByDate.get(selectedDate) ?? []) : [];
   const dayLabel = selectedDate ? formatDateShort(selectedDate) : '';
 
-  const todayString = (() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  })();
+  const todayString = todayLocal();
+
+  const upcoming = useMemo(
+    () => upcomingItems(vaccinations, vets, dogs, todayString),
+    [vaccinations, vets, dogs, todayString]
+  );
+
+  // Einträge des angezeigten Monats, neueste zuerst (fetchEntries sortiert so).
+  const monthPrefix = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+  const monthEntries = useMemo(
+    () => entries.filter((e) => e.date.startsWith(monthPrefix)),
+    [entries, monthPrefix]
+  );
 
   return (
     <div>
@@ -196,6 +218,85 @@ export default function CalendarPage() {
               })}
             </div>
           </div>
+
+          {upcoming.length > 0 && (
+            <section className="mt-4">
+              <h3 className="label">Demnächst</h3>
+              <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+                {upcoming.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center gap-3 border-b border-stone-100 px-4 py-2.5 last:border-0"
+                  >
+                    <span
+                      className={`chip shrink-0 ${
+                        u.daysLeft < 0
+                          ? 'bg-red-100 text-red-800'
+                          : u.daysLeft <= 7
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-stone-100 text-stone-600'
+                      }`}
+                    >
+                      {formatDaysLeft(u.daysLeft)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-stone-800">
+                        {u.title}
+                      </span>
+                      <span className="block text-xs text-stone-500">
+                        {formatDateShort(u.date)}
+                        {u.dogName && ` · ${u.dogName}`}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="mt-4">
+            <h3 className="label">
+              Einträge im {MONTHS[month.getMonth()]}
+              {monthEntries.length > 0 && ` (${monthEntries.length})`}
+            </h3>
+            {monthEntries.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-stone-300 bg-white px-4 py-6 text-center text-sm text-stone-500">
+                Keine Einträge in diesem Monat. Tage mit Einträgen werden im Kalender markiert.
+              </p>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+                {monthEntries.map((e) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => setDetailId(e.id)}
+                    className="flex w-full items-center gap-3 border-b border-stone-100 px-4 py-2.5 text-left last:border-0 hover:bg-accent-tint/60"
+                  >
+                    <span className="w-20 shrink-0 text-sm font-semibold">
+                      {formatDateShort(e.date).slice(0, 6)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-stone-800">
+                        {e.ort ?? 'Ohne Ort'}
+                        {e.dogId && byDog.has(e.dogId) && ` · ${byDog.get(e.dogId)}`}
+                      </span>
+                      {e.commands.length > 0 && (
+                        <span className="block truncate text-xs text-stone-500">
+                          {e.commands.map((c) => c.name).join(', ')}
+                        </span>
+                      )}
+                    </span>
+                    {e.erledigt && (
+                      <span className="chip shrink-0 bg-emerald-100 text-emerald-800">
+                        Erledigt
+                      </span>
+                    )}
+                    <ChevronRightIcon className="h-4 w-4 shrink-0 text-stone-400" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
 
           {selectedDate && (
             <div className="mt-3">

@@ -27,3 +27,24 @@ export function formatDateShort(date: string): string {
 export function formatKg(value: number): string {
   return value.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' kg';
 }
+
+// Alter als lesbarer Text: "2 Jahre 3 Monate", "7 Monate", "3 Wochen".
+export function formatAge(geburtsdatum: string | null, today = new Date()): string | null {
+  if (!geburtsdatum) return null;
+  const birth = new Date(`${geburtsdatum}T00:00:00`);
+  if (Number.isNaN(birth.getTime()) || birth > today) return null;
+  let months =
+    (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+  if (today.getDate() < birth.getDate()) months -= 1;
+  if (months < 1) {
+    const weeks = Math.floor((today.getTime() - birth.getTime()) / (7 * 86400000));
+    return weeks <= 1 ? '1 Woche' : `${weeks} Wochen`;
+  }
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  const y = years === 1 ? '1 Jahr' : `${years} Jahre`;
+  const m = rest === 1 ? '1 Monat' : `${rest} Monate`;
+  if (years === 0) return m;
+  if (rest === 0) return y;
+  return `${y} ${m}`;
+}

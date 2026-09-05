@@ -504,6 +504,22 @@ export function discardUntouchedDemoData(): void {
   writeJson(COMMANDS_KEY, []);
 }
 
+// Sind ausschließlich Demodaten vorhanden? (Für den Hinweis mit „Alle entfernen“.)
+export function hasOnlyDemoData(): boolean {
+  const entries = readJson<Entry[]>(ENTRIES_KEY, []);
+  const commands = readJson<Command[]>(COMMANDS_KEY, []);
+  const all = [...entries, ...commands];
+  return all.length > 0 && all.every((x) => x.id.startsWith('demo-'));
+}
+
+export function fetchAllVaccinations(): Vaccination[] {
+  return readJson<Vaccination[]>(VACCINATIONS_KEY, []);
+}
+
+export function fetchAllVets(): VetVisit[] {
+  return readJson<VetVisit[]>(VET_KEY, []);
+}
+
 // Beim ersten Start ohne eingerichtete Synchronisierung aufrufen.
 export function seedDemoIfEmpty(): void {
   if (localStorage.getItem(DEMO_MARKER_KEY)) return;
