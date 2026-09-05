@@ -47,6 +47,9 @@ export default function App() {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'ok' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  // Sync-Text nur kurz einblenden: beim Sync und bei Fehlern offen, nach
+  // Erfolg klappt er nach kurzer Zeit ein und der Punkt rückt nach rechts.
+  const [statusOpen, setStatusOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showDogPicker, setShowDogPicker] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
@@ -94,6 +97,17 @@ export default function App() {
       void handle.then((h) => h.remove());
     };
   }, []);
+
+  useEffect(() => {
+    if (status === 'idle') {
+      setStatusOpen(false);
+      return;
+    }
+    setStatusOpen(true);
+    if (status !== 'ok') return;
+    const timer = setTimeout(() => setStatusOpen(false), 2500);
+    return () => clearTimeout(timer);
+  }, [status, lastSync]);
 
   useEffect(() => {
     const onOnline = () => setOffline(false);
@@ -271,13 +285,20 @@ export default function App() {
           </button>
         )}
         {configured && (
-          <span className="flex items-center gap-1.5">
-            <span className={`h-2.5 w-2.5 rounded-full ${statusDot}`} />
-            <span className="hidden text-xs text-stone-500 min-[420px]:inline">
+          <span className="flex items-center overflow-hidden" aria-live="polite">
+            <span
+              className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors duration-300 ${statusDot} ${
+                status === 'syncing' ? 'animate-pulse' : ''
+              }`}
+            />
+            <span
+              className={`whitespace-nowrap text-xs text-stone-500 transition-all duration-500 ease-out ${
+                statusOpen ? 'ml-1.5 max-w-40 opacity-100' : 'ml-0 max-w-0 opacity-0'
+              }`}
+            >
               {status === 'syncing' && 'Sync…'}
               {status === 'ok' && (lastSync ? `Sync ${lastSync}` : 'Synchron')}
               {status === 'error' && 'Sync-Fehler'}
-              {status === 'idle' && ''}
             </span>
           </span>
         )}
