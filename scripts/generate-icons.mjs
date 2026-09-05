@@ -29,16 +29,16 @@ function chunk(type, data) {
   return out;
 }
 
-function encodePng(size, rgba) {
+function encodePng(width, rgba, height = width) {
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
   ihdr[8] = 8; // bit depth
   ihdr[9] = 6; // color type RGBA
-  const raw = Buffer.alloc((size * 4 + 1) * size);
-  for (let y = 0; y < size; y++) {
-    raw[y * (size * 4 + 1)] = 0; // filter: none
-    rgba.copy(raw, y * (size * 4 + 1) + 1, y * size * 4, (y + 1) * size * 4);
+  const raw = Buffer.alloc((width * 4 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * (width * 4 + 1)] = 0; // filter: none
+    rgba.copy(raw, y * (width * 4 + 1) + 1, y * width * 4, (y + 1) * width * 4);
   }
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
@@ -90,11 +90,11 @@ function inPaw(fx, fy, scale = 1) {
   return false;
 }
 
-function render(size, pixel) {
-  const px = Buffer.alloc(size * size * 4);
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const i = (y * size + x) * 4;
+function render(width, pixel, height = width) {
+  const px = Buffer.alloc(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
       const c = pixel(x + 0.5, y + 0.5);
       if (!c) continue; // transparent
       px[i] = c[0];
@@ -154,3 +154,33 @@ writeFileSync(join(assetsDir, 'icon-background.png'), encodePng(1024, drawSolid(
 writeFileSync(join(assetsDir, 'splash.png'), encodePng(2732, drawSplash(2732, PAGE)));
 writeFileSync(join(assetsDir, 'splash-dark.png'), encodePng(2732, drawSplash(2732, [28, 25, 23])));
 console.log('Capacitor-Quellbilder generiert in', assetsDir);
+
+// Play-Store-Grafiken: Icon 512x512 ohne transparente Ecken (Google rundet
+// selbst) und Feature-Grafik 1024x500 (Pflicht im Store-Eintrag).
+const storeDir = join(__dirname, '..', 'store');
+mkdirSync(storeDir, { recursive: true });
+writeFileSync(
+  join(storeDir, 'icon-512.png'),
+  encodePng(
+    512,
+    render(512, (fx, fy) => (inPaw(fx / 512, fy / 512) ? CREAM : ORANGE))
+  )
+);
+function drawFeature(w, h) {
+  // Orange Fläche, große Pfote leicht links, rechts Platz für Text im Store.
+  const paw = h * 0.78;
+  const ox = w * 0.14;
+  const oy = (h - paw) / 2;
+  return render(
+    w,
+    (fx, fy) => {
+      const lx = (fx - ox) / paw;
+      const ly = (fy - oy) / paw;
+      if (lx >= 0 && lx < 1 && ly >= 0 && ly < 1 && inPaw(lx, ly)) return CREAM;
+      return ORANGE;
+    },
+    h
+  );
+}
+writeFileSync(join(storeDir, 'feature-graphic.png'), encodePng(1024, drawFeature(1024, 500), 500));
+console.log('Store-Grafiken generiert in', storeDir);
