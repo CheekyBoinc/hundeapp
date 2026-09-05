@@ -107,48 +107,47 @@ html {
    Die App nutzt Tailwinds Stone-Palette und eigene Akzent-Tokens. Statt jede
    Klasse anzufassen, werden hier die Farbvariablen selbst umgedeutet: Die
    Utilities (bg-stone-50, text-stone-900, bg-white …) lesen var(--color-*),
-   also reicht ein Satz Überschreibungen. Helle Stufen werden dunkel und
-   umgekehrt, die Akzentfarbe bleibt. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-white: #2a231d;
-    --color-surface: #231d19;
-    --color-stone-50: #171311;
-    --color-stone-100: #2c251f;
-    --color-stone-200: #433930;
-    --color-stone-300: #50453b;
-    --color-stone-400: #8f8072;
-    --color-stone-500: #a99a8b;
-    --color-stone-600: #c4b6a7;
-    --color-stone-700: #d8ccbf;
-    --color-stone-800: #e9e0d5;
-    --color-stone-900: #f6f0e8;
+   also reicht ein Satz Überschreibungen. Aktiviert wird der Block über
+   data-theme="dark" am Wurzelelement, gesetzt in src/theme.ts (Einstellung
+   System/Hell/Dunkel; bei "System" folgt es prefers-color-scheme). */
+:root[data-theme='dark'] {
+  --color-white: #2a231d;
+  --color-surface: #231d19;
+  --color-stone-50: #171311;
+  --color-stone-100: #2c251f;
+  --color-stone-200: #433930;
+  --color-stone-300: #50453b;
+  --color-stone-400: #8f8072;
+  --color-stone-500: #a99a8b;
+  --color-stone-600: #c4b6a7;
+  --color-stone-700: #d8ccbf;
+  --color-stone-800: #e9e0d5;
+  --color-stone-900: #f6f0e8;
 
-    --color-accent-soft: #4a2a14;
-    --color-accent-tint: #2a1d14;
-    --color-accent-dark: #fdba74;
-    --color-accent-ring: #7c3a12;
+  --color-accent-soft: #4a2a14;
+  --color-accent-tint: #2a1d14;
+  --color-accent-dark: #fdba74;
+  --color-accent-ring: #7c3a12;
 
-    --color-emerald-50: #1b2417;
-    --color-emerald-100: #27351f;
-    --color-emerald-500: #8fb27a;
-    --color-emerald-600: #8fb27a;
-    --color-emerald-700: #a9c797;
-    --color-emerald-800: #c6dbb6;
+  --color-emerald-50: #1b2417;
+  --color-emerald-100: #27351f;
+  --color-emerald-500: #8fb27a;
+  --color-emerald-600: #8fb27a;
+  --color-emerald-700: #a9c797;
+  --color-emerald-800: #c6dbb6;
 
-    --color-amber-50: #2c1f08;
-    --color-amber-100: #4a3208;
-    --color-amber-200: #6b4a0c;
-    --color-amber-400: #f59e0b;
-    --color-amber-700: #fcd34d;
-    --color-amber-800: #fde68a;
+  --color-amber-50: #2c1f08;
+  --color-amber-100: #4a3208;
+  --color-amber-200: #6b4a0c;
+  --color-amber-400: #f59e0b;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
 
-    --color-red-50: #2d1212;
-    --color-red-100: #4a1a1a;
-    --color-red-200: #6b2323;
-    --color-red-500: #f87171;
-    --color-red-600: #fca5a5;
-    --color-red-700: #fca5a5;
-    --color-red-800: #fecaca;
-  }
+  --color-red-50: #2d1212;
+  --color-red-100: #4a1a1a;
+  --color-red-200: #6b2323;
+  --color-red-500: #f87171;
+  --color-red-600: #fca5a5;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
 }
