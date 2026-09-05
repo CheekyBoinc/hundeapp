@@ -3,6 +3,7 @@ import { fetchWeights } from '../api';
 import { useLiveReload } from '../hooks';
 import type { DogProfile, WeightEntry } from '../types';
 import { formatAge, formatDateShort, formatKg } from '../utils';
+import DogTag from './DogTag';
 
 interface Props {
   dog: DogProfile;
@@ -52,14 +53,9 @@ export default function DogProfileTab({ dog, onEdit }: Props) {
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <div
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent text-2xl font-bold text-white"
-          aria-hidden="true"
-        >
-          {dog.name.slice(0, 1).toUpperCase()}
-        </div>
+        <DogTag name={dog.name} size={64} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-xl font-bold">{dog.name}</h3>
+          <h3 className="truncate text-2xl font-bold tracking-tight">{dog.name}</h3>
           <p className="truncate text-sm text-stone-500">{subtitle || 'Profil ausfüllen'}</p>
         </div>
         <button className="btn-secondary shrink-0 px-3 py-1.5 text-sm" onClick={onEdit}>

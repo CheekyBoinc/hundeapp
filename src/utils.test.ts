@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAge } from './utils';
+import { dateParts, formatAge } from './utils';
 
 describe('formatAge', () => {
   const today = new Date('2026-09-05T12:00:00');
@@ -12,5 +12,17 @@ describe('formatAge', () => {
   it('liefert null ohne oder mit zukünftigem Datum', () => {
     expect(formatAge(null, today)).toBeNull();
     expect(formatAge('2027-01-01', today)).toBeNull();
+  });
+});
+
+describe('dateParts', () => {
+  it('liefert Wochentag, Tag und Monat kurz', () => {
+    expect(dateParts('2026-08-29')).toEqual({ weekday: 'Sa', day: '29', month: 'Aug' });
+    const m = dateParts('2026-03-01');
+    expect([m.weekday, m.day]).toEqual(['So', '1']);
+    expect(m.month.startsWith('Mär')).toBe(true);
+  });
+  it('ist robust bei kaputtem Datum', () => {
+    expect(dateParts('kaputt').day).toBe('–');
   });
 });

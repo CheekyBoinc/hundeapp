@@ -98,6 +98,15 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.2
+
+<de-DE>
+Neu in 1.2: Frischer Feldbuch-Look mit Datumsmarke, Papierton und Stempeln
+für Kommandos, Trainer-Tipps als Randnotiz, Hundemarke als Profilbild,
+Pfoten für den Übungsstand. Alle Buttons und Felder sind größer und leichter
+zu treffen. Der Sync-Status blendet sich nach dem Abgleich dezent aus.
+</de-DE>
+
 ## Versionshinweise für Release 1.1
 
 <de-DE>

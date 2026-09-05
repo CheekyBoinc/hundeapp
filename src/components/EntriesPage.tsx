@@ -8,6 +8,7 @@ import {
   toggleEntryDone
 } from '../api';
 import { ChevronRightIcon } from './NavIcons';
+import DateStamp from './DateStamp';
 import { useLiveReload } from '../hooks';
 import type { Command, DogProfile, Entry } from '../types';
 import { formatDate, preview } from '../utils';
@@ -134,7 +135,7 @@ export default function EntriesPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-accent-mid/40 bg-accent-tint px-4 py-2.5 text-sm text-accent-dark">
           <span>Das sind Beispiele zum Ausprobieren.</span>
           <button
-            className="shrink-0 font-semibold underline"
+            className="tap-target shrink-0 font-semibold underline"
             onClick={async () => {
               if (!window.confirm('Alle Beispieleinträge und Beispiel-Kommandos entfernen?'))
                 return;
@@ -199,7 +200,7 @@ export default function EntriesPage() {
                       <div className="flex max-w-44 flex-wrap gap-1">
                         {e.commands.length === 0 && <span className="text-stone-400">–</span>}
                         {e.commands.map((c) => (
-                          <span key={c.id} className="chip bg-accent-soft text-accent-dark">
+                          <span key={c.id} className="stamp">
                             {c.name}
                           </span>
                         ))}
@@ -229,42 +230,53 @@ export default function EntriesPage() {
           </div>
 
           <div className="space-y-2.5 md:hidden">
-            {filtered.map((e) => (
-              <div
-                key={e.id}
-                className={`cursor-pointer rounded-2xl border border-stone-200 bg-white p-4 shadow-sm ${
-                  e.erledigt ? 'opacity-70' : ''
-                }`}
-                onClick={() => setDetailId(e.id)}
-              >
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="font-semibold">{formatDate(e.date)}</span>
-                  <span className="flex items-center gap-2">
-                    {e.erledigt && (
-                      <span className="chip bg-emerald-100 text-emerald-800">Erledigt</span>
-                    )}
-                    <ChevronRightIcon className="h-4 w-4 text-stone-400" />
-                  </span>
-                </div>
-                {e.ort && (
-                  <div className="mb-2">
-                    <span className="badge">Ort: {e.ort}</span>
-                  </div>
-                )}
-                {e.commands.length > 0 && (
-                  <div className="mb-2 flex flex-wrap gap-1">
-                    {e.commands.map((c) => (
-                      <span key={c.id} className="chip bg-accent-soft text-accent-dark">
-                        {c.name}
+            {filtered.map((e) => {
+              const dogName = e.dogId ? dogs.find((d) => d.id === e.dogId)?.name : null;
+              return (
+                <article
+                  key={e.id}
+                  className={`flex cursor-pointer gap-3 rounded-2xl border border-stone-200 bg-white p-3.5 shadow-sm ${
+                    e.erledigt ? 'opacity-75' : ''
+                  }`}
+                  onClick={() => setDetailId(e.id)}
+                >
+                  <DateStamp date={e.date} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-bold leading-tight tracking-tight">
+                          {e.ort ?? 'Training'}
+                        </p>
+                        {dogName && <p className="text-xs text-stone-500">{dogName}</p>}
+                      </div>
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        {e.erledigt && (
+                          <span className="chip bg-emerald-100 text-emerald-800">Erledigt</span>
+                        )}
+                        <ChevronRightIcon className="h-4 w-4 text-stone-400" />
                       </span>
-                    ))}
+                    </div>
+                    {e.commands.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {e.commands.map((c) => (
+                          <span key={c.id} className="stamp">
+                            {c.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {e.was_gemacht && (
+                      <p className="prose-serif mt-2 line-clamp-2 text-sm text-stone-700">
+                        {e.was_gemacht}
+                      </p>
+                    )}
+                    {e.tipps && (
+                      <p className="margin-note mt-2 line-clamp-2">{preview(e.tipps, 110)}</p>
+                    )}
                   </div>
-                )}
-                {e.was_gemacht && (
-                  <p className="prose-serif line-clamp-2 text-sm text-stone-600">{e.was_gemacht}</p>
-                )}
-              </div>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </>
       )}

@@ -5,6 +5,7 @@ import { masteryStats, daysSince, masteryLevel, MASTERY_LABEL } from '../mastery
 import type { Command, DogProfile, Entry } from '../types';
 import { formatDateShort } from '../utils';
 import CommandModal from './CommandModal';
+import { PawIcon } from './PawIcon';
 
 const IDLE_DAYS = 30;
 
@@ -20,10 +21,7 @@ function MasteryDots({ level }: { level: 0 | 1 | 2 | 3 }) {
     <span className={`chip inline-flex items-center gap-1.5 ${tone}`}>
       <span className="flex items-center gap-0.5" aria-hidden="true">
         {[1, 2, 3].map((n) => (
-          <span
-            key={n}
-            className={`h-1.5 w-1.5 rounded-full ${n <= level ? 'bg-current' : 'bg-current opacity-25'}`}
-          />
+          <PawIcon key={n} className={`h-3 w-3 ${n <= level ? '' : 'opacity-25'}`} />
         ))}
       </span>
       {MASTERY_LABEL[level]}
@@ -231,12 +229,7 @@ export default function CommandsPage() {
                 {c.beschreibung && (
                   <p className="prose-serif text-sm text-stone-700">{c.beschreibung}</p>
                 )}
-                {c.tipp && (
-                  <p className="prose-serif mt-2 rounded-xl bg-accent-tint px-3 py-2 text-sm text-accent-dark">
-                    <span className="font-semibold">Tipp: </span>
-                    {c.tipp}
-                  </p>
-                )}
+                {c.tipp && <p className="margin-note mt-2">{c.tipp}</p>}
               </div>
             );
           })}

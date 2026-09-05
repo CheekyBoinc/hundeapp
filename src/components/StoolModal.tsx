@@ -130,10 +130,10 @@ export default function StoolModal({ dogId, entry, onClose, onSaved }: Props) {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm font-medium">
+        <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium">
           <input
             type="checkbox"
-            className="h-5 w-5 accent-accent"
+            className="h-6 w-6 accent-accent"
             checked={abnormal}
             onChange={(ev) => setAbnormal(ev.target.checked)}
           />

@@ -241,7 +241,7 @@ export default function App() {
   const canSwitchDog = dogs.length > 1;
 
   const headerInner = (
-    <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+    <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
           <PawIcon className="h-6 w-6" />
@@ -255,7 +255,9 @@ export default function App() {
             title={canSwitchDog ? 'Hund wechseln' : undefined}
           >
             <span className="flex items-center gap-1">
-              <span className="truncate text-lg font-bold leading-tight">{title}</span>
+              <span className="truncate text-xl font-bold leading-tight tracking-tight">
+                {title}
+              </span>
               {canSwitchDog && <ChevronDownIcon className="h-4 w-4 shrink-0 text-stone-400" />}
             </span>
             <span className="block text-xs text-stone-500">Trainingstagebuch</span>
@@ -265,7 +267,7 @@ export default function App() {
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {configured && (
           <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 hover:text-stone-700"
             onClick={handleSyncNow}
             title="Jetzt synchronisieren"
             aria-label="Jetzt synchronisieren"
@@ -303,7 +305,7 @@ export default function App() {
           </span>
         )}
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+          className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 hover:text-stone-700"
           onClick={() => setShowSettings(true)}
           title="Einstellungen"
           aria-label="Einstellungen"

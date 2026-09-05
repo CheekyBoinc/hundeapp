@@ -176,9 +176,11 @@ export default function EntryModal({
                     key={c.id}
                     type="button"
                     onClick={() => toggleCommand(c.id)}
-                    className={
-                      on ? 'chip bg-accent text-white' : 'chip bg-stone-100 text-stone-700'
-                    }
+                    className={`chip-toggle ${
+                      on
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-stone-300 bg-white text-stone-700'
+                    }`}
                   >
                     {c.name}
                   </button>
@@ -233,10 +235,10 @@ export default function EntryModal({
           />
         </div>
 
-        <label className="flex items-center gap-2 text-sm font-medium">
+        <label className="flex min-h-11 items-center gap-2.5 text-sm font-medium">
           <input
             type="checkbox"
-            className="h-5 w-5 accent-accent"
+            className="h-6 w-6 accent-accent"
             checked={erledigt}
             onChange={(ev) => setErledigt(ev.target.checked)}
           />
