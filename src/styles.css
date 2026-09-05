@@ -111,11 +111,11 @@ html {
    umgekehrt, die Akzentfarbe bleibt. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-white: #231d19;
+    --color-white: #2a231d;
     --color-surface: #231d19;
     --color-stone-50: #171311;
     --color-stone-100: #2c251f;
-    --color-stone-200: #3c332b;
+    --color-stone-200: #433930;
     --color-stone-300: #50453b;
     --color-stone-400: #8f8072;
     --color-stone-500: #a99a8b;

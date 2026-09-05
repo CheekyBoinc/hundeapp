@@ -22,7 +22,7 @@ import DogsPage from './components/DogsPage';
 import CalendarPage from './components/CalendarPage';
 import SettingsModal from './components/SettingsModal';
 import DogPicker from './components/DogPicker';
-import { PawIcon } from './components/PawIcon';
+import { BrandMark } from './components/BrandMark';
 import {
   CalendarIcon,
   ChevronDownIcon,
@@ -243,9 +243,7 @@ export default function App() {
   const headerInner = (
     <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
-          <PawIcon className="h-6 w-6" />
-        </div>
+        <BrandMark className="h-11 w-11 shrink-0 text-accent" />
         {settings.headerText && (
           <button
             type="button"

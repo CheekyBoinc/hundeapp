@@ -107,40 +107,92 @@ function render(width, pixel, height = width) {
 }
 
 // Klassisches App-Icon: abgerundetes Quadrat mit Pfote.
-function drawIcon(size) {
-  const r = size * 0.22;
+// ===== Hundemarke: Anhänger mit Öse, darin die Pfote =====
+// Alles in Bruchteilen von 0..1 der Kantenlänge, damit jede Größe passt.
+const DEEP = [181, 86, 26]; // Öse-Ring (#b5561a)
+
+function inRoundedBox(fx, fy, x0, y0, w, h, rTop, rBottom) {
+  if (fx < x0 || fx > x0 + w || fy < y0 || fy > y0 + h) return false;
+  const corners = [
+    [x0 + rTop, y0 + rTop, rTop, fx < x0 + rTop && fy < y0 + rTop],
+    [x0 + w - rTop, y0 + rTop, rTop, fx > x0 + w - rTop && fy < y0 + rTop],
+    [x0 + rBottom, y0 + h - rBottom, rBottom, fx < x0 + rBottom && fy > y0 + h - rBottom],
+    [x0 + w - rBottom, y0 + h - rBottom, rBottom, fx > x0 + w - rBottom && fy > y0 + h - rBottom]
+  ];
+  for (const [cx, cy, r, inCorner] of corners) {
+    if (inCorner && (fx - cx) ** 2 + (fy - cy) ** 2 > r * r) return false;
+  }
+  return true;
+}
+
+// Liefert die Farbe der Marke an Punkt (fx, fy) im Einheitsquadrat oder null.
+// `scale` verkleinert die Marke zur Mitte hin (adaptive Icons, Splash).
+function tagPixel(fx, fy, scale = 1) {
+  const sx = 0.5 + (fx - 0.5) / scale;
+  const sy = 0.5 + (fy - 0.5) / scale;
+  const w = 0.64;
+  const h = 0.78;
+  const x0 = 0.5 - w / 2;
+  const y0 = 0.5 - h / 2;
+  if (!inRoundedBox(sx, sy, x0, y0, w, h, 0.3, 0.17)) return null;
+  // Öse: Loch mit Ring
+  const hx = 0.5;
+  const hy = y0 + 0.105;
+  const d = Math.hypot(sx - hx, sy - hy);
+  if (d < 0.045) return 'hole';
+  if (d < 0.068) return DEEP;
+  // Pfote im unteren Teil, verkleinert
+  const px = 0.5 + (sx - 0.5) / 0.58;
+  const py = 0.5 + (sy - 0.615) / 0.58;
+  if (inPaw(px, py)) return CREAM;
+  return ORANGE;
+}
+
+// App-Icon: Marke auf Papiergrund (volle Fläche, Plattform rundet selbst).
+function drawIcon(size, background = PAGE) {
   return render(size, (fx, fy) => {
-    if (!roundedRectInside(fx, fy, size, r)) return null;
-    return inPaw(fx / size, fy / size) ? CREAM : ORANGE;
+    const c = tagPixel(fx / size, fy / size, 0.92);
+    if (c === null || c === 'hole') return background;
+    return c;
   });
 }
 
-// Adaptive Icon (Android): Vordergrund nur Pfote auf transparent, verkleinert
-// in die sichere Zone; Hintergrund einfarbig.
+// Web-Icon mit abgerundeten Ecken (Favicon, Apple Touch Icon, PWA).
+function drawIconRounded(size) {
+  const r = size * 0.22;
+  return render(size, (fx, fy) => {
+    if (!roundedRectInside(fx, fy, size, r)) return null;
+    const c = tagPixel(fx / size, fy / size, 0.92);
+    if (c === null || c === 'hole') return PAGE;
+    return c;
+  });
+}
+
+// Adaptive Icon (Android): nur die Marke auf transparent, in der sicheren Zone.
 function drawForeground(size) {
-  return render(size, (fx, fy) => (inPaw(fx / size, fy / size, 0.62) ? CREAM : null));
+  return render(size, (fx, fy) => {
+    const c = tagPixel(fx / size, fy / size, 0.6);
+    if (c === null) return null;
+    if (c === 'hole') return PAGE;
+    return c;
+  });
 }
 
 function drawSolid(size, color) {
   return render(size, () => color);
 }
 
-// Splash: App-Hintergrundfarbe mit dem Icon in der Mitte.
+// Splash: Hintergrundfarbe mit der Marke in der Mitte.
 function drawSplash(size, background) {
-  const icon = size * 0.22;
-  const off = (size - icon) / 2;
-  const r = icon * 0.22;
   return render(size, (fx, fy) => {
-    const lx = fx - off;
-    const ly = fy - off;
-    if (lx < 0 || ly < 0 || lx >= icon || ly >= icon) return background;
-    if (!roundedRectInside(lx, ly, icon, r)) return background;
-    return inPaw(lx / icon, ly / icon) ? CREAM : ORANGE;
+    const c = tagPixel(fx / size, fy / size, 0.2);
+    if (c === null || c === 'hole') return background;
+    return c;
   });
 }
 
 for (const size of [192, 512]) {
-  writeFileSync(join(outDir, `icon-${size}.png`), encodePng(size, drawIcon(size)));
+  writeFileSync(join(outDir, `icon-${size}.png`), encodePng(size, drawIconRounded(size)));
 }
 writeFileSync(join(outDir, 'apple-touch-icon.png'), encodePng(180, drawIcon(180)));
 console.log('Icons generiert in', outDir);
@@ -150,34 +202,29 @@ const assetsDir = join(__dirname, '..', 'assets');
 mkdirSync(assetsDir, { recursive: true });
 writeFileSync(join(assetsDir, 'icon-only.png'), encodePng(1024, drawIcon(1024)));
 writeFileSync(join(assetsDir, 'icon-foreground.png'), encodePng(1024, drawForeground(1024)));
-writeFileSync(join(assetsDir, 'icon-background.png'), encodePng(1024, drawSolid(1024, ORANGE)));
+writeFileSync(join(assetsDir, 'icon-background.png'), encodePng(1024, drawSolid(1024, PAGE)));
 writeFileSync(join(assetsDir, 'splash.png'), encodePng(2732, drawSplash(2732, PAGE)));
-writeFileSync(join(assetsDir, 'splash-dark.png'), encodePng(2732, drawSplash(2732, [28, 25, 23])));
+writeFileSync(join(assetsDir, 'splash-dark.png'), encodePng(2732, drawSplash(2732, [35, 29, 25])));
 console.log('Capacitor-Quellbilder generiert in', assetsDir);
 
-// Play-Store-Grafiken: Icon 512x512 ohne transparente Ecken (Google rundet
-// selbst) und Feature-Grafik 1024x500 (Pflicht im Store-Eintrag).
+// Play-Store-Grafiken: Icon 512x512 ohne Transparenz und Feature-Grafik 1024x500.
 const storeDir = join(__dirname, '..', 'store');
 mkdirSync(storeDir, { recursive: true });
-writeFileSync(
-  join(storeDir, 'icon-512.png'),
-  encodePng(
-    512,
-    render(512, (fx, fy) => (inPaw(fx / 512, fy / 512) ? CREAM : ORANGE))
-  )
-);
+writeFileSync(join(storeDir, 'icon-512.png'), encodePng(512, drawIcon(512)));
 function drawFeature(w, h) {
-  // Orange Fläche, große Pfote leicht links, rechts Platz für Text im Store.
-  const paw = h * 0.78;
-  const ox = w * 0.14;
-  const oy = (h - paw) / 2;
+  // Papiergrund, Marke links, rechts Platz für den App-Namen im Store.
+  const tag = h * 0.9;
+  const ox = w * 0.12;
+  const oy = (h - tag) / 2;
   return render(
     w,
     (fx, fy) => {
-      const lx = (fx - ox) / paw;
-      const ly = (fy - oy) / paw;
-      if (lx >= 0 && lx < 1 && ly >= 0 && ly < 1 && inPaw(lx, ly)) return CREAM;
-      return ORANGE;
+      const lx = (fx - ox) / tag;
+      const ly = (fy - oy) / tag;
+      if (lx < 0 || lx >= 1 || ly < 0 || ly >= 1) return PAGE;
+      const c = tagPixel(lx, ly, 1);
+      if (c === null || c === 'hole') return PAGE;
+      return c;
     },
     h
   );
