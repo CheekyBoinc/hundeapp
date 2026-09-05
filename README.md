@@ -123,6 +123,9 @@ Das Bundle liegt danach unter `android/app/build/outputs/bundle/release/`.
 Die Signatur kommt aus `android/keystore.properties` (nicht im Repo), die auf
 den Upload-Schlüssel in `~/hundeapp-signing/` zeigt. Diesen Ordner sichern!
 
-Für jede neue Version `versionCode` (ganzzahlig, immer erhöhen) und
-`versionName` in `android/app/build.gradle` anpassen. Icons und Splash-Screens
-erzeugt `npm run assets` aus dem Pfoten-Icon.
+Ein Update für den Store baut ein Befehl: `npm run release:android -- 1.1`
+zählt `versionCode` hoch, setzt `versionName` auf 1.1 (Angabe optional), baut
+das Web-Projekt und das signierte Bundle und legt es unter `store/` ab. Danach
+die Änderung an `build.gradle` committen und das Bundle in der Play Console
+hochladen. Icons und Splash-Screens erzeugt `npm run assets` aus dem
+Pfoten-Icon.
