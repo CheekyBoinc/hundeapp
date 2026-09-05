@@ -98,6 +98,15 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.1
+
+<de-DE>
+Neu in 1.1: Dunkelmodus, Kopfzeile zeigt deinen Hund, Tab-Leiste mit Symbolen,
+Kalender mit fälligen Impfungen und Terminen, Hundeprofil mit Alter und Gewicht,
+Übungsstand bei jedem Kommando, Sicherung als Datei. Beispieldaten lassen sich
+mit einem Tipp entfernen.
+</de-DE>
+
 ## Versionshinweise für Release 1.0
 
 <de-DE>
