@@ -64,7 +64,7 @@ export default function DogForm({ dog, onClose, onSaved }: Props) {
           <input
             className="input"
             autoFocus
-            placeholder="z. B. Suse"
+            placeholder="z. B. Luna"
             value={name}
             onChange={(ev) => setName(ev.target.value)}
           />

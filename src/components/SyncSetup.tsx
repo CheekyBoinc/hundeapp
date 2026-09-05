@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { SyncError, validateConfig } from '../github';
+import Modal from './Modal';
 
 interface Props {
   onDone: (user: string, repo: string, token: string) => void;
-  onSkip: () => void;
+  onClose: () => void;
 }
 
-export default function SyncSetup({ onDone, onSkip }: Props) {
+// Einrichtung der optionalen GitHub-Synchronisierung. Erreichbar über
+// Einstellungen → Erweitert; die App selbst läuft ohne sie vollständig lokal.
+export default function SyncSetup({ onDone, onClose }: Props) {
   const [user, setUser] = useState('');
   const [repo, setRepo] = useState('hundeapp-daten');
   const [token, setToken] = useState('');
@@ -35,74 +38,65 @@ export default function SyncSetup({ onDone, onSkip }: Props) {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-accent-soft via-accent-tint to-stone-50 px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold">Hundeapp</h1>
-          <p className="mt-1 text-sm text-stone-600">
-            Euer gemeinsames Trainingstagebuch. Jetzt Synchronisierung einrichten
+    <Modal title="GitHub-Synchronisierung" onClose={onClose}>
+      <p className="mb-4 text-sm text-stone-600">
+        Für Fortgeschrittene: Die Daten werden in einem privaten GitHub-Repo gespeichert und
+        zwischen allen Geräten abgeglichen, die denselben Token benutzen. Ohne GitHub-Konto nutze
+        stattdessen die Sicherung als Datei.
+      </p>
+
+      <form onSubmit={submit} className="space-y-4">
+        <div>
+          <label className="label">GitHub-Benutzername</label>
+          <input
+            className="input"
+            placeholder="z. B. deinname"
+            autoComplete="username"
+            value={user}
+            onChange={(ev) => setUser(ev.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Repo-Name (privates Daten-Repo)</label>
+          <input
+            className="input"
+            placeholder="hundeapp-daten"
+            value={repo}
+            onChange={(ev) => setRepo(ev.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Personal Access Token</label>
+          <input
+            type="password"
+            className="input"
+            placeholder="github_pat_…"
+            autoComplete="off"
+            value={token}
+            onChange={(ev) => setToken(ev.target.value)}
+          />
+          <p className="mt-1.5 text-xs text-stone-500">
+            Auf github.com unter Settings → Developer settings → Personal access tokens →
+            Fine-grained tokens erstellen. Nur für das Repo oben, Berechtigung „Contents: Read &
+            Write“.
           </p>
         </div>
 
-        <form
-          onSubmit={submit}
-          className="space-y-4 rounded-3xl border border-stone-200 bg-white p-6 shadow-lg"
-        >
-          <div>
-            <label className="label">GitHub-Benutzername</label>
-            <input
-              className="input"
-              placeholder="z. B. deinname"
-              autoComplete="username"
-              value={user}
-              onChange={(ev) => setUser(ev.target.value)}
-            />
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+            {error}
           </div>
-          <div>
-            <label className="label">Repo-Name (Datenrepositium)</label>
-            <input
-              className="input"
-              placeholder="hundeapp-daten"
-              value={repo}
-              onChange={(ev) => setRepo(ev.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label">Personal Access Token</label>
-            <input
-              type="password"
-              className="input"
-              placeholder="github_pat_…"
-              autoComplete="off"
-              value={token}
-              onChange={(ev) => setToken(ev.target.value)}
-            />
-            <p className="mt-1.5 text-xs text-stone-500">
-              Erstellt ihr auf github.com unter Settings → Developer settings → Personal access
-              tokens → Fine-grained tokens. Gilt nur für das Repo oben, Berechtigung „Contents: Read
-              & Write“.
-            </p>
-          </div>
+        )}
 
-          {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <button type="submit" className="btn-primary w-full" disabled={busy}>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button type="submit" className="btn-primary flex-1" disabled={busy}>
             {busy ? 'Verbinde…' : 'Verbinden & synchronisieren'}
           </button>
-
-          <button
-            type="button"
-            className="w-full text-sm font-medium text-stone-500 underline hover:text-stone-700"
-            onClick={onSkip}
-          >
-            Ohne Sync fortfahren (nur dieses Gerät)
+          <button type="button" className="btn-secondary" onClick={onClose}>
+            Abbrechen
           </button>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
 }

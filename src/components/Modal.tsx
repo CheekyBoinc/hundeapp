@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { isTopModal, nextModalId, popModal, pushModal } from '../modalStack';
 
 interface Props {
   title: string;
@@ -10,19 +11,20 @@ interface Props {
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-// Stapel offener Modale: nur das oberste reagiert auf Escape, damit ein
-// verschachteltes Modal (z. B. Detail über Tagesansicht) nicht alles schließt.
-let modalIdCounter = 0;
-const modalStack: number[] = [];
-
 export default function Modal({ title, onClose, headerExtra, children }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
-  const [id] = useState(() => ++modalIdCounter);
+  const [id] = useState(nextModalId);
+  // onClose wird von Eltern oft inline neu erzeugt; über ein Ref bleibt der
+  // Effekt stabil und setzt den Fokus nicht bei jedem Re-Render zurück.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     previousFocus.current = document.activeElement as HTMLElement | null;
-    modalStack.push(id);
+    pushModal(id, () => onCloseRef.current());
 
     // Fokus ins Modal lenken (erstes fokussierbares Element).
     const first = panelRef.current?.querySelector<HTMLElement>(FOCUSABLE);
@@ -30,8 +32,8 @@ export default function Modal({ title, onClose, headerExtra, children }: Props) 
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (modalStack[modalStack.length - 1] !== id) return;
-        onClose();
+        if (!isTopModal(id)) return;
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -63,10 +65,9 @@ export default function Modal({ title, onClose, headerExtra, children }: Props) 
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
       previousFocus.current?.focus();
-      const idx = modalStack.lastIndexOf(id);
-      if (idx !== -1) modalStack.splice(idx, 1);
+      popModal(id);
     };
-  }, [onClose, id]);
+  }, [id]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">

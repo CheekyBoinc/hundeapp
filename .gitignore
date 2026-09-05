@@ -6,3 +6,6 @@ dist
 .commandcode/
 # Debug-Screenshots
 hundeapp-*.png
+.claude/
+# Signierte Bundles nicht einchecken
+store/*.aab

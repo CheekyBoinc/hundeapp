@@ -23,7 +23,6 @@ const DELETED_WEIGHT_KEY = 'hundeapp.deletedWeight';
 const DELETED_STOOL_KEY = 'hundeapp.deletedStool';
 const DELETED_VET_KEY = 'hundeapp.deletedVet';
 const DELETED_VACCINATIONS_KEY = 'hundeapp.deletedVaccinations';
-const NOTES_MARKER_KEY = 'hundeapp.notizenEingespielt';
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -71,7 +70,7 @@ export function saveCommand(cmd: {
 
   if (existing) {
     existing.name = name;
-    existing.dogId = cmd.dogId ?? existing.dogId;
+    if (cmd.dogId !== undefined) existing.dogId = cmd.dogId;
     existing.beschreibung = cmd.beschreibung ?? null;
     existing.tipp = cmd.tipp ?? null;
     existing.updated_at = now();
@@ -143,7 +142,7 @@ export function saveEntry(
 
   const existing = entries.find((e) => e.id === input.id);
   if (existing) {
-    existing.dogId = input.dogId ?? existing.dogId;
+    if (input.dogId !== undefined) existing.dogId = input.dogId;
     existing.date = input.date;
     existing.ort = input.ort;
     existing.was_gemacht = input.was_gemacht;
@@ -360,126 +359,122 @@ export const fetchVaccinations = vaccinationCollection.fetch;
 export const saveVaccination = vaccinationCollection.save;
 export const deleteVaccination = vaccinationCollection.remove;
 
-// ===== Start-Notizen (deterministische IDs, damit beide Geräte identisch seeden) =====
+// ===== Demodaten (nur für einen frischen Start ohne Sync) =====
+// Neutrale Beispiele, damit die App nicht leer wirkt. Sie werden nur
+// eingespielt, wenn der Nutzer bewusst ohne Synchronisierung startet und
+// noch keine eigenen Daten hat. Ein Gerät, das direkt den Sync einrichtet,
+// bekommt keine Demodaten, damit nichts in ein bestehendes Repo gemischt wird.
 
-interface NoteCommand {
+const DEMO_MARKER_KEY = 'hundeapp.demoEingespielt';
+
+interface DemoCommand {
   id: string;
-  dogId: string | null;
   name: string;
   beschreibung: string | null;
   tipp: string | null;
-  created_at: string;
 }
 
-interface NoteEntry {
+interface DemoEntry {
   id: string;
-  dogId: string | null;
-  date: string;
+  daysAgo: number;
   ort: string;
   was_gemacht: string;
   uebungsaufgaben: string;
   tipps: string;
   erledigt: boolean;
   commands: string[];
-  created_at: string;
 }
 
-const NOTE_COMMANDS: NoteCommand[] = [
+const DEMO_COMMANDS: DemoCommand[] = [
   {
-    id: 'seed-cmd-sitz',
-    dogId: null,
+    id: 'demo-cmd-sitz',
     name: 'Sitz',
-    beschreibung: 'Handzeichen: Erhobener Finger.',
-    tipp: null,
-    created_at: '2026-08-11T00:00:00.000Z'
+    beschreibung: 'Der Hund setzt sich und bleibt sitzen, bis er aufgelöst wird.',
+    tipp: 'Leckerli langsam über die Nase nach hinten führen, das Hinterteil geht von selbst nach unten.'
   },
   {
-    id: 'seed-cmd-platz',
-    dogId: null,
+    id: 'demo-cmd-platz',
     name: 'Platz',
-    beschreibung: 'Handzeichen: Flache Hand nach unten und eindeutig nach unten bewegen.',
-    tipp: 'Noch nicht geübt.',
-    created_at: '2026-08-11T00:00:00.000Z'
+    beschreibung: 'Der Hund legt sich ab. Handzeichen: flache Hand nach unten.',
+    tipp: 'Erst aus dem Sitz aufbauen, später auch aus dem Stehen.'
   },
   {
-    id: 'seed-cmd-bleib',
-    dogId: null,
+    id: 'demo-cmd-bleib',
     name: 'Bleib',
-    beschreibung: 'Handzeichen: Flache Hand nach vorne ausgestreckt (wie ein Stopp-Zeichen).',
-    tipp: 'Suse darf die Position (Sitz, Steh oder Liegen) frei wählen. Wichtig: Vorher niemals das Kommando „Sitz“ oder „Platz“ geben – sonst muss sie zwingend in genau dieser Position verharren.',
-    created_at: '2026-08-11T00:00:00.000Z'
+    beschreibung: 'Der Hund hält seine Position, auch wenn du dich entfernst.',
+    tipp: 'Distanz und Dauer getrennt steigern, nie beides gleichzeitig.'
   },
   {
-    id: 'seed-cmd-komm',
-    dogId: null,
-    name: 'Komm',
-    beschreibung: 'Bedeutung: Herankommen bzw. zielstrebig auf dich zulaufen.',
-    tipp: null,
-    created_at: '2026-08-11T00:00:00.000Z'
+    id: 'demo-cmd-hier',
+    name: 'Hier',
+    beschreibung: 'Rückruf: Der Hund kommt zügig zu dir und bleibt bei dir.',
+    tipp: 'Immer belohnen, auch wenn es lange gedauert hat. Nie zum Schimpfen rufen.'
   },
   {
-    id: 'seed-cmd-stups',
-    dogId: null,
-    name: 'Stups',
-    beschreibung: 'Bedeutung/Ausführung: Suse soll mit der Nase gegen deine Handfläche stupsen.',
-    tipp: 'Wird beim Heranrufen genutzt, damit sie gezielt bei dir ankommt und abstoppt, statt an dir vorbeizurennen.',
-    created_at: '2026-08-11T00:00:00.000Z'
-  },
-  {
-    id: 'seed-cmd-fuss',
-    dogId: null,
+    id: 'demo-cmd-fuss',
     name: 'Fuß',
-    beschreibung: 'Bedeutung: Direkt am Bein mitlaufen (immer auf der rechten Seite).',
-    tipp: null,
-    created_at: '2026-08-11T00:00:00.000Z'
+    beschreibung: 'Der Hund läuft dicht neben dem Bein mit, ohne zu ziehen.',
+    tipp: 'Mit wenigen Schritten beginnen und häufig belohnen.'
   }
 ];
 
-const NOTE_ENTRIES: NoteEntry[] = [
+const DEMO_ENTRIES: DemoEntry[] = [
   {
-    id: 'seed-entry-2026-08-11',
-    dogId: null,
-    date: '2026-08-11',
-    ort: 'Hundeplatz',
+    id: 'demo-entry-1',
+    daysAgo: 14,
+    ort: 'Hundeschule',
     was_gemacht:
-      'Allererste Stunde auf dem Hundeplatz in einer Gruppe mit fünf Hunden. Leinenführigkeit an der langen Leine hat schon gut funktioniert. Abruf auf Entfernung: 2 von 3 Versuchen sehr gut – Suse hat das Aushalten auf Distanz vorher gut gemeistert. Fußlaufen steht noch am Anfang. Suse hat die neue Situation insgesamt gut gemeistert.',
-    uebungsaufgaben:
-      'Das Kommando „Stups“ üben, damit das Abstoppen an der Hand beim Heranrufen in Fleisch und Blut übergeht.',
+      'Beispiel-Eintrag: Erste Stunde in der Gruppe. Sitz und Platz klappen mit Leckerli schon gut. Der Rückruf funktioniert, solange keine anderen Hunde in der Nähe sind.',
+    uebungsaufgaben: 'Täglich dreimal kurz Sitz und Platz üben, jeweils nur ein bis zwei Minuten.',
     tipps:
-      'Beim Abruf soll Suse als Abschluss mit der Nase an die Handfläche stupsen – dafür gibt es direkt das Leckerchen. Das verhindert, dass sie vorbeirennt.',
-    erledigt: false,
-    commands: ['seed-cmd-komm', 'seed-cmd-stups', 'seed-cmd-fuss'],
-    created_at: '2026-08-11T00:00:00.000Z'
+      'Belohnung sofort geben, damit der Hund das Verhalten mit dem Kommando verknüpft. Übungen immer mit einem Erfolg beenden.',
+    erledigt: true,
+    commands: ['demo-cmd-sitz', 'demo-cmd-platz', 'demo-cmd-hier']
   },
   {
-    id: 'seed-entry-2026-08-18',
-    dogId: null,
-    date: '2026-08-18',
-    ort: 'Halle',
+    id: 'demo-entry-2',
+    daysAgo: 7,
+    ort: 'Spaziergang',
     was_gemacht:
-      'Impulskontrolle (Bleiben unter Ablenkung): fremde Menschen und andere Hunde gehen vorbei. Direkt neben dem Bein und auch auf Distanz sehr gut ausgehalten – höchstens um die eigene Achse gedreht, den Platz aber nicht verlassen. Fußlaufen (rechte Seite) läuft noch nicht optimal: Suse versteht das Konzept noch nicht – hier liegt die kommende Baustelle. Suse hat die Reize in der Halle toll ausgehalten und super mitgemacht.',
+      'Beispiel-Eintrag: Bleib auf dem Feldweg geübt, erst zwei Schritte Abstand, dann fünf. Fuß laufen auf dem Rückweg, noch mit viel Ablenkung durch Gerüche.',
     uebungsaufgaben:
-      'Fußlaufen auf der rechten Seite in kleinen Intervallen üben: 3–4 Schritte gehen → stehen bleiben → Suse absitzen lassen → in die gleiche Richtung weiterlaufen.',
+      'Bleib mit wachsender Distanz üben. Fuß in kurzen Abschnitten von zehn Schritten.',
     tipps:
-      'Wichtiger Merksatz: Immer mit dem Bein loslaufen, an dem der Hund geführt wird (in eurem Fall das rechte Bein). So bekommt Suse den Impuls zum Loslaufen direkt mit.',
+      'Beim Losgehen mit dem Bein starten, an dem der Hund läuft. So bekommt er den Impuls direkt mit.',
     erledigt: false,
-    commands: ['seed-cmd-bleib', 'seed-cmd-fuss'],
-    created_at: '2026-08-18T00:00:00.000Z'
+    commands: ['demo-cmd-bleib', 'demo-cmd-fuss']
   }
 ];
 
-export function loadNotes(): void {
-  const commands: Command[] = NOTE_COMMANDS.map((nc) => ({ ...nc }));
+function dateDaysAgo(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+}
+
+export function loadDemoData(): void {
+  const stamp = now();
+  const commands: Command[] = DEMO_COMMANDS.map((c) => ({
+    ...c,
+    dogId: null,
+    created_at: stamp,
+    updated_at: stamp
+  }));
   const byId = new Map(commands.map((c) => [c.id, c]));
 
-  const entries: Entry[] = NOTE_ENTRIES.map((ne) => ({
-    ...ne,
-    commands: ne.commands.map((n) => byId.get(n)).filter((c): c is Command => Boolean(c))
+  const entries: Entry[] = DEMO_ENTRIES.map(({ daysAgo, commands: ids, ...rest }) => ({
+    ...rest,
+    dogId: null,
+    date: dateDaysAgo(daysAgo),
+    created_at: stamp,
+    updated_at: stamp,
+    commands: ids.map((id) => byId.get(id)).filter((c): c is Command => Boolean(c))
   }));
 
   writeJson(COMMANDS_KEY, commands);
   writeJson(ENTRIES_KEY, entries);
-  localStorage.setItem(NOTES_MARKER_KEY, '1');
+  localStorage.setItem(DEMO_MARKER_KEY, '1');
 }
 
 export function hasData(): boolean {
@@ -489,8 +484,29 @@ export function hasData(): boolean {
   );
 }
 
-export function autoSeedIfEmpty(): void {
-  if (localStorage.getItem(NOTES_MARKER_KEY)) return;
+// Vor dem Einrichten der Synchronisierung: Sind ausschließlich unveränderte
+// Demodaten vorhanden, werden sie verworfen, damit sie nicht in ein
+// bestehendes Repo (z. B. vom zweiten Handy) gemischt werden.
+export function discardUntouchedDemoData(): void {
+  const lists: { id: string }[][] = [
+    readJson<Entry[]>(ENTRIES_KEY, []),
+    readJson<Command[]>(COMMANDS_KEY, []),
+    readJson<DogProfile[]>(DOGS_KEY, []),
+    readJson<WeightEntry[]>(WEIGHT_KEY, []),
+    readJson<StoolEntry[]>(STOOL_KEY, []),
+    readJson<VetVisit[]>(VET_KEY, []),
+    readJson<Vaccination[]>(VACCINATIONS_KEY, [])
+  ];
+  const all = lists.flat();
+  if (all.length === 0) return;
+  if (!all.every((x) => x.id.startsWith('demo-'))) return;
+  writeJson(ENTRIES_KEY, []);
+  writeJson(COMMANDS_KEY, []);
+}
+
+// Beim ersten Start ohne eingerichtete Synchronisierung aufrufen.
+export function seedDemoIfEmpty(): void {
+  if (localStorage.getItem(DEMO_MARKER_KEY)) return;
   if (hasData()) return;
-  loadNotes();
+  loadDemoData();
 }

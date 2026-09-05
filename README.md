@@ -1,10 +1,15 @@
 # Hundeapp – Trainingstagebuch für die Hundeschule
 
-Eine kleine App für iPhone und Android. Die Daten liegen in einem **privaten
-GitHub-Repo** als normale Datei (`daten.json`) – dadurch:
+Eine kleine App für iPhone und Android. Sie läuft komplett lokal auf dem Gerät;
+eine Sicherung als Datei (Einstellungen → Sicherung) deckt Handywechsel und
+Weitergabe ab. Für Fortgeschrittene gibt es optional eine Synchronisierung über
+ein **privates GitHub-Repo** (Einstellungen → Erweitert), in dem die Daten als
+normale Datei (`daten.json`) liegen – dadurch:
+
 - keine weiteren Konten nötig (ihr habt bereits GitHub)
 - kostenlos für immer, nichts pausiert
-- beide Handys sind ein- bis zweimal pro Minute bzw. beim Öffnen der App synchron
+- beide Handys gleichen sich beim Öffnen der App, beim Zurückkehren in die App
+  und kurz nach jeder Änderung ab
 - automatisches Backup: alle Änderungen sind als Commit in GitHub dokumentiert
 
 ## Funktionen
@@ -35,7 +40,7 @@ GitHub-Repo** als normale Datei (`daten.json`) – dadurch:
 
 ### 3. App einrichten (auf jedem Handy)
 
-1. App öffnen → Formular „Verbinden & synchronisieren“ ausfüllen:
+1. App öffnen → Einstellungen (Zahnrad) → Erweitert → „Einrichten“:
    - GitHub-Benutzername
    - Repo-Name: `hundeapp-daten`
    - Token aus Schritt 2
@@ -100,3 +105,24 @@ GitHub-Repo über die GitHub REST API (Contents API). Offline-first:
   neuere Version. Unterschiedliche Objekte werden vereinigt – nichts geht verloren.
 - Gelöschte Einträge bleiben als „Tombstones“ erhalten, damit keine Geräte
   nachträglich gelöschte Daten wieder hochladen.
+
+## Android-App (Play Store)
+
+Die App wird mit [Capacitor](https://capacitorjs.com) als native Android-App
+verpackt. Voraussetzungen auf dem Mac: Android Studio (SDK) und ein JDK 21
+(`brew install --cask temurin@21`; Gradle 8.14 läuft nicht mit dem JDK 25
+aus Android Studio).
+
+```bash
+npm run android            # Web-Build, nach android/ kopieren, Android Studio öffnen
+npm run cap:sync           # nur Web-Build + Kopieren
+cd android && ./gradlew bundleRelease   # signiertes App-Bundle für den Play Store
+```
+
+Das Bundle liegt danach unter `android/app/build/outputs/bundle/release/`.
+Die Signatur kommt aus `android/keystore.properties` (nicht im Repo), die auf
+den Upload-Schlüssel in `~/hundeapp-signing/` zeigt. Diesen Ordner sichern!
+
+Für jede neue Version `versionCode` (ganzzahlig, immer erhöhen) und
+`versionName` in `android/app/build.gradle` anpassen. Icons und Splash-Screens
+erzeugt `npm run assets` aus dem Pfoten-Icon.

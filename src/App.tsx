@@ -1,11 +1,22 @@
-import { useEffect, useState } from 'react';
-import { clearConfig, isConfigured, onChange, pullNow, pushNow, setConfig } from './github';
+import { useEffect, useRef, useState } from 'react';
+import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { closeTopModal } from './modalStack';
+import {
+  clearConfig,
+  isConfigured,
+  onChange,
+  onSyncError,
+  pullNow,
+  pushNow,
+  setConfig
+} from './github';
 import { loadSettings, saveSettings, type Settings } from './settings';
+import { discardUntouchedDemoData } from './localStore';
 import EntriesPage from './components/EntriesPage';
 import CommandsPage from './components/CommandsPage';
 import DogsPage from './components/DogsPage';
 import CalendarPage from './components/CalendarPage';
-import SyncSetup from './components/SyncSetup';
 import SettingsModal from './components/SettingsModal';
 import { PawIcon } from './components/PawIcon';
 
@@ -13,14 +24,34 @@ type Tab = 'eintraege' | 'kommandos' | 'hunde' | 'kalender';
 
 export default function App() {
   const [configured, setConfigured] = useState(isConfigured());
-  const [skipSetup, setSkipSetup] = useState(false);
+  const [settings, setSettings] = useState<Settings>(loadSettings);
   const [tab, setTab] = useState<Tab>('eintraege');
   const [status, setStatus] = useState<'idle' | 'syncing' | 'ok' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  const [settings, setSettings] = useState<Settings>(loadSettings);
   const [showSettings, setShowSettings] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
+
+  // Android-Zurück-Taste: erst offenes Modal schließen, dann zur Startseite,
+  // erst danach die App verlassen (Standard wäre sofortiges Beenden).
+  const tabRef = useRef(tab);
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = CapApp.addListener('backButton', () => {
+      if (closeTopModal()) return;
+      if (tabRef.current !== 'eintraege') {
+        setTab('eintraege');
+        return;
+      }
+      void CapApp.exitApp();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, []);
 
   useEffect(() => {
     const onOnline = () => setOffline(false);
@@ -57,30 +88,48 @@ export default function App() {
         setLastSync(new Date().toLocaleTimeString('de-DE'));
       }
     });
+    const unsubError = onSyncError((message) => {
+      if (!cancelled) {
+        setStatus('error');
+        setErrorMsg(message);
+      }
+    });
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
-        pullNow().catch(() => undefined);
+        setStatus('syncing');
+        pullNow()
+          .then(() => {
+            if (cancelled) return;
+            setStatus('ok');
+            setLastSync(new Date().toLocaleTimeString('de-DE'));
+          })
+          .catch((err: Error) => {
+            if (cancelled) return;
+            setStatus('error');
+            setErrorMsg(err.message);
+          });
       }
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       cancelled = true;
       unsub();
+      unsubError();
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [configured]);
 
-  if (!configured && !skipSetup) {
-    return (
-      <SyncSetup
-        onSkip={() => setSkipSetup(true)}
-        onDone={(user, repo, token) => {
-          setConfig({ user, repo, token });
-          setConfigured(true);
-        }}
-      />
-    );
-  }
+  const handleSettings = (s: Settings) => {
+    setSettings(s);
+    saveSettings(s);
+  };
+
+  const handleConnected = (user: string, repo: string, token: string) => {
+    // Unveränderte Beispieldaten nicht in ein (bestehendes) Repo mischen.
+    discardUntouchedDemoData();
+    setConfig({ user, repo, token });
+    setConfigured(true);
+  };
 
   const handleSyncNow = () => {
     setStatus('syncing');
@@ -98,11 +147,9 @@ export default function App() {
   const handleDisconnect = () => {
     clearConfig();
     setConfigured(false);
-  };
-
-  const handleSettings = (s: Settings) => {
-    setSettings(s);
-    saveSettings(s);
+    setStatus('idle');
+    setErrorMsg(null);
+    setShowSettings(false);
   };
 
   const tabs: [Tab, string][] = [
@@ -113,10 +160,11 @@ export default function App() {
   ];
 
   const statusDot = {
+    idle: 'bg-stone-300',
     syncing: 'bg-amber-400',
     ok: 'bg-emerald-500',
     error: 'bg-red-500'
-  }[status as 'syncing' | 'ok' | 'error'];
+  }[status];
 
   const navButtons = (
     <div className="mx-auto flex max-w-5xl gap-1 px-4 py-2">
@@ -147,30 +195,39 @@ export default function App() {
           </div>
         )}
       </div>
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <button
-          className="rounded-lg px-2 py-1.5 text-xs font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 sm:px-3 sm:py-1.5 sm:text-sm"
-          onClick={handleSyncNow}
-          title="Jetzt synchronisieren"
-        >
-          Aktualisieren
-        </button>
-        <button
-          className="rounded-lg px-2 py-1.5 text-xs font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 sm:px-3 sm:py-1.5 sm:text-sm"
-          onClick={handleDisconnect}
-          title="Synchronisierung trennen"
-        >
-          Trennen
-        </button>
-        <span className="flex items-center gap-1.5">
-          <span className={`h-2.5 w-2.5 rounded-full ${statusDot}`} />
-          <span className="hidden text-xs text-stone-500 min-[420px]:inline">
-            {status === 'syncing' && 'Sync…'}
-            {status === 'ok' && (lastSync ? `Sync ${lastSync}` : 'Synchron')}
-            {status === 'error' && 'Sync-Fehler'}
-            {status === 'idle' && ''}
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        {configured && (
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+            onClick={handleSyncNow}
+            title="Jetzt synchronisieren"
+            aria-label="Jetzt synchronisieren"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-5 w-5 ${status === 'syncing' ? 'animate-spin' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <path d="M21 3v6h-6" />
+            </svg>
+          </button>
+        )}
+        {configured && (
+          <span className="flex items-center gap-1.5">
+            <span className={`h-2.5 w-2.5 rounded-full ${statusDot}`} />
+            <span className="hidden text-xs text-stone-500 min-[420px]:inline">
+              {status === 'syncing' && 'Sync…'}
+              {status === 'ok' && (lastSync ? `Sync ${lastSync}` : 'Synchron')}
+              {status === 'error' && 'Sync-Fehler'}
+              {status === 'idle' && ''}
+            </span>
           </span>
-        </span>
+        )}
         <button
           className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-700"
           onClick={() => setShowSettings(true)}
@@ -190,21 +247,23 @@ export default function App() {
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
         </button>
-        <a
-          href="https://ko-fi.com/cloudplay"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#29abe0] text-white hover:bg-[#1f96c7]"
-          title="Unterstützen über Ko-fi"
-          aria-label="Unterstützen über Ko-fi"
-        >
-          <svg viewBox="0 0 32 32" className="h-6 w-6" fill="none">
-            <path
-              d="M16 26c-7-4.5-12-9.7-12-14 0-3.2 2.6-5.4 5.8-4.8 2.2.4 4.2 1.5 6.2 3.4 2-1.9 4-3 6.2-3.4 3.2-.6 5.8 1.6 5.8 4.8 0 4.3-5 9.5-12 14z"
-              fill="#fff"
-            />
-          </svg>
-        </a>
+        {Capacitor.getPlatform() !== 'ios' && (
+          <a
+            href="https://ko-fi.com/cloudplay"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#29abe0] text-white hover:bg-[#1f96c7]"
+            title="Unterstützen über Ko-fi"
+            aria-label="Unterstützen über Ko-fi"
+          >
+            <svg viewBox="0 0 32 32" className="h-6 w-6" fill="none">
+              <path
+                d="M16 26c-7-4.5-12-9.7-12-14 0-3.2 2.6-5.4 5.8-4.8 2.2.4 4.2 1.5 6.2 3.4 2-1.9 4-3 6.2-3.4 3.2-.6 5.8 1.6 5.8 4.8 0 4.3-5 9.5-12 14z"
+                fill="#fff"
+              />
+            </svg>
+          </a>
+        )}
       </div>
     </div>
   );
@@ -234,20 +293,6 @@ export default function App() {
           Keine Verbindung – Änderungen werden gespeichert und später synchronisiert.
         </div>
       )}
-      {!configured && skipSetup && (
-        <div className="flex flex-wrap items-center justify-center gap-x-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
-          <span>Nur auf diesem Gerät gespeichert – ohne GitHub-Sync.</span>
-          <button
-            className="font-semibold underline"
-            onClick={() => {
-              setSkipSetup(false);
-            }}
-          >
-            Sync einrichten
-          </button>
-        </div>
-      )}
-
       <main className="mx-auto max-w-5xl px-4 py-4 pb-24">
         {tab === 'eintraege' && <EntriesPage />}
         {tab === 'kommandos' && <CommandsPage />}
@@ -264,7 +309,10 @@ export default function App() {
       {showSettings && (
         <SettingsModal
           settings={settings}
+          configured={configured}
           onChange={handleSettings}
+          onConnected={handleConnected}
+          onDisconnect={handleDisconnect}
           onClose={() => setShowSettings(false)}
         />
       )}

@@ -64,38 +64,39 @@ function inEllipse(x, y, cx, cy, rx, ry) {
   return dx * dx + dy * dy <= 1;
 }
 
-function drawIcon(size) {
-  const bg = [234, 124, 58]; // orange
-  const pad = [255, 250, 244]; // cream
-  const px = Buffer.alloc(size * size * 4);
-  const r = size * 0.22;
-  const toes = [
-    [0.3, 0.34, 0.085],
-    [0.44, 0.235, 0.095],
-    [0.56, 0.235, 0.095],
-    [0.7, 0.34, 0.085]
-  ];
-  const mainPad = [0.5, 0.66, 0.21, 0.155];
+const ORANGE = [234, 124, 58];
+const CREAM = [255, 250, 244];
+const PAGE = [250, 247, 242]; // Hintergrund der App (#faf7f2)
 
+const TOES = [
+  [0.3, 0.34, 0.085],
+  [0.44, 0.235, 0.095],
+  [0.56, 0.235, 0.095],
+  [0.7, 0.34, 0.085]
+];
+const MAIN_PAD = [0.5, 0.66, 0.21, 0.155];
+
+// Liegt der Punkt (fx, fy) in Bruchteilen von 0..1 in der Pfote? `scale`
+// verkleinert die Pfote zur Mitte hin (für adaptive Android-Icons).
+function inPaw(fx, fy, scale = 1) {
+  const sx = 0.5 + (fx - 0.5) / scale;
+  const sy = 0.5 + (fy - 0.5) / scale;
+  if (inEllipse(sx, sy, MAIN_PAD[0], MAIN_PAD[1], MAIN_PAD[2], MAIN_PAD[3])) return true;
+  for (const [cx, cy, cr] of TOES) {
+    const dx = sx - cx;
+    const dy = sy - cy;
+    if (dx * dx + dy * dy <= cr * cr) return true;
+  }
+  return false;
+}
+
+function render(size, pixel) {
+  const px = Buffer.alloc(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const i = (y * size + x) * 4;
-      const fx = x + 0.5;
-      const fy = y + 0.5;
-      if (!roundedRectInside(fx, fy, size, r)) {
-        px[i + 3] = 0;
-        continue;
-      }
-      let inPaw = inEllipse(fx, fy, mainPad[0] * size, mainPad[1] * size, mainPad[2] * size, mainPad[3] * size);
-      for (const [cx, cy, cr] of toes) {
-        const dx = fx / size - cx;
-        const dy = fy / size - cy;
-        if (dx * dx + dy * dy <= cr * cr) {
-          inPaw = true;
-          break;
-        }
-      }
-      const c = inPaw ? pad : bg;
+      const c = pixel(x + 0.5, y + 0.5);
+      if (!c) continue; // transparent
       px[i] = c[0];
       px[i + 1] = c[1];
       px[i + 2] = c[2];
@@ -105,8 +106,51 @@ function drawIcon(size) {
   return px;
 }
 
+// Klassisches App-Icon: abgerundetes Quadrat mit Pfote.
+function drawIcon(size) {
+  const r = size * 0.22;
+  return render(size, (fx, fy) => {
+    if (!roundedRectInside(fx, fy, size, r)) return null;
+    return inPaw(fx / size, fy / size) ? CREAM : ORANGE;
+  });
+}
+
+// Adaptive Icon (Android): Vordergrund nur Pfote auf transparent, verkleinert
+// in die sichere Zone; Hintergrund einfarbig.
+function drawForeground(size) {
+  return render(size, (fx, fy) => (inPaw(fx / size, fy / size, 0.62) ? CREAM : null));
+}
+
+function drawSolid(size, color) {
+  return render(size, () => color);
+}
+
+// Splash: App-Hintergrundfarbe mit dem Icon in der Mitte.
+function drawSplash(size, background) {
+  const icon = size * 0.22;
+  const off = (size - icon) / 2;
+  const r = icon * 0.22;
+  return render(size, (fx, fy) => {
+    const lx = fx - off;
+    const ly = fy - off;
+    if (lx < 0 || ly < 0 || lx >= icon || ly >= icon) return background;
+    if (!roundedRectInside(lx, ly, icon, r)) return background;
+    return inPaw(lx / icon, ly / icon) ? CREAM : ORANGE;
+  });
+}
+
 for (const size of [192, 512]) {
   writeFileSync(join(outDir, `icon-${size}.png`), encodePng(size, drawIcon(size)));
 }
 writeFileSync(join(outDir, 'apple-touch-icon.png'), encodePng(180, drawIcon(180)));
 console.log('Icons generiert in', outDir);
+
+// Quellbilder für @capacitor/assets (npx capacitor-assets generate)
+const assetsDir = join(__dirname, '..', 'assets');
+mkdirSync(assetsDir, { recursive: true });
+writeFileSync(join(assetsDir, 'icon-only.png'), encodePng(1024, drawIcon(1024)));
+writeFileSync(join(assetsDir, 'icon-foreground.png'), encodePng(1024, drawForeground(1024)));
+writeFileSync(join(assetsDir, 'icon-background.png'), encodePng(1024, drawSolid(1024, ORANGE)));
+writeFileSync(join(assetsDir, 'splash.png'), encodePng(2732, drawSplash(2732, PAGE)));
+writeFileSync(join(assetsDir, 'splash-dark.png'), encodePng(2732, drawSplash(2732, [28, 25, 23])));
+console.log('Capacitor-Quellbilder generiert in', assetsDir);

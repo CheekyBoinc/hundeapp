@@ -8,9 +8,14 @@ import type {
   VetVisit,
   WeightEntry
 } from './types';
+import { Preferences } from '@capacitor/preferences';
 import { loadState, saveState } from './localStore';
 
 // ===== Konfiguration =====
+// Token und Repo-Daten liegen in Capacitor Preferences: nativ in den
+// App-eigenen Einstellungen (Android SharedPreferences / iOS UserDefaults),
+// im Browser weiterhin im localStorage. Der Zugriff im Code bleibt synchron
+// über einen Cache, der einmalig beim Start per initConfig() gefüllt wird.
 
 const CONFIG_KEY = 'hundeapp.syncConfig';
 const DATA_PATH = 'daten.json';
@@ -26,21 +31,54 @@ export interface SyncConfig {
   token: string;
 }
 
-export function getConfig(): SyncConfig | null {
+let configCache: SyncConfig | null = null;
+
+function parseConfig(raw: string | null | undefined): SyncConfig | null {
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(CONFIG_KEY);
-    return raw ? (JSON.parse(raw) as SyncConfig) : null;
+    const cfg = JSON.parse(raw) as Partial<SyncConfig>;
+    return cfg &&
+      typeof cfg.user === 'string' &&
+      typeof cfg.repo === 'string' &&
+      typeof cfg.token === 'string'
+      ? { user: cfg.user, repo: cfg.repo, token: cfg.token }
+      : null;
   } catch {
     return null;
   }
 }
 
+// Einmalig vor dem ersten Render aufrufen.
+export async function initConfig(): Promise<void> {
+  let cfg = await Preferences.get({ key: CONFIG_KEY })
+    .then((r) => parseConfig(r.value))
+    .catch(() => null);
+  // Migration: Ältere Versionen haben die Konfiguration direkt im localStorage abgelegt.
+  if (!cfg) {
+    const legacy = parseConfig(localStorage.getItem(CONFIG_KEY));
+    if (legacy) {
+      cfg = legacy;
+      await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(legacy) }).catch(
+        () => undefined
+      );
+      localStorage.removeItem(CONFIG_KEY);
+    }
+  }
+  configCache = cfg;
+}
+
+export function getConfig(): SyncConfig | null {
+  return configCache;
+}
+
 export function setConfig(cfg: SyncConfig) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+  configCache = cfg;
+  void Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(cfg) });
 }
 
 export function clearConfig() {
-  localStorage.removeItem(CONFIG_KEY);
+  configCache = null;
+  void Preferences.remove({ key: CONFIG_KEY });
 }
 
 export function isConfigured(): boolean {
@@ -442,7 +480,23 @@ export function mergeStates(local: SyncState, remote: SyncState): SyncState {
 }
 
 export function areEqual(a: SyncState, b: SyncState): boolean {
-  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
+  return stableStringify(normalize(a)) === stableStringify(normalize(b));
+}
+
+// JSON mit sortierten Objektschlüsseln. Lokal erzeugte Objekte und die per
+// sanitizeState eingelesene Remote-Kopie haben sonst unterschiedliche
+// Schlüsselreihenfolgen und würden trotz gleichem Inhalt als verschieden gelten.
+function stableStringify(v: unknown): string {
+  if (Array.isArray(v)) return '[' + v.map(stableStringify).join(',') + ']';
+  if (v !== null && typeof v === 'object') {
+    const r = v as Record<string, unknown>;
+    const parts = Object.keys(r)
+      .filter((k) => r[k] !== undefined)
+      .sort()
+      .map((k) => JSON.stringify(k) + ':' + stableStringify(r[k]));
+    return '{' + parts.join(',') + '}';
+  }
+  return JSON.stringify(v) ?? 'null';
 }
 
 function normalize(s: SyncState): SyncState {
@@ -594,8 +648,10 @@ export function schedulePush() {
   if (!isConfigured()) return;
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => {
-    pushNow().catch(() => {
-      /* still – nächste Änderung oder manueller Pull versucht es erneut */
+    pushNow().catch((err: unknown) => {
+      // Nicht verschlucken: Die UI soll wissen, dass lokale Änderungen noch
+      // nicht auf dem Server sind (z. B. Token abgelaufen, offline).
+      notifyError(err instanceof Error ? err.message : 'Synchronisierung fehlgeschlagen.');
     });
   }, 1200);
 }
@@ -643,6 +699,16 @@ export async function pushNow(): Promise<void> {
   });
 }
 
+// Einen fremden Stand (z. B. Sicherungsdatei) lokal einmischen. Gleiche
+// Regeln wie beim Sync: nichts geht verloren, bei gleicher ID gewinnt der
+// neuere Stand, Löschvermerke bleiben wirksam.
+export function mergeIntoLocal(incoming: SyncState): SyncState {
+  const merged = pruneStaleTombstones(mergeStates(loadState(), incoming));
+  saveState(merged);
+  notifyChanged();
+  return merged;
+}
+
 export async function pullNow(): Promise<SyncState> {
   return serialize(async () => {
     const cfg = getConfig();
@@ -668,4 +734,18 @@ export function onChange(fn: Listener): () => void {
 
 function notifyChanged() {
   for (const fn of listeners) fn();
+}
+
+type ErrorListener = (message: string) => void;
+const errorListeners = new Set<ErrorListener>();
+
+// Fehler aus automatisch angestoßenen Sync-Läufen (schedulePush), die sonst
+// keinen Aufrufer hätten, der sie anzeigen könnte.
+export function onSyncError(fn: ErrorListener): () => void {
+  errorListeners.add(fn);
+  return () => errorListeners.delete(fn);
+}
+
+function notifyError(message: string) {
+  for (const fn of errorListeners) fn(message);
 }

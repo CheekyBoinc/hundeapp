@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { mergeStates, pruneStaleTombstones, sanitizeState, type SyncState } from './github';
+import {
+  areEqual,
+  mergeStates,
+  pruneStaleTombstones,
+  sanitizeState,
+  type SyncState
+} from './github';
 import type { Command, Entry } from './types';
 
 const T1 = '2026-08-01T10:00:00.000Z';
@@ -226,5 +232,24 @@ describe('Netzwerkfehler -> verständliche Meldung', () => {
     await expect(validateConfig(cfg)).rejects.toThrow(SyncError);
     await expect(validateConfig(cfg)).rejects.toThrow('Keine Verbindung');
     globalThis.fetch = original;
+  });
+});
+
+describe('areEqual', () => {
+  it('ignoriert die Schlüsselreihenfolge (lokal erzeugt vs. sanitized Remote)', () => {
+    // So legt localStore.saveEntry ein Objekt an: commands steht am Ende.
+    const local = { ...base(), entries: [entry('e1', [])] };
+    // Die Remote-Kopie kommt über JSON-Roundtrip + sanitizeState zurück und hat
+    // eine andere Schlüsselreihenfolge (commands vor created_at).
+    const remote = sanitizeState(JSON.parse(JSON.stringify(local)));
+    expect(Object.keys(remote.entries[0])).not.toEqual(Object.keys(local.entries[0]));
+    expect(areEqual(local, remote)).toBe(true);
+    expect(areEqual(remote, mergeStates(local, remote))).toBe(true);
+  });
+
+  it('erkennt echte Unterschiede weiterhin', () => {
+    const a = { ...base(), entries: [entry('e1', [])] };
+    const b = { ...base(), entries: [{ ...entry('e1', []), ort: 'Halle' }] };
+    expect(areEqual(a, b)).toBe(false);
   });
 });

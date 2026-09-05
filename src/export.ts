@@ -1,5 +1,6 @@
 import type { Command, DogProfile, Entry, WeightEntry } from './types';
 import { formatDateShort, formatKg } from './utils';
+import { saveFile } from './files';
 
 // ===== CSV =====
 
@@ -18,18 +19,13 @@ export function toCSV(rows: Record<string, unknown>[]): string {
   return lines.join('\r\n');
 }
 
-export function downloadCSV(filename: string, rows: Record<string, unknown>[]): void {
+export async function downloadCSV(
+  filename: string,
+  rows: Record<string, unknown>[]
+): Promise<void> {
   const csv = toCSV(rows);
   if (!csv) return;
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  await saveFile(filename, '\ufeff' + csv, 'text/csv;charset=utf-8;');
 }
 
 // ===== PDF (jspdf wird erst beim ersten Export geladen) =====
@@ -135,5 +131,9 @@ export async function downloadPDF(
     );
   }
 
-  doc.save(`trainingstagebuch-${dog.name.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+  await saveFile(
+    `trainingstagebuch-${dog.name.toLowerCase().replace(/\s+/g, '-')}.pdf`,
+    doc.output('blob'),
+    'application/pdf'
+  );
 }

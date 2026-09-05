@@ -55,6 +55,9 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  /* Horizontaler Überlauf würde in mobilen WebViews den Layout-Viewport
+     vergrößern und fixierte Leisten aus dem sichtbaren Bereich schieben. */
+  overflow-x: hidden;
 }
 
 /* Erzählende Fließtexte (Trainingsberichte, Tipps, Beschreibungen) im
