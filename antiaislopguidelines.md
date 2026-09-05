@@ -66,7 +66,7 @@ Zielverhältnis: **~80 % bewährte, funktionierende Muster + ~20 % unverwechselb
 
 ### 1.8 Der Lackmustest
 
-Vor Abgabe fragen: *"Würde jemand, der einen Screenshot sieht, sofort sagen 'das hat eine AI gebaut'?"* Wenn ja, ist der Trainingsdaten-Durchschnitt nicht verlassen worden — nochmal ansetzen. Umgekehrt: *"Könnte jemand außerhalb des Projekts am Screenshot erkennen, um welches Produkt es sich handelt?"* Wenn ja, ist das ein gutes Zeichen für "Soul"; wenn nein, wurde eher eine Vorlage ausgefüllt als ein Produkt gestaltet.
+Vor Abgabe fragen: _"Würde jemand, der einen Screenshot sieht, sofort sagen 'das hat eine AI gebaut'?"_ Wenn ja, ist der Trainingsdaten-Durchschnitt nicht verlassen worden — nochmal ansetzen. Umgekehrt: _"Könnte jemand außerhalb des Projekts am Screenshot erkennen, um welches Produkt es sich handelt?"_ Wenn ja, ist das ein gutes Zeichen für "Soul"; wenn nein, wurde eher eine Vorlage ausgefüllt als ein Produkt gestaltet.
 
 ---
 
@@ -115,7 +115,7 @@ Vor Abgabe fragen: *"Würde jemand, der einen Screenshot sieht, sofort sagen 'da
 
 ## Teil 3 — Text, Microcopy & Kommentare
 
-*(gilt für UI-Texte, Button-Labels, Code-Kommentare, Commit-Messages, Doku, READMEs, Fehlermeldungen)*
+_(gilt für UI-Texte, Button-Labels, Code-Kommentare, Commit-Messages, Doku, READMEs, Fehlermeldungen)_
 
 ### 3.1 Wörter/Phrasen grundsätzlich vermeiden
 

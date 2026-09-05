@@ -17,7 +17,7 @@ export default function EntriesPage() {
   const [commandFilter, setCommandFilter] = useState('');
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
-  const [detailId, setDetailId] = useState<Entry | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +38,13 @@ export default function EntriesPage() {
   }, [load]);
 
   useLiveReload(load);
+
+  // Aus der aktuellen Liste ableiten, damit die Detailansicht nach einem
+  // Reload (z. B. Erledigt-Umschalten) nicht auf einem veralteten Objekt sitzt.
+  const detailEntry = useMemo(
+    () => (detailId ? (entries.find((e) => e.id === detailId) ?? null) : null),
+    [entries, detailId]
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -150,7 +157,7 @@ export default function EntriesPage() {
                     className={`cursor-pointer border-b border-stone-100 align-top last:border-0 hover:bg-accent-tint/60 ${
                       e.erledigt ? 'opacity-60' : ''
                     }`}
-                    onClick={() => setDetailId(e)}
+                    onClick={() => setDetailId(e.id)}
                   >
                     <td className="whitespace-nowrap px-3 py-3 font-medium">
                       {formatDate(e.date)}
@@ -194,7 +201,7 @@ export default function EntriesPage() {
                 className={`cursor-pointer rounded-2xl border border-stone-200 bg-white p-4 shadow-sm ${
                   e.erledigt ? 'opacity-70' : ''
                 }`}
-                onClick={() => setDetailId(e)}
+                onClick={() => setDetailId(e.id)}
               >
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="font-semibold">{formatDate(e.date)}</span>
@@ -226,13 +233,13 @@ export default function EntriesPage() {
         </>
       )}
 
-      {detailId && (
+      {detailEntry && (
         <EntryDetail
-          entry={detailId}
+          entry={detailEntry}
           onClose={() => setDetailId(null)}
           onChanged={load}
           onEdit={() => {
-            setEditing(detailId);
+            setEditing(detailEntry);
             setDetailId(null);
           }}
         />

@@ -13,7 +13,6 @@
 - Lokaler Demo-Modus ohne Konto ist vorhanden
 - Aktuelle Live-Adresse: `https://cheekyboinc.github.io/hundeapp/`
 
-
 - Der GitHub-Token liegt im Browser-`localStorage`.
 - Eine installierte PWA hat aktuell `start_url: "/"`, obwohl die App unter `/hundeapp/` liegt.
 - Das Einrichtungsformular erzwingt nicht, dass das Daten-Repo privat ist.
@@ -22,7 +21,6 @@
 - Die Struktur von `daten.json` wird nicht vollständig validiert.
 - GitHub-Actions sind nicht auf feste Commit-SHAs gepinnt.
 - Positiv: keine bekannten XSS-Sinks, keine Geheimnisse im App-Repo und `npm audit` meldet aktuell keine bekannten Schwachstellen.
-
 
 ### Variante A: GitHub beibehalten
 
@@ -45,7 +43,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 
 **Vorschlag:** Zunächst Variante A sicher härten. Vor sensiblen Daten eine neue Architekturentscheidung treffen.
 
-
 ### Phase 0: Regeln festlegen
 
 **Priorität:** P0, vor der täglichen Nutzung  
@@ -58,7 +55,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - GitHub-Konto mit 2FA oder Passkey schützen.
 - Entscheiden, ob normale Hundeschulnotizen ohne Verschlüsselung ausreichen.
 - Festlegen, wie ein Token bei Handyverlust oder Verdacht auf Missbrauch widerrufen wird.
-
 
 **Priorität:** P0  
 **Geschätzter Aufwand:** 2–4 Stunden  
@@ -77,7 +73,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Funktion „Sync trennen“ beibehalten und um „Lokale Daten dieses Geräts löschen“ ergänzen.
 - Beim Löschen lokaler Daten eine klare Bestätigung mit Hinweis auf nicht synchronisierte Änderungen anzeigen.
 - Nach dem Deployment prüfen, dass App-Repo öffentlich und Daten-Repo privat ist.
-
 
 **Priorität:** P1  
 **Geschätzter Aufwand:** 4–8 Stunden  
@@ -100,7 +95,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Kollisionen gleichnamiger Kommandos bereinigen, sodass der verworfene Datensatz nicht zusätzlich erhalten bleibt.
 - Löschmarkierungen und Wiederherstellung alter Daten dokumentieren.
 
-
 **Priorität:** P1  
 **Geschätzter Aufwand:** 2–4 Stunden  
 **Ergebnis:** Beschädigte oder manipulierte Daten legen die App nicht lahm
@@ -113,7 +107,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Zu viele Einträge oder Kommandos begrenzen beziehungsweise paginieren.
 - Bei beschädigter Datei einen lokalen Wiederherstellungsmodus anbieten.
 - JSON-Versionierung für spätere Formatänderungen ergänzen.
-
 
 **Priorität:** P1 für sensible Daten, sonst P2  
 **Geschätzter Aufwand:** abhängig von der Entscheidung
@@ -132,11 +125,9 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Suche, Merge und Backup werden komplexer.
 - Verschlüsselung muss vor dem Speichern sensibler Daten konzipiert werden.
 
-
 - Kein GitHub-PAT im Browser.
 - Benutzer- und Geräteverwaltung möglich.
 - Höherer Betriebs- und Entwicklungsaufwand.
-
 
 **Priorität:** P1  
 **Geschätzter Aufwand:** 1–3 Stunden  
@@ -151,7 +142,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Vor jedem Release `npm audit`, TypeScript-Prüfung und Production-Build ausführen.
 - Änderungen an Workflow-Dateien besonders prüfen.
 - Für besonders hohe Sicherheit App-Code und Daten-Repo unter getrennten GitHub-Konten oder Organisationen betreiben.
-
 
 **Priorität:** P1  
 **Geschätzter Aufwand:** 2–4 Stunden  
@@ -175,7 +165,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Touch-Ziele mindestens fingerfreundlich gestalten.
 - Fokuszustände und Beschriftungen für Bedienungshilfen prüfen.
 - PWA-Update nach einer neuen Version auf beiden Plattformen testen.
-
 
 **Priorität:** P1  
 **Geschätzter Aufwand:** 3–6 Stunden  
@@ -214,7 +203,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Daten-Repo ist privat und App-Repo enthält keine privaten Daten.
 - Build, Audit und Deployment laufen erfolgreich.
 
-
 1. PWA-Startadresse korrigieren.
 2. Prüfung auf privates Repo und Schreibberechtigung ergänzen.
 3. Sync-Konflikte mit Retry und sichtbarem Fehlerstatus beheben.
@@ -225,17 +213,15 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 8. Entscheidung über Git-Historie und Verschlüsselung treffen.
 9. Erst danach die App dauerhaft im Alltag verwenden.
 
-
-| Ausbau | Grober Aufwand | Nutzen |
-|---|---:|---|
-| Kritische Grundeinrichtung | 2–4 Stunden | Verhindert die wichtigsten Fehlkonfigurationen |
-| Zuverlässiger Sync | 4–8 Stunden | Verhindert stille Sync- und Konfliktprobleme |
-| Datenvalidierung | 2–4 Stunden | Schutz vor beschädigten Dateien und Eingaben |
-| CI- und GitHub-Härtung | 1–3 Stunden | Reduziert Supply-Chain- und Kontorisiken |
-| Mobile Abnahme | 2–4 Stunden | Stabiler Alltag auf iPhone und Android |
-| Clientseitige Verschlüsselung | 1–2 Tage zusätzlich | Schutz bei Einsicht in GitHub oder Datei-Historie |
-| Backend/OAuth-Architektur | mehrere Tage zusätzlich | Kein PAT im Browser, bessere Zugriffskontrolle |
-
+| Ausbau                        |          Grober Aufwand | Nutzen                                            |
+| ----------------------------- | ----------------------: | ------------------------------------------------- |
+| Kritische Grundeinrichtung    |             2–4 Stunden | Verhindert die wichtigsten Fehlkonfigurationen    |
+| Zuverlässiger Sync            |             4–8 Stunden | Verhindert stille Sync- und Konfliktprobleme      |
+| Datenvalidierung              |             2–4 Stunden | Schutz vor beschädigten Dateien und Eingaben      |
+| CI- und GitHub-Härtung        |             1–3 Stunden | Reduziert Supply-Chain- und Kontorisiken          |
+| Mobile Abnahme                |             2–4 Stunden | Stabiler Alltag auf iPhone und Android            |
+| Clientseitige Verschlüsselung |     1–2 Tage zusätzlich | Schutz bei Einsicht in GitHub oder Datei-Historie |
+| Backend/OAuth-Architektur     | mehrere Tage zusätzlich | Kein PAT im Browser, bessere Zugriffskontrolle    |
 
 - Reichen private, unverschlüsselte GitHub-Daten für eure Notizen aus?
 - Soll die App auf GitHub Pages bleiben oder eine eigene Domain bekommen?
@@ -243,7 +229,6 @@ Empfohlen, falls später Adressen, Gesundheitsdaten, private Kontaktdaten oder a
 - Wie lange sollen ältere Daten in der Git-Historie erhalten bleiben?
 - Braucht ihr später Export, mehrere Hunde oder mehrere Trainingsarten?
 - Soll es einen App-PIN oder eine zusätzliche Sperre geben?
-
 
 Für euren aktuellen Anwendungsfall würde ich folgende Zielversion anstreben:
 

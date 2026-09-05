@@ -27,27 +27,27 @@ Der Plan nutzt dieses Muster für die neuen Datentypen – **konsistent, wiederv
 
 ## 3. Grundsatzentscheidungen (vorab klären)
 
-| Frage | Entscheidung (ihr habt gewählt) |
-|---|---|
-| Ein Hund oder mehrere? | **Mehrere Hunde** – Daten werden pro Hund (über `dogId`) geführt |
-| Neue Daten in dieselbe `daten.json`? | **Ja** – eine Datei = ein Sync-Weg |
-| Diagramm fürs Gewicht selbst bauen? | **Ja, schlicht** (SVG-Linienchart), ohne Chart-Bibliothek |
-| Auffällig-Markierung bei Kot/Gewicht? | **Ja** – Ampel-/Auffällig-Flag |
-| Impfpass | **Ja, eigene Impfungen-Liste** (Datum, Impfstoff, nächste Fälligkeit, Hund) |
-| Einheit Gewicht | **kg** |
+| Frage                                 | Entscheidung (ihr habt gewählt)                                             |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| Ein Hund oder mehrere?                | **Mehrere Hunde** – Daten werden pro Hund (über `dogId`) geführt            |
+| Neue Daten in dieselbe `daten.json`?  | **Ja** – eine Datei = ein Sync-Weg                                          |
+| Diagramm fürs Gewicht selbst bauen?   | **Ja, schlicht** (SVG-Linienchart), ohne Chart-Bibliothek                   |
+| Auffällig-Markierung bei Kot/Gewicht? | **Ja** – Ampel-/Auffällig-Flag                                              |
+| Impfpass                              | **Ja, eigene Impfungen-Liste** (Datum, Impfstoff, nächste Fälligkeit, Hund) |
+| Einheit Gewicht                       | **kg**                                                                      |
 
 ## 4. Datenmodell (`src/types.ts`)
 
 ```ts
 export interface DogProfile {
-  id: string;                 // eindeutig, pro Hund
+  id: string; // eindeutig, pro Hund
   name: string;
   rasse: string | null;
-  geburtsdatum: string | null;   // ISO-Datum
+  geburtsdatum: string | null; // ISO-Datum
   geschlecht: 'w' | 'm' | null;
   chipNr: string | null;
   registerNr: string | null;
-  tierarzt: string | null;       // Name/Anschrift
+  tierarzt: string | null; // Name/Anschrift
   allergien: string | null;
   besonderheiten: string | null; // Freitext
   created_at: string;
@@ -56,7 +56,7 @@ export interface DogProfile {
 
 export interface WeightEntry {
   id: string;
-  dogId: string;                // Zuordnung zum Hund
+  dogId: string; // Zuordnung zum Hund
   date: string;
   weightKg: number;
   note: string | null;
@@ -68,10 +68,10 @@ export interface StoolEntry {
   id: string;
   dogId: string;
   date: string;
-  consistency: number;          // 1–7 (Bristol-Skala), 0 = unbekannt
-  color: string | null;         // z. B. braun, schwarz, gelb …
+  consistency: number; // 1–7 (Bristol-Skala), 0 = unbekannt
+  color: string | null; // z. B. braun, schwarz, gelb …
   amount: 'wenig' | 'normal' | 'viel' | null;
-  abnormal: boolean;            // Auffällig-Flag
+  abnormal: boolean; // Auffällig-Flag
   note: string | null;
   created_at: string;
   updated_at?: string;
@@ -81,12 +81,12 @@ export interface VetVisit {
   id: string;
   dogId: string;
   date: string;
-  clinic: string | null;        // Praxis
-  reason: string | null;        // Grund
-  diagnosis: string | null;     // Befund
-  treatment: string | null;     // Behandlung
-  medication: string | null;    // Medikamente
-  followUp: string | null;      // Folgetermin
+  clinic: string | null; // Praxis
+  reason: string | null; // Grund
+  diagnosis: string | null; // Befund
+  treatment: string | null; // Behandlung
+  medication: string | null; // Medikamente
+  followUp: string | null; // Folgetermin
   note: string | null;
   created_at: string;
   updated_at?: string;
@@ -95,9 +95,9 @@ export interface VetVisit {
 export interface Vaccination {
   id: string;
   dogId: string;
-  date: string;                 // Datum der Impfung
-  name: string;                 // Impfstoff (z. B. Tollwut, Staupe)
-  nextDue: string | null;       // nächstes Fälligkeitsdatum
+  date: string; // Datum der Impfung
+  name: string; // Impfstoff (z. B. Tollwut, Staupe)
+  nextDue: string | null; // nächstes Fälligkeitsdatum
   note: string | null;
   created_at: string;
   updated_at?: string;
@@ -160,6 +160,7 @@ export interface SyncState {
 ## 7. UI-Struktur (`src/App.tsx` + neue Komponenten)
 
 **Navigation:**
+
 - Neuer Haupt-Tab **„Hunde“** zusätzlich zu „Einträge“ / „Kommandos“.
 - Der „Hunde“-Tab hat **oben eine Hund-Auswahl** (Dropdown mit allen Hunden + „Hund hinzufügen“).
 - Darunter eine **Unter-Navigation** mit 5 Bereichen:
@@ -172,17 +173,17 @@ export interface SyncState {
 
 **Neue Komponenten:**
 
-| Komponente | Funktion |
-|---|---|
-| `DogsPage.tsx` | Container: Hund-Auswahl + 5 Unter-Tabs |
-| `DogSelector.tsx` | Dropdown zur Hund-Auswahl inkl. „+ Hund“ |
-| `DogForm.tsx` | Hund anlegen/bearbeiten (Stammdaten) |
-| `DogProfileTab.tsx` | Stammdaten des gewählten Hundes anzeigen/bearbeiten |
-| `WeightTab.tsx` | Liste + einfaches SVG-Liniendiagramm + „Gewicht hinzufügen“ |
-| `StoolTab.tsx` | Liste mit Konsistenz-/Farbe-Auswahl, Auffällig-Markierung, Hinzufügen |
-| `VetTab.tsx` | Chronologische Liste, Detail-Modal, Hinzufügen/Bearbeiten |
-| `VaccinationTab.tsx` | Impfpass: Liste, Fälligkeits-Markierung, Hinzufügen/Bearbeiten |
-| `WeightModal.tsx` / `StoolModal.tsx` / `VetModal.tsx` / `VaccinationModal.tsx` | Eingabe-Formulare (Bottom-Sheet, wie bisher) |
+| Komponente                                                                     | Funktion                                                              |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `DogsPage.tsx`                                                                 | Container: Hund-Auswahl + 5 Unter-Tabs                                |
+| `DogSelector.tsx`                                                              | Dropdown zur Hund-Auswahl inkl. „+ Hund“                              |
+| `DogForm.tsx`                                                                  | Hund anlegen/bearbeiten (Stammdaten)                                  |
+| `DogProfileTab.tsx`                                                            | Stammdaten des gewählten Hundes anzeigen/bearbeiten                   |
+| `WeightTab.tsx`                                                                | Liste + einfaches SVG-Liniendiagramm + „Gewicht hinzufügen“           |
+| `StoolTab.tsx`                                                                 | Liste mit Konsistenz-/Farbe-Auswahl, Auffällig-Markierung, Hinzufügen |
+| `VetTab.tsx`                                                                   | Chronologische Liste, Detail-Modal, Hinzufügen/Bearbeiten             |
+| `VaccinationTab.tsx`                                                           | Impfpass: Liste, Fälligkeits-Markierung, Hinzufügen/Bearbeiten        |
+| `WeightModal.tsx` / `StoolModal.tsx` / `VetModal.tsx` / `VaccinationModal.tsx` | Eingabe-Formulare (Bottom-Sheet, wie bisher)                          |
 
 **Charts:** `WeightTab` rendert ein kleines SVG-Liniendiagramm (Datum → kg) ohne Zusatzbibliothek; bei <2 Messpunkten Hinweis „Weitere Messungen anlegen“.
 
@@ -219,18 +220,18 @@ Diese neuen Daten sind sensibler als reine Trainingsnotizen.
 
 ## 11. Aufwandsschätzung
 
-| Arbeit | Grober Aufwand |
-|---|---:|
-| Datenmodell + localStorage (mehrhundfähig) | 2–3 Std. |
-| Sync-Erweiterung + Migration | 2–3 Std. |
-| Hunde-Container + Auswahl + Navigation | 2–3 Std. |
-| Profil + Formular | 2–3 Std. |
-| Gewicht + Diagramm | 3–4 Std. |
-| Kot | 2–3 Std. |
-| Tierarzt | 2–3 Std. |
-| Impfpass | 2–3 Std. |
-| Tests + Abnahme | 4–5 Std. |
-| **Gesamt** | **ca. 21–30 Std.** |
+| Arbeit                                     |     Grober Aufwand |
+| ------------------------------------------ | -----------------: |
+| Datenmodell + localStorage (mehrhundfähig) |           2–3 Std. |
+| Sync-Erweiterung + Migration               |           2–3 Std. |
+| Hunde-Container + Auswahl + Navigation     |           2–3 Std. |
+| Profil + Formular                          |           2–3 Std. |
+| Gewicht + Diagramm                         |           3–4 Std. |
+| Kot                                        |           2–3 Std. |
+| Tierarzt                                   |           2–3 Std. |
+| Impfpass                                   |           2–3 Std. |
+| Tests + Abnahme                            |           4–5 Std. |
+| **Gesamt**                                 | **ca. 21–30 Std.** |
 
 ## 12. Empfohlene Reihenfolge
 

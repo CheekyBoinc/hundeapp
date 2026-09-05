@@ -18,12 +18,14 @@ interface Props {
   dog: DogProfile;
 }
 
-function ageInMonths(geburtsdatum: string | null): number | null {
+// Alter in vollen Monaten zu einem Stichtag (Standard: heute).
+function ageInMonths(geburtsdatum: string | null, atDate?: string): number | null {
   if (!geburtsdatum) return null;
   const birth = new Date(`${geburtsdatum}T00:00:00`);
-  const now = new Date();
-  const months =
-    (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  const at = atDate ? new Date(`${atDate}T00:00:00`) : new Date();
+  if (Number.isNaN(birth.getTime()) || Number.isNaN(at.getTime())) return null;
+  let months = (at.getFullYear() - birth.getFullYear()) * 12 + (at.getMonth() - birth.getMonth());
+  if (at.getDate() < birth.getDate()) months -= 1;
   return months >= 0 ? months : null;
 }
 
@@ -201,14 +203,18 @@ export default function WeightTab({ dog }: Props) {
   const [editing, setEditing] = useState<WeightEntry | null>(null);
 
   const breedRange = findBreedRange(dog.rasse);
+  const growth = findGrowth(dog.rasse);
   const dogId = dog.id;
 
-  const ageMonths = ageInMonths(dog.geburtsdatum);
-  const growth = findGrowth(dog.rasse);
-  const growthRange = ageMonths !== null && growth !== null ? rangeAt(ageMonths, growth) : null;
-  const isPuppy = growthRange !== null;
-  // Für Jungtiere das altersabhängige Band verwenden, sonst die adult-Spanne.
-  const activeRange: BreedRange | null = growthRange ?? breedRange;
+  // Richtbereich für ein bestimmtes Datum: Für Jungtiere das altersabhängige
+  // Wachstumsband (Alter zum Eintragsdatum, nicht heute), sonst die adult-Spanne.
+  const rangeForDate = (date: string): { range: BreedRange | null; growth: boolean } => {
+    const months = ageInMonths(dog.geburtsdatum, date);
+    const growthRange = months !== null && growth !== null ? rangeAt(months, growth) : null;
+    return growthRange
+      ? { range: growthRange, growth: true }
+      : { range: breedRange, growth: false };
+  };
 
   const load = useCallback(async () => {
     try {
@@ -240,16 +246,18 @@ export default function WeightTab({ dog }: Props) {
   const latest = entries[entries.length - 1];
   const prev = entries[entries.length - 2];
   const diff = latest && prev ? latest.weightKg - prev.weightKg : null;
+  const latestRange = latest ? rangeForDate(latest.date) : { range: breedRange, growth: false };
+  const latestAgeMonths = latest ? ageInMonths(dog.geburtsdatum, latest.date) : null;
 
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
         <div className="flex-1">
           {latest && <p className="text-lg font-bold">{formatKg(latest.weightKg)}</p>}
-          {latest && statusChip(latest.weightKg, activeRange, isPuppy)}
-          {isPuppy && latest && (
+          {latest && statusChip(latest.weightKg, latestRange.range, latestRange.growth)}
+          {latest && latestRange.growth && latestAgeMonths !== null && (
             <p className="text-xs text-stone-500">
-              Wachstumsbereich (Alter: {Math.round(ageMonths!)} Monate)
+              Wachstumsbereich (Alter: {latestAgeMonths} Monate)
             </p>
           )}
           {diff !== null && (
@@ -287,7 +295,7 @@ export default function WeightTab({ dog }: Props) {
         </div>
       ) : (
         <>
-          {entries.length >= 2 && <WeightChart entries={entries} range={activeRange} />}
+          {entries.length >= 2 && <WeightChart entries={entries} range={latestRange.range} />}
           <div className="mt-3 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
             {[...entries].reverse().map((e, i) => (
               <div
@@ -299,7 +307,7 @@ export default function WeightTab({ dog }: Props) {
                   {e.note && <p className="text-xs text-stone-500">{e.note}</p>}
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  {statusIcon(e.weightKg, activeRange)}
+                  {statusIcon(e.weightKg, rangeForDate(e.date).range)}
                   <span className="text-sm font-semibold">{formatKg(e.weightKg)}</span>
                   <button
                     className="tap-target text-xs font-medium text-stone-400 hover:text-accent-strong"

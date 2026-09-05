@@ -64,7 +64,7 @@ export default function CalendarPage() {
   const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Entry | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Entry | null>(null);
 
   const load = useCallback(async () => {
@@ -100,6 +100,13 @@ export default function CalendarPage() {
   }, [entries]);
 
   const byDog = useMemo(() => new Map(dogs.map((d) => [d.id, d.name])), [dogs]);
+
+  // Aus der aktuellen Liste ableiten, damit die Detailansicht nach einem
+  // Reload (z. B. Erledigt-Umschalten) nicht auf einem veralteten Objekt sitzt.
+  const detail = useMemo(
+    () => (detailId ? (entries.find((e) => e.id === detailId) ?? null) : null),
+    [entries, detailId]
+  );
 
   const dayEntries = selectedDate ? (entriesByDate.get(selectedDate) ?? []) : [];
   const dayLabel = selectedDate ? formatDateShort(selectedDate) : '';
@@ -203,7 +210,7 @@ export default function CalendarPage() {
                       <div
                         key={e.id}
                         className="cursor-pointer rounded-xl border border-stone-200 p-3 text-sm hover:border-accent-mid"
-                        onClick={() => setDetail(e)}
+                        onClick={() => setDetailId(e.id)}
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-semibold">
@@ -243,11 +250,11 @@ export default function CalendarPage() {
           {detail && (
             <EntryDetail
               entry={detail}
-              onClose={() => setDetail(null)}
+              onClose={() => setDetailId(null)}
               onChanged={load}
               onEdit={() => {
                 setEditing(detail);
-                setDetail(null);
+                setDetailId(null);
               }}
             />
           )}
