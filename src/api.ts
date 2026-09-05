@@ -65,3 +65,10 @@ export const deleteVet = withSync(local.deleteVet);
 export const fetchVaccinations = async (dogId: string) => local.fetchVaccinations(dogId);
 export const saveVaccination = withSync(local.saveVaccination);
 export const deleteVaccination = withSync(local.deleteVaccination);
+
+// ===== Übersicht (alle Hunde) und Demodaten =====
+
+export const fetchAllVaccinations = async () => local.fetchAllVaccinations();
+export const fetchAllVets = async () => local.fetchAllVets();
+export const hasOnlyDemoData = async () => local.hasOnlyDemoData();
+export const removeDemoData = withSync(local.discardUntouchedDemoData);

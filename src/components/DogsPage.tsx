@@ -20,11 +20,18 @@ const SUB_TABS: [SubTab, string][] = [
   ['impfungen', 'Impfungen']
 ];
 
-export default function DogsPage() {
+interface Props {
+  activeDogId: string | null;
+  onActiveDogChange: (dogId: string | null) => void;
+}
+
+export default function DogsPage({ activeDogId, onActiveDogChange }: Props) {
   const [dogs, setDogs] = useState<DogProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Auswahl lebt in den Einstellungen (aktiver Hund), hier nur als Ableitung.
+  const selectedId = activeDogId;
+  const setSelectedId = (id: string | null) => onActiveDogChange(id);
   const [subTab, setSubTab] = useState<SubTab>('profil');
   const [addingDog, setAddingDog] = useState(false);
   const [editingDog, setEditingDog] = useState<DogProfile | null>(null);
@@ -35,17 +42,17 @@ export default function DogsPage() {
       const d = await fetchDogs();
       setDogs(d);
       setError(null);
-      setSelectedId((prev) => {
-        if (d.length === 0) return null;
-        if (prev && d.some((x) => x.id === prev)) return prev;
-        return d[0].id;
-      });
+      if (d.length === 0) {
+        if (activeDogId !== null) onActiveDogChange(null);
+      } else if (!activeDogId || !d.some((x) => x.id === activeDogId)) {
+        onActiveDogChange(d[0].id);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeDogId, onActiveDogChange]);
 
   useEffect(() => {
     load();

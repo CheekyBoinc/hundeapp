@@ -66,3 +66,53 @@ html {
   font-family: var(--font-serif);
   font-weight: 400;
 }
+
+/* ===== Dunkelmodus =====
+   Die App nutzt Tailwinds Stone-Palette und eigene Akzent-Tokens. Statt jede
+   Klasse anzufassen, werden hier die Farbvariablen selbst umgedeutet: Die
+   Utilities (bg-stone-50, text-stone-900, bg-white …) lesen var(--color-*),
+   also reicht ein Satz Überschreibungen. Helle Stufen werden dunkel und
+   umgekehrt, die Akzentfarbe bleibt. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-white: #1c1917;
+    --color-surface: #1c1917;
+    --color-stone-50: #121110;
+    --color-stone-100: #292524;
+    --color-stone-200: #3a3532;
+    --color-stone-300: #4d4744;
+    --color-stone-400: #8b837c;
+    --color-stone-500: #a8a29e;
+    --color-stone-600: #c2bbb4;
+    --color-stone-700: #d6d3d1;
+    --color-stone-800: #e7e5e4;
+    --color-stone-900: #f5f5f4;
+
+    --color-accent-soft: #4a2a14;
+    --color-accent-tint: #2a1d14;
+    --color-accent-dark: #fdba74;
+    --color-accent-ring: #7c3a12;
+
+    --color-emerald-50: #0f2a1f;
+    --color-emerald-100: #14432f;
+    --color-emerald-500: #34d399;
+    --color-emerald-600: #34d399;
+    --color-emerald-700: #6ee7b7;
+    --color-emerald-800: #a7f3d0;
+
+    --color-amber-50: #2c1f08;
+    --color-amber-100: #4a3208;
+    --color-amber-200: #6b4a0c;
+    --color-amber-400: #f59e0b;
+    --color-amber-700: #fcd34d;
+    --color-amber-800: #fde68a;
+
+    --color-red-50: #2d1212;
+    --color-red-100: #4a1a1a;
+    --color-red-200: #6b2323;
+    --color-red-500: #f87171;
+    --color-red-600: #fca5a5;
+    --color-red-700: #fca5a5;
+    --color-red-800: #fecaca;
+  }
+}

@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchCommands, fetchDogs, fetchEntries, toggleEntryDone } from '../api';
+import {
+  fetchCommands,
+  fetchDogs,
+  fetchEntries,
+  hasOnlyDemoData,
+  removeDemoData,
+  toggleEntryDone
+} from '../api';
+import { ChevronRightIcon } from './NavIcons';
 import { useLiveReload } from '../hooks';
 import type { Command, DogProfile, Entry } from '../types';
 import { formatDate, preview } from '../utils';
@@ -18,13 +26,20 @@ export default function EntriesPage() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [demoOnly, setDemoOnly] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [e, c, d] = await Promise.all([fetchEntries(), fetchCommands(), fetchDogs()]);
+      const [e, c, d, demo] = await Promise.all([
+        fetchEntries(),
+        fetchCommands(),
+        fetchDogs(),
+        hasOnlyDemoData()
+      ]);
       setEntries(e);
       setCommands(c);
       setDogs(d);
+      setDemoOnly(demo);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
@@ -115,6 +130,23 @@ export default function EntriesPage() {
         </select>
       </div>
 
+      {demoOnly && !loading && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-accent-mid/40 bg-accent-tint px-4 py-2.5 text-sm text-accent-dark">
+          <span>Das sind Beispiele zum Ausprobieren.</span>
+          <button
+            className="shrink-0 font-semibold underline"
+            onClick={async () => {
+              if (!window.confirm('Alle Beispieleinträge und Beispiel-Kommandos entfernen?'))
+                return;
+              await removeDemoData();
+              load();
+            }}
+          >
+            Alle entfernen
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span>{error}</span>
@@ -187,7 +219,9 @@ export default function EntriesPage() {
                         onChange={(ev) => toggleEntryDone(e.id, ev.target.checked).then(load)}
                       />
                     </td>
-                    <td className="px-3 py-3 text-right text-xs text-stone-400">Details</td>
+                    <td className="px-3 py-3 text-right text-stone-400">
+                      <ChevronRightIcon className="ml-auto h-4 w-4" />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -205,9 +239,12 @@ export default function EntriesPage() {
               >
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="font-semibold">{formatDate(e.date)}</span>
-                  {e.erledigt && (
-                    <span className="chip bg-emerald-100 text-emerald-800">Erledigt</span>
-                  )}
+                  <span className="flex items-center gap-2">
+                    {e.erledigt && (
+                      <span className="chip bg-emerald-100 text-emerald-800">Erledigt</span>
+                    )}
+                    <ChevronRightIcon className="h-4 w-4 text-stone-400" />
+                  </span>
                 </div>
                 {e.ort && (
                   <div className="mb-2">
@@ -226,7 +263,6 @@ export default function EntriesPage() {
                 {e.was_gemacht && (
                   <p className="prose-serif line-clamp-2 text-sm text-stone-600">{e.was_gemacht}</p>
                 )}
-                <p className="mt-2 text-xs font-medium text-stone-400">Antippen für Details</p>
               </div>
             ))}
           </div>

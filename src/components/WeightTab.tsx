@@ -61,7 +61,7 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
   const bandX = pad;
   const bandWidth = width - pad * 2;
   // Halo hinter Achsen-Beschriftungen, damit sie über dem Band lesbar bleiben.
-  const halo = { paintOrder: 'stroke' as const, stroke: '#fafaf9', strokeWidth: 3 };
+  const halo = { paintOrder: 'stroke' as const, stroke: 'var(--color-stone-50)', strokeWidth: 3 };
   // Label liegt innerhalb des Bandes; ist das Band zu dünn, rutscht es über die Oberkante.
   const bandHeight = bandBottom - bandTop;
   const labelY = bandHeight >= 22 ? bandTop + 14 : Math.max(10, bandTop - 5);
@@ -75,7 +75,7 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
             y={bandTop}
             width={bandWidth}
             height={bandHeight}
-            fill="#d1fae5"
+            fill="var(--color-emerald-100)"
             opacity={0.5}
           />
           <line
@@ -83,7 +83,7 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
             y1={bandTop}
             x2={bandX + bandWidth}
             y2={bandTop}
-            stroke="#10b981"
+            stroke="var(--color-emerald-500)"
             strokeWidth="1.5"
             strokeDasharray="6 4"
             opacity="0.7"
@@ -93,7 +93,7 @@ function WeightChart({ entries, range }: { entries: WeightEntry[]; range: BreedR
             y1={bandBottom}
             x2={bandX + bandWidth}
             y2={bandBottom}
-            stroke="#10b981"
+            stroke="var(--color-emerald-500)"
             strokeWidth="1.5"
             strokeDasharray="6 4"
             opacity="0.7"

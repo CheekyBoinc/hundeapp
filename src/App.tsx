@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { closeTopModal } from './modalStack';
@@ -13,14 +13,32 @@ import {
 } from './github';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { discardUntouchedDemoData } from './localStore';
+import { fetchDogs } from './api';
+import { useLiveReload } from './hooks';
+import type { DogProfile } from './types';
 import EntriesPage from './components/EntriesPage';
 import CommandsPage from './components/CommandsPage';
 import DogsPage from './components/DogsPage';
 import CalendarPage from './components/CalendarPage';
 import SettingsModal from './components/SettingsModal';
+import DogPicker from './components/DogPicker';
 import { PawIcon } from './components/PawIcon';
+import {
+  CalendarIcon,
+  ChevronDownIcon,
+  ListCheckIcon,
+  NotebookIcon,
+  PawOutlineIcon
+} from './components/NavIcons';
 
 type Tab = 'eintraege' | 'kommandos' | 'hunde' | 'kalender';
+
+const TABS: { id: Tab; label: string; Icon: (p: { className?: string }) => ReactElement }[] = [
+  { id: 'eintraege', label: 'Einträge', Icon: NotebookIcon },
+  { id: 'kommandos', label: 'Kommandos', Icon: ListCheckIcon },
+  { id: 'hunde', label: 'Hunde', Icon: PawOutlineIcon },
+  { id: 'kalender', label: 'Kalender', Icon: CalendarIcon }
+];
 
 export default function App() {
   const [configured, setConfigured] = useState(isConfigured());
@@ -30,7 +48,31 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDogPicker, setShowDogPicker] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
+  const [dogs, setDogs] = useState<DogProfile[]>([]);
+
+  const handleSettings = useCallback((s: Settings) => {
+    setSettings(s);
+    saveSettings(s);
+  }, []);
+
+  // Hunde für die Kopfzeile; der aktive Hund wird in den Einstellungen gemerkt.
+  const loadDogs = useCallback(async () => {
+    try {
+      setDogs(await fetchDogs());
+    } catch {
+      /* Kopfzeile fällt dann auf "Hundeapp" zurück */
+    }
+  }, []);
+  useEffect(() => {
+    loadDogs();
+  }, [loadDogs]);
+  useLiveReload(loadDogs);
+
+  const activeDog = dogs.find((d) => d.id === settings.activeDogId) ?? dogs[0] ?? null;
+  const setActiveDog = (dogId: string | null) =>
+    handleSettings({ ...settings, activeDogId: dogId });
 
   // Android-Zurück-Taste: erst offenes Modal schließen, dann zur Startseite,
   // erst danach die App verlassen (Standard wäre sofortiges Beenden).
@@ -119,11 +161,6 @@ export default function App() {
     };
   }, [configured]);
 
-  const handleSettings = (s: Settings) => {
-    setSettings(s);
-    saveSettings(s);
-  };
-
   const handleConnected = (user: string, repo: string, token: string) => {
     // Unveränderte Beispieldaten nicht in ein (bestehendes) Repo mischen.
     discardUntouchedDemoData();
@@ -152,13 +189,6 @@ export default function App() {
     setShowSettings(false);
   };
 
-  const tabs: [Tab, string][] = [
-    ['eintraege', 'Einträge'],
-    ['kommandos', 'Kommandos'],
-    ['hunde', 'Hunde'],
-    ['kalender', 'Kalender']
-  ];
-
   const statusDot = {
     idle: 'bg-stone-300',
     syncing: 'bg-amber-400',
@@ -167,32 +197,55 @@ export default function App() {
   }[status];
 
   const navButtons = (
-    <div className="mx-auto flex max-w-5xl gap-1 px-4 py-2">
-      {tabs.map(([id, label]) => (
-        <button
-          key={id}
-          onClick={() => setTab(id)}
-          className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold ${
-            tab === id ? 'bg-accent-soft text-accent-dark' : 'text-stone-500 hover:bg-stone-100'
-          }`}
-        >
-          {label}
-        </button>
-      ))}
+    <div className="mx-auto flex max-w-5xl px-2 pt-1.5 pb-1">
+      {TABS.map(({ id, label, Icon }) => {
+        const active = tab === id;
+        return (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            aria-current={active ? 'page' : undefined}
+            className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold ${
+              active ? 'text-accent-strong' : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <span
+              className={`flex h-8 w-14 items-center justify-center rounded-full ${
+                active ? 'bg-accent-soft' : ''
+              }`}
+            >
+              <Icon className="h-5.5 w-5.5" />
+            </span>
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 
+  const title = activeDog?.name ?? 'Hundeapp';
+  const canSwitchDog = dogs.length > 1;
+
   const headerInner = (
     <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
           <PawIcon className="h-6 w-6" />
         </div>
         {settings.headerText && (
-          <div>
-            <h1 className="text-lg font-bold leading-tight">Hundeapp</h1>
-            <p className="text-xs text-stone-500">Trainingstagebuch</p>
-          </div>
+          <button
+            type="button"
+            className="min-w-0 text-left"
+            onClick={() => canSwitchDog && setShowDogPicker(true)}
+            disabled={!canSwitchDog}
+            title={canSwitchDog ? 'Hund wechseln' : undefined}
+          >
+            <span className="flex items-center gap-1">
+              <span className="truncate text-lg font-bold leading-tight">{title}</span>
+              {canSwitchDog && <ChevronDownIcon className="h-4 w-4 shrink-0 text-stone-400" />}
+            </span>
+            <span className="block text-xs text-stone-500">Trainingstagebuch</span>
+          </button>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -247,23 +300,6 @@ export default function App() {
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
         </button>
-        {Capacitor.getPlatform() !== 'ios' && (
-          <a
-            href="https://ko-fi.com/cloudplay"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#29abe0] text-white hover:bg-[#1f96c7]"
-            title="Unterstützen über Ko-fi"
-            aria-label="Unterstützen über Ko-fi"
-          >
-            <svg viewBox="0 0 32 32" className="h-6 w-6" fill="none">
-              <path
-                d="M16 26c-7-4.5-12-9.7-12-14 0-3.2 2.6-5.4 5.8-4.8 2.2.4 4.2 1.5 6.2 3.4 2-1.9 4-3 6.2-3.4 3.2-.6 5.8 1.6 5.8 4.8 0 4.3-5 9.5-12 14z"
-                fill="#fff"
-              />
-            </svg>
-          </a>
-        )}
       </div>
     </div>
   );
@@ -293,10 +329,12 @@ export default function App() {
           Keine Verbindung – Änderungen werden gespeichert und später synchronisiert.
         </div>
       )}
-      <main className="mx-auto max-w-5xl px-4 py-4 pb-24">
+      <main className="mx-auto max-w-5xl px-4 py-4 pb-28">
         {tab === 'eintraege' && <EntriesPage />}
         {tab === 'kommandos' && <CommandsPage />}
-        {tab === 'hunde' && <DogsPage />}
+        {tab === 'hunde' && (
+          <DogsPage activeDogId={activeDog?.id ?? null} onActiveDogChange={setActiveDog} />
+        )}
         {tab === 'kalender' && <CalendarPage />}
       </main>
 
@@ -304,6 +342,15 @@ export default function App() {
         <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
           {navButtons}
         </nav>
+      )}
+
+      {showDogPicker && (
+        <DogPicker
+          dogs={dogs}
+          activeDogId={activeDog?.id ?? null}
+          onSelect={setActiveDog}
+          onClose={() => setShowDogPicker(false)}
+        />
       )}
 
       {showSettings && (

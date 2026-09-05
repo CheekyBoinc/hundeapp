@@ -1,12 +1,35 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { deleteCommand, fetchCommands, fetchDogs, fetchEntries } from '../api';
 import { useLiveReload } from '../hooks';
-import { masteryStats, daysSince } from '../mastery';
+import { masteryStats, daysSince, masteryLevel, MASTERY_LABEL } from '../mastery';
 import type { Command, DogProfile, Entry } from '../types';
 import { formatDateShort } from '../utils';
 import CommandModal from './CommandModal';
 
 const IDLE_DAYS = 30;
+
+// Drei Punkte für den Übungsstand: 0 = Neu … 3 = Sitzt.
+function MasteryDots({ level }: { level: 0 | 1 | 2 | 3 }) {
+  const tone =
+    level === 3
+      ? 'bg-emerald-100 text-emerald-800'
+      : level === 0
+        ? 'bg-stone-100 text-stone-500'
+        : 'bg-accent-soft text-accent-dark';
+  return (
+    <span className={`chip inline-flex items-center gap-1.5 ${tone}`}>
+      <span className="flex items-center gap-0.5" aria-hidden="true">
+        {[1, 2, 3].map((n) => (
+          <span
+            key={n}
+            className={`h-1.5 w-1.5 rounded-full ${n <= level ? 'bg-current' : 'bg-current opacity-25'}`}
+          />
+        ))}
+      </span>
+      {MASTERY_LABEL[level]}
+    </span>
+  );
+}
 
 export default function CommandsPage() {
   const [commands, setCommands] = useState<Command[]>([]);
@@ -159,13 +182,16 @@ export default function CommandsPage() {
                 className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
               >
                 <div className="mb-1 flex items-start justify-between gap-2">
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-base font-bold">{c.name}</h3>
-                    {c.dogId && (
-                      <span className="chip bg-stone-100 text-stone-600">
-                        {dogs.find((d) => d.id === c.dogId)?.name ?? 'Hund'}
-                      </span>
-                    )}
+                    <div className="mt-1 mb-1.5 flex flex-wrap items-center gap-1.5">
+                      <MasteryDots level={masteryLevel(s)} />
+                      {c.dogId && (
+                        <span className="chip bg-stone-100 text-stone-600">
+                          {dogs.find((d) => d.id === c.dogId)?.name ?? 'Hund'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <button

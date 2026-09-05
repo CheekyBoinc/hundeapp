@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 import type { Settings } from '../settings';
 import { exportBackup, formatCounts, importBackup, readBackupFile } from '../backup';
+import { Capacitor } from '@capacitor/core';
 import Modal from './Modal';
 import SyncSetup from './SyncSetup';
+import { CoffeeIcon } from './NavIcons';
 
 interface Props {
   settings: Settings;
@@ -207,16 +209,57 @@ export default function SettingsModal({
           </div>
         </Section>
 
-        <p className="text-center text-xs text-stone-500">
-          <a
-            href="https://cheekyboinc.github.io/hundeapp/datenschutz.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-stone-700"
-          >
-            Datenschutzerklärung
-          </a>
-        </p>
+        <Section title="Über die App">
+          <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+            {Capacitor.getPlatform() !== 'ios' && (
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-dark">
+                  <CoffeeIcon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-stone-800">
+                    Gefällt dir die Hundeapp?
+                  </span>
+                  <span className="block text-xs text-stone-500">
+                    Kostenlos und ohne Werbung. Ein Kaffee hilft beim Weiterbauen.
+                  </span>
+                </span>
+                <a
+                  href="https://ko-fi.com/cloudplay"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary shrink-0 px-3 py-1.5 text-xs"
+                >
+                  Unterstützen
+                </a>
+              </div>
+            )}
+            <p
+              className={`text-center text-xs text-stone-500 ${
+                Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
+              }`}
+            >
+              Version {__APP_VERSION__} ·{' '}
+              <a
+                href="https://cheekyboinc.github.io/hundeapp/datenschutz.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-stone-700"
+              >
+                Datenschutz
+              </a>{' '}
+              ·{' '}
+              <a
+                href="https://cheekyboinc.github.io/hundeapp/datenschutz.html#impressum"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-stone-700"
+              >
+                Impressum
+              </a>
+            </p>
+          </div>
+        </Section>
       </div>
 
       {showSyncSetup && (
