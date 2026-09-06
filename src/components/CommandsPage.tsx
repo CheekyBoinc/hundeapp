@@ -103,7 +103,7 @@ export default function CommandsPage() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-2">
         <input
           className="input"
           placeholder="Kommando suchen…"

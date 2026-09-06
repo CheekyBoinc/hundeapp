@@ -15,7 +15,8 @@
     "android": "npm run cap:sync && cap open android",
     "assets": "node scripts/generate-icons.mjs && npx -y @capacitor/assets generate --android --ios",
     "release:android": "node scripts/release-android.mjs",
-    "ios": "npm run cap:sync && cap open ios"
+    "ios": "npm run cap:sync && cap open ios",
+    "texts": "node scripts/extract-texts.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.0",

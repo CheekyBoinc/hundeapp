@@ -41,9 +41,15 @@
 }
 
 @layer components {
-  /* Mindesthöhe 44 px: Richtwert für Touch-Ziele (Apple 44 pt, Google 48 dp). */
+  /* Feste Höhe 44 px für einzeilige Felder und Auswahllisten, damit alle
+     Seiten dieselbe Zeilenhöhe haben (Richtwert für Touch-Ziele: Apple 44 pt,
+     Google 48 dp). Mehrzeilige Felder bekommen nur die Mindesthöhe. */
   .input {
     @apply min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-accent-mid focus:outline-none focus:ring-2 focus:ring-accent-ring;
+  }
+  input.input,
+  select.input {
+    @apply h-11;
   }
   .btn-primary {
     @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-strong active:bg-accent-deep disabled:opacity-50;
