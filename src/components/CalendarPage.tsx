@@ -6,7 +6,7 @@ import { ChevronRightIcon } from './NavIcons';
 import { PawIcon } from './PawIcon';
 import { useLiveReload } from '../hooks';
 import type { Command, DogProfile, Entry, Vaccination, VetVisit } from '../types';
-import { formatDateShort } from '../utils';
+import { formatDateShort, formatDayMonth } from '../utils';
 import EntryDetail from './EntryDetail';
 import EntryModal from './EntryModal';
 import Modal from './Modal';
@@ -274,7 +274,7 @@ export default function CalendarPage() {
                     className="flex w-full items-center gap-3 border-b border-stone-100 px-4 py-2.5 text-left last:border-0 hover:bg-accent-tint/60"
                   >
                     <span className="w-20 shrink-0 text-sm font-semibold">
-                      {formatDateShort(e.date).slice(0, 6)}
+                      {formatDayMonth(e.date)}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-stone-800">

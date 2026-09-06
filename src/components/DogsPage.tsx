@@ -39,20 +39,24 @@ export default function DogsPage({ activeDogId, onActiveDogChange }: Props) {
 
   const load = useCallback(async () => {
     try {
-      const d = await fetchDogs();
-      setDogs(d);
+      setDogs(await fetchDogs());
       setError(null);
-      if (d.length === 0) {
-        if (activeDogId !== null) onActiveDogChange(null);
-      } else if (!activeDogId || !d.some((x) => x.id === activeDogId)) {
-        onActiveDogChange(d[0].id);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Laden');
     } finally {
       setLoading(false);
     }
-  }, [activeDogId, onActiveDogChange]);
+  }, []);
+
+  // Auswahl mit der Liste abgleichen: gelöschter Hund → erster Hund, keine Hunde → nichts.
+  useEffect(() => {
+    if (loading) return;
+    if (dogs.length === 0) {
+      if (activeDogId !== null) onActiveDogChange(null);
+    } else if (!activeDogId || !dogs.some((x) => x.id === activeDogId)) {
+      onActiveDogChange(dogs[0].id);
+    }
+  }, [dogs, activeDogId, onActiveDogChange, loading]);
 
   useEffect(() => {
     load();

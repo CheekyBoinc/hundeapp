@@ -98,6 +98,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.2.4
+
+<de-DE>
+Beispieldaten lassen sich jetzt auch entfernen, wenn schon ein Hund angelegt
+ist. Zugangsdaten für den optionalen Sync liegen in der sicheren Ablage des
+Systems. Hinweis, bevor die Sync-Datei zu groß wird. Kleinere Korrekturen.
+</de-DE>
+
 ## Versionshinweise für Release 1.2.3
 
 <de-DE>
