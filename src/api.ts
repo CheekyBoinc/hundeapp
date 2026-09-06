@@ -2,13 +2,6 @@ import * as local from './localStore';
 import { schedulePush } from './github';
 import type { Command, DogProfile, Entry } from './types';
 
-export class ApiError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
 function afterMutation() {
   schedulePush();
 }
@@ -71,4 +64,4 @@ export const deleteVaccination = withSync(local.deleteVaccination);
 export const fetchAllVaccinations = async () => local.fetchAllVaccinations();
 export const fetchAllVets = async () => local.fetchAllVets();
 export const hasOnlyDemoData = async () => local.hasOnlyDemoData();
-export const removeDemoData = withSync(local.discardUntouchedDemoData);
+export const removeDemoData = withSync(local.removeDemoData);

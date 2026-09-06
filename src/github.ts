@@ -8,14 +8,18 @@ import type {
   VetVisit,
   WeightEntry
 } from './types';
+import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
+import { SecureStorage } from '@aparajita/capacitor-secure-storage';
 import { loadState, saveState } from './localStore';
 
 // ===== Konfiguration =====
-// Token und Repo-Daten liegen in Capacitor Preferences: nativ in den
-// App-eigenen Einstellungen (Android SharedPreferences / iOS UserDefaults),
-// im Browser weiterhin im localStorage. Der Zugriff im Code bleibt synchron
-// über einen Cache, der einmalig beim Start per initConfig() gefüllt wird.
+// Token und Repo-Daten liegen nativ in der sicheren Ablage des Systems
+// (iOS Keychain, Android verschlüsselte SharedPreferences), im Browser im
+// localStorage über Capacitor Preferences. Der Zugriff im Code bleibt
+// synchron über einen Cache, der einmalig beim Start per initConfig()
+// gefüllt wird. Ältere Stände (Preferences, davor localStorage) werden
+// beim ersten Start übernommen.
 
 const CONFIG_KEY = 'hundeapp.syncConfig';
 const DATA_PATH = 'daten.json';
@@ -48,19 +52,48 @@ function parseConfig(raw: string | null | undefined): SyncConfig | null {
   }
 }
 
+const useSecureStore = Capacitor.isNativePlatform();
+
+async function readStoredConfig(): Promise<string | null> {
+  if (useSecureStore) {
+    // Keine iCloud-Schlüsselbund-Synchronisierung: Der Token bleibt auf dem Gerät.
+    await SecureStorage.setSynchronize(false).catch(() => undefined);
+    const value = await SecureStorage.get(CONFIG_KEY).catch(() => null);
+    return typeof value === 'string' ? value : null;
+  }
+  return (await Preferences.get({ key: CONFIG_KEY })).value;
+}
+
+async function writeStoredConfig(value: string): Promise<void> {
+  if (useSecureStore) await SecureStorage.set(CONFIG_KEY, value);
+  else await Preferences.set({ key: CONFIG_KEY, value });
+}
+
+async function removeStoredConfig(): Promise<void> {
+  if (useSecureStore) await SecureStorage.remove(CONFIG_KEY);
+  else await Preferences.remove({ key: CONFIG_KEY });
+}
+
 // Einmalig vor dem ersten Render aufrufen.
 export async function initConfig(): Promise<void> {
-  let cfg = await Preferences.get({ key: CONFIG_KEY })
-    .then((r) => parseConfig(r.value))
+  let cfg = await readStoredConfig()
+    .then(parseConfig)
     .catch(() => null);
-  // Migration: Ältere Versionen haben die Konfiguration direkt im localStorage abgelegt.
+  // Migration 2: Versionen 1.0 bis 1.2.3 haben nativ in Preferences gespeichert.
+  if (!cfg && useSecureStore) {
+    const previous = parseConfig((await Preferences.get({ key: CONFIG_KEY })).value);
+    if (previous) {
+      cfg = previous;
+      await writeStoredConfig(JSON.stringify(previous)).catch(() => undefined);
+      await Preferences.remove({ key: CONFIG_KEY }).catch(() => undefined);
+    }
+  }
+  // Migration 1: Die Web-Version hat die Konfiguration anfangs direkt im localStorage abgelegt.
   if (!cfg) {
     const legacy = parseConfig(localStorage.getItem(CONFIG_KEY));
     if (legacy) {
       cfg = legacy;
-      await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(legacy) }).catch(
-        () => undefined
-      );
+      await writeStoredConfig(JSON.stringify(legacy)).catch(() => undefined);
       localStorage.removeItem(CONFIG_KEY);
     }
   }
@@ -73,12 +106,12 @@ export function getConfig(): SyncConfig | null {
 
 export function setConfig(cfg: SyncConfig) {
   configCache = cfg;
-  void Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(cfg) });
+  void writeStoredConfig(JSON.stringify(cfg)).catch(() => undefined);
 }
 
 export function clearConfig() {
   configCache = null;
-  void Preferences.remove({ key: CONFIG_KEY });
+  void removeStoredConfig().catch(() => undefined);
 }
 
 export function isConfigured(): boolean {
@@ -603,8 +636,8 @@ async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise
     );
   }
   if (bytes > WARN_PAYLOAD_BYTES) {
-    console.warn(
-      `Hundeapp Sync: Die Daten sind mit ${(bytes / 1024).toFixed(0)} KB fast am 1-MB-Limit. Bitte bereinigen.`
+    notifyNotice(
+      `Die Sync-Datei ist mit ${(bytes / 1024).toFixed(0)} KB nahe am Limit von 1 MB. Alte Einträge löschen oder eine Sicherung anlegen.`
     );
   }
   const body: Record<string, unknown> = {
@@ -748,4 +781,16 @@ export function onSyncError(fn: ErrorListener): () => void {
 
 function notifyError(message: string) {
   for (const fn of errorListeners) fn(message);
+}
+
+// Hinweise, die keinen Fehlerzustand bedeuten (z. B. Dateigröße nahe am Limit).
+const noticeListeners = new Set<ErrorListener>();
+
+export function onSyncNotice(fn: ErrorListener): () => void {
+  noticeListeners.add(fn);
+  return () => noticeListeners.delete(fn);
+}
+
+function notifyNotice(message: string) {
+  for (const fn of noticeListeners) fn(message);
 }

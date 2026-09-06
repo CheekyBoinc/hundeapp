@@ -56,6 +56,28 @@ writeFileSync(
     .replace(/versionName "[^"]+"/, `versionName "${nextName}"`)
 );
 
+// iOS gleich mitziehen (Marketing Version und Build-Nummer), damit beide
+// Plattformen dieselbe Version tragen.
+const pbxproj = join(root, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+if (existsSync(pbxproj)) {
+  writeFileSync(
+    pbxproj,
+    readFileSync(pbxproj, 'utf8')
+      .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${nextName};`)
+      .replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${nextCode};`)
+  );
+  console.log(`iOS: MARKETING_VERSION ${nextName}, Build ${nextCode}`);
+}
+
+// package.json-Version an den Namen angleichen (x.y → x.y.0).
+const pkgFile = join(root, 'package.json');
+const pkgJson = JSON.parse(readFileSync(pkgFile, 'utf8'));
+const semver = nextName.split('.').length === 2 ? `${nextName}.0` : nextName;
+if (pkgJson.version !== semver) {
+  pkgJson.version = semver;
+  writeFileSync(pkgFile, JSON.stringify(pkgJson, null, 2) + '\n');
+}
+
 // JDK 21 für Gradle (Android Studio bringt ein neueres JDK mit, das Gradle 8 nicht kann)
 const env = { ...process.env };
 if (!env.JAVA_HOME && process.platform === 'darwin') {
@@ -98,6 +120,6 @@ copyFileSync(aab, target);
 console.log(`
 Fertig: ${target}
 Nächste Schritte:
-  1. git commit -am "Release ${nextName} (${nextCode})"
+  1. git add -A && git commit -m "Release ${nextName} (${nextCode})"
   2. Bundle in der Play Console hochladen (Testen und veröffentlichen -> Track -> Neuen Release erstellen)
 `);

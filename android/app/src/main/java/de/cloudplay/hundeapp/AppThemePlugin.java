@@ -27,9 +27,16 @@ public class AppThemePlugin extends Plugin {
             call.reject("Ungültige Farbe: " + background);
             return;
         }
-        getActivity().runOnUiThread(() -> {
-            Window window = getActivity().getWindow();
-            window.setBackgroundDrawable(new ColorDrawable(color));
+        android.app.Activity activity = getActivity();
+        if (activity == null || activity.isFinishing()) {
+            call.resolve();
+            return;
+        }
+        activity.runOnUiThread(() -> {
+            Window window = activity.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawable(new ColorDrawable(color));
+            }
             call.resolve();
         });
     }

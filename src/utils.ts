@@ -59,3 +59,10 @@ export function dateParts(date: string): { weekday: string; day: string; month: 
     month: d.toLocaleDateString('de-DE', { month: 'short' }).replace('.', '')
   };
 }
+
+// "06.09." – Tag und Monat ohne Jahr, für kompakte Listen.
+export function formatDayMonth(date: string): string {
+  const d = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return '–';
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+}

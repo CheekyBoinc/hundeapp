@@ -453,8 +453,10 @@ function dateDaysAgo(days: number): string {
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
 
-export function loadDemoData(): void {
-  const stamp = now();
+function loadDemoData(): void {
+  // Eine Minute in der Vergangenheit, damit jede spätere Bearbeitung an
+  // updated_at erkennbar ist (siehe isUntouchedDemo).
+  const stamp = new Date(Date.now() - 60_000).toISOString();
   const commands: Command[] = DEMO_COMMANDS.map((c) => ({
     ...c,
     dogId: null,
@@ -477,18 +479,54 @@ export function loadDemoData(): void {
   localStorage.setItem(DEMO_MARKER_KEY, '1');
 }
 
-export function hasData(): boolean {
+function hasData(): boolean {
   return (
     readJson<Entry[]>(ENTRIES_KEY, []).length > 0 ||
     readJson<Command[]>(COMMANDS_KEY, []).length > 0
   );
 }
 
-// Vor dem Einrichten der Synchronisierung: Sind ausschließlich unveränderte
-// Demodaten vorhanden, werden sie verworfen, damit sie nicht in ein
+// Demodaten gelten als „unberührt“, solange sie die Demo-ID tragen und nie
+// bearbeitet wurden (updated_at gleich created_at). Ein bearbeiteter
+// Beispieleintrag ist ab dann ein echter Eintrag des Nutzers.
+function isUntouchedDemo(x: { id: string; created_at: string; updated_at?: string }): boolean {
+  return x.id.startsWith('demo-') && (!x.updated_at || x.updated_at === x.created_at);
+}
+
+// Sind Einträge und Kommandos ausschließlich unberührte Demodaten?
+// (Steuert den Hinweis mit „Alle entfernen“.)
+export function hasOnlyDemoData(): boolean {
+  const entries = readJson<Entry[]>(ENTRIES_KEY, []);
+  const commands = readJson<Command[]>(COMMANDS_KEY, []);
+  const all = [...entries, ...commands];
+  return all.length > 0 && all.every(isUntouchedDemo);
+}
+
+// Knopf „Alle entfernen“: unberührte Demo-Einträge und -Kommandos löschen,
+// unabhängig davon, ob schon ein Hund oder Gewichte angelegt sind. Mit
+// Tombstones, falls die Daten bereits synchronisiert wurden.
+export function removeDemoData(): void {
+  const entries = readJson<Entry[]>(ENTRIES_KEY, []);
+  const commands = readJson<Command[]>(COMMANDS_KEY, []);
+  const goneEntries = entries.filter(isUntouchedDemo);
+  const goneCommands = commands.filter(isUntouchedDemo);
+  writeJson(
+    ENTRIES_KEY,
+    entries.filter((e) => !isUntouchedDemo(e))
+  );
+  writeJson(
+    COMMANDS_KEY,
+    commands.filter((c) => !isUntouchedDemo(c))
+  );
+  for (const e of goneEntries) addTombstone(DELETED_ENTRIES_KEY, e.id);
+  for (const c of goneCommands) addTombstone(DELETED_COMMANDS_KEY, c.id);
+}
+
+// Vor dem Einrichten der Synchronisierung: Besteht der gesamte Datenbestand
+// nur aus unberührten Demodaten, werden sie verworfen, damit sie nicht in ein
 // bestehendes Repo (z. B. vom zweiten Handy) gemischt werden.
 export function discardUntouchedDemoData(): void {
-  const lists: { id: string }[][] = [
+  const lists: { id: string; created_at: string; updated_at?: string }[][] = [
     readJson<Entry[]>(ENTRIES_KEY, []),
     readJson<Command[]>(COMMANDS_KEY, []),
     readJson<DogProfile[]>(DOGS_KEY, []),
@@ -499,17 +537,9 @@ export function discardUntouchedDemoData(): void {
   ];
   const all = lists.flat();
   if (all.length === 0) return;
-  if (!all.every((x) => x.id.startsWith('demo-'))) return;
+  if (!all.every(isUntouchedDemo)) return;
   writeJson(ENTRIES_KEY, []);
   writeJson(COMMANDS_KEY, []);
-}
-
-// Sind ausschließlich Demodaten vorhanden? (Für den Hinweis mit „Alle entfernen“.)
-export function hasOnlyDemoData(): boolean {
-  const entries = readJson<Entry[]>(ENTRIES_KEY, []);
-  const commands = readJson<Command[]>(COMMANDS_KEY, []);
-  const all = [...entries, ...commands];
-  return all.length > 0 && all.every((x) => x.id.startsWith('demo-'));
 }
 
 export function fetchAllVaccinations(): Vaccination[] {

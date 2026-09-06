@@ -7,6 +7,7 @@ import {
   isConfigured,
   onChange,
   onSyncError,
+  onSyncNotice,
   pullNow,
   pushNow,
   setConfig
@@ -56,11 +57,16 @@ export default function App() {
   const [offline, setOffline] = useState(!navigator.onLine);
   const [dogs, setDogs] = useState<DogProfile[]>([]);
 
-  const handleSettings = useCallback((s: Settings) => {
-    setSettings(s);
-    saveSettings(s);
-    applyTheme(s.theme);
-  }, []);
+  const handleSettings = useCallback((s: Settings) => setSettings(s), []);
+  // Speichern und Design als Effekte, damit Setter stabil bleiben und keine
+  // veralteten Einstellungen überschrieben werden.
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
+  useEffect(() => {
+    applyTheme(settings.theme);
+  }, [settings.theme]);
+  const [notice, setNotice] = useState<string | null>(null);
 
   // Hunde für die Kopfzeile; der aktive Hund wird in den Einstellungen gemerkt.
   const loadDogs = useCallback(async () => {
@@ -76,8 +82,10 @@ export default function App() {
   useLiveReload(loadDogs);
 
   const activeDog = dogs.find((d) => d.id === settings.activeDogId) ?? dogs[0] ?? null;
-  const setActiveDog = (dogId: string | null) =>
-    handleSettings({ ...settings, activeDogId: dogId });
+  const setActiveDog = useCallback(
+    (dogId: string | null) => setSettings((prev) => ({ ...prev, activeDogId: dogId })),
+    []
+  );
 
   // Android-Zurück-Taste: erst offenes Modal schließen, dann zur Startseite,
   // erst danach die App verlassen (Standard wäre sofortiges Beenden).
@@ -152,6 +160,9 @@ export default function App() {
         setErrorMsg(message);
       }
     });
+    const unsubNotice = onSyncNotice((message) => {
+      if (!cancelled) setNotice(message);
+    });
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
         setStatus('syncing');
@@ -173,6 +184,7 @@ export default function App() {
       cancelled = true;
       unsub();
       unsubError();
+      unsubNotice();
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [configured]);
@@ -350,6 +362,18 @@ export default function App() {
       {offline && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs text-amber-800">
           Keine Verbindung – Änderungen werden gespeichert und später synchronisiert.
+        </div>
+      )}
+      {notice && (
+        <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+          <span>{notice}</span>
+          <button
+            type="button"
+            className="tap-target shrink-0 font-semibold underline"
+            onClick={() => setNotice(null)}
+          >
+            OK
+          </button>
         </div>
       )}
       <main className="mx-auto max-w-5xl px-4 py-4 pb-28">

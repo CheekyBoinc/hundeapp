@@ -22,11 +22,11 @@ export interface BackupCounts {
 
 const STATE_KEYS = ['commands', 'entries', 'dogs', 'weight', 'stool', 'vet', 'vaccinations'];
 
-export function buildBackup(): BackupFile {
+function buildBackup(): BackupFile {
   return { app: 'hundeapp', version: 1, exportedAt: new Date().toISOString(), data: loadState() };
 }
 
-export function backupFilename(): string {
+function backupFilename(): string {
   return `hundeapp-sicherung-${todayLocal()}.json`;
 }
 
