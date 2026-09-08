@@ -163,8 +163,14 @@ export default function App() {
     const unsubNotice = onSyncNotice((message) => {
       if (!cancelled) setNotice(message);
     });
+    // Beim Zurückkehren in die App höchstens alle 30 s abrufen, sonst löst
+    // jeder App-Wechsel einen Request aus.
+    const PULL_COOLDOWN_MS = 30_000;
+    let lastPull = Date.now();
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
+        if (Date.now() - lastPull < PULL_COOLDOWN_MS) return;
+        lastPull = Date.now();
         setStatus('syncing');
         pullNow()
           .then(() => {

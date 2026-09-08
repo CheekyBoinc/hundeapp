@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { deleteVaccination, fetchVaccinations } from '../api';
 import { useLiveReload } from '../hooks';
 import type { Vaccination } from '../types';
-import { formatDateShort } from '../utils';
+import { formatDateShort, startOfToday } from '../utils';
 import VaccinationModal from './VaccinationModal';
 import DateStamp from './DateStamp';
 import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
@@ -13,7 +13,7 @@ interface Props {
 
 function dueState(nextDue: string | null): 'overdue' | 'soon' | 'ok' | null {
   if (!nextDue) return null;
-  const today = new Date(new Date().toDateString());
+  const today = startOfToday();
   const due = new Date(`${nextDue}T00:00:00`);
   const diff = Math.round((due.getTime() - today.getTime()) / 86400000);
   if (diff < 0) return 'overdue';
