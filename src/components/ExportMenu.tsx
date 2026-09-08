@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchCommands, fetchEntries, fetchWeights } from '../api';
 import { downloadCSV, downloadPDF } from '../export';
+import { safeFilePart } from '../files';
 import type { DogProfile } from '../types';
 import Modal from './Modal';
 
@@ -71,7 +72,9 @@ export default function ExportMenu({ dog, onClose }: Props) {
               className="btn-secondary"
               disabled={busy || dogEntries.length === 0}
               onClick={() =>
-                run(() => downloadCSV(`eintraege-${dog.name}.csv`, entryRows(dogEntries)))
+                run(() =>
+                  downloadCSV(`eintraege-${safeFilePart(dog.name)}.csv`, entryRows(dogEntries))
+                )
               }
             >
               Einträge
@@ -82,7 +85,7 @@ export default function ExportMenu({ dog, onClose }: Props) {
               onClick={() =>
                 run(() =>
                   downloadCSV(
-                    `gewicht-${dog.name}.csv`,
+                    `gewicht-${safeFilePart(dog.name)}.csv`,
                     [...weights]
                       .sort((a, b) => a.date.localeCompare(b.date))
                       .map((w) => ({
@@ -102,7 +105,7 @@ export default function ExportMenu({ dog, onClose }: Props) {
               onClick={() =>
                 run(() =>
                   downloadCSV(
-                    `kommandos-${dog.name}.csv`,
+                    `kommandos-${safeFilePart(dog.name)}.csv`,
                     dogCommands.map((c) => ({
                       Kommando: c.name,
                       Beschreibung: c.beschreibung ?? '',

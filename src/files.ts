@@ -67,6 +67,23 @@ export async function saveFile(
   );
 }
 
+// Freitext (z. B. Hundename) in einen sicheren Dateinamen-Baustein wandeln:
+// Umlaute umschreiben, alles außer Buchstaben, Ziffern und Bindestrich raus.
+export function safeFilePart(name: string, fallback = 'hund'): string {
+  const cleaned = name
+    .trim()
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return cleaned || fallback;
+}
+
 // Datei vom Nutzer einlesen (Text).
 export function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

@@ -98,6 +98,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.2.7
+
+<de-DE>
+Kleinere Korrekturen: sicherer CSV-Export, robuste Dateinamen beim Export,
+verständliche Meldung bei vollem Speicher, sparsamerer Abgleich beim
+Zurückkehren in die App.
+</de-DE>
+
 ## Versionshinweise für Release 1.2.6
 
 <de-DE>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { deleteVet, fetchVets } from '../api';
 import { useLiveReload } from '../hooks';
 import type { VetVisit } from '../types';
-import { formatDateShort } from '../utils';
+import { formatDateShort, startOfToday } from '../utils';
 import Modal from './Modal';
 import VetModal from './VetModal';
 import DateStamp from './DateStamp';
@@ -14,7 +14,7 @@ interface Props {
 
 function isOverdue(date: string | null): boolean {
   if (!date) return false;
-  return new Date(`${date}T00:00:00`) < new Date(new Date().toDateString());
+  return new Date(`${date}T00:00:00`) < startOfToday();
 }
 
 export default function VetTab({ dogId }: Props) {

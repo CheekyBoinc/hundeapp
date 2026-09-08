@@ -49,6 +49,12 @@ export function formatAge(geburtsdatum: string | null, today = new Date()): stri
   return `${y} ${m}`;
 }
 
+// Heute um Mitternacht (lokale Zeit), für Tagesvergleiche.
+export function startOfToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
 // Bausteine für die Datumsmarke: "Sa", "29", "Aug".
 export function dateParts(date: string): { weekday: string; day: string; month: string } {
   const d = new Date(`${date}T00:00:00`);

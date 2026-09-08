@@ -1,12 +1,16 @@
 import type { Command, DogProfile, Entry, WeightEntry } from './types';
 import { formatDateShort, formatKg } from './utils';
-import { saveFile } from './files';
+import { safeFilePart, saveFile } from './files';
 
 // ===== CSV =====
 
-function escapeField(value: unknown): string {
-  const s = value === null || value === undefined ? '' : String(value);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+// Ein Feld für CSV aufbereiten. Beginnt der Wert mit einem Formelzeichen,
+// würden Excel und LibreOffice ihn beim Öffnen als Formel ausführen; ein
+// führendes Apostroph macht daraus reinen Text (CWE-1236).
+export function escapeCsvField(value: unknown): string {
+  let s = value === null || value === undefined ? '' : String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 function toCSV(rows: Record<string, unknown>[]): string {
@@ -14,7 +18,7 @@ function toCSV(rows: Record<string, unknown>[]): string {
   const headers = Object.keys(rows[0]);
   const lines = [headers.join(',')];
   for (const row of rows) {
-    lines.push(headers.map((h) => escapeField(row[h])).join(','));
+    lines.push(headers.map((h) => escapeCsvField(row[h])).join(','));
   }
   return lines.join('\r\n');
 }
@@ -132,7 +136,7 @@ export async function downloadPDF(
   }
 
   await saveFile(
-    `trainingstagebuch-${dog.name.toLowerCase().replace(/\s+/g, '-')}.pdf`,
+    `trainingstagebuch-${safeFilePart(dog.name)}.pdf`,
     doc.output('blob'),
     'application/pdf'
   );

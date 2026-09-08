@@ -34,7 +34,14 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 function writeJson(key: string, value: unknown) {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Speicher voll oder vom Browser gesperrt (z. B. strenger Privatmodus).
+    throw new Error(
+      'Speichern nicht möglich: Der Speicher ist voll oder gesperrt. Bitte eine Sicherung erstellen und alte Einträge löschen.'
+    );
+  }
 }
 
 function uuid(): string {
