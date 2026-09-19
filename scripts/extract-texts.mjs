@@ -45,7 +45,9 @@ const SCREEN_BY_FILE = {
   'localStore.ts': 'Demodaten & Speicher',
   'export.ts': 'PDF-Export',
   'hooks.ts': 'Formulare allgemein',
-  'theme.ts': 'Design'
+  'theme.ts': 'Design',
+  'utils.ts': 'Datum und Formatierung',
+  'files.ts': 'Dateien speichern'
 };
 
 function walk(dir) {
