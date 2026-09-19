@@ -17,6 +17,14 @@ export default tseslint.config(
     }
   },
   {
+    // Der Service Worker auf der Seite läuft in einem eigenen Kontext.
+    files: ['site/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.serviceworker
+    }
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2022,

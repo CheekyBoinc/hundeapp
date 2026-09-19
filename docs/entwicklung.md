@@ -19,7 +19,7 @@ sind Beispieldaten (11.08. und 18.08.2026, Kommando-Übersicht) eingespielt.
 
 ## Technik
 
-React, TypeScript und Vite als PWA, verpackt mit
+React, TypeScript und Vite, verpackt mit
 [Capacitor](https://capacitorjs.com) als native App für Android und iOS.
 
 Die Daten liegen im `localStorage`. Der Abgleich nutzt die GitHub Contents API

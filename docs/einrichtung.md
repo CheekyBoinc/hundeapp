@@ -33,11 +33,6 @@ Der Status steht oben in der Kopfzeile: grün = synchron, gelb = läuft, rot = F
 Der Abgleich läuft von selbst, beim Öffnen der App, beim Zurückkehren in die App
 und kurz nach jeder Änderung.
 
-## 4. App auf den Startbildschirm legen (optional)
-
-- **iPhone (Safari)**: Adresse öffnen → Teilen → **Zum Home-Bildschirm**
-- **Android (Chrome)**: Adresse öffnen → Menü (⋮) → **App installieren**
-
 ## Sicherheit
 
 - Der Token gilt nur für das Repo `hundeapp-daten` und darf dort nur Inhalte
