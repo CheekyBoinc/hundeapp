@@ -98,6 +98,18 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.3.0
+
+<de-DE>
+Neu: Eine Einführung erklärt beim ersten Start in fünf Schritten, wo Trainings,
+Hunde und Termine zu finden sind. In den Einstellungen gibt es jetzt einen
+Abschnitt Hilfe mit kurzen Antworten zu Sicherung, Abgleich und Daten. Die
+Einführung lässt sich dort jederzeit erneut starten.
+
+Behoben: Die App ließ sich auf manchen Geräten seitlich verschieben.
+Sync-Fehler zeigen einen verständlichen Hinweis statt der rohen Serverantwort.
+</de-DE>
+
 ## Versionshinweise für Release 1.2.7
 
 <de-DE>
