@@ -102,6 +102,17 @@ html {
   overflow-x: hidden;
 }
 
+/* `hidden` auf html allein klippt in iOS-WebViews nicht zuverlässig, der Body
+   wird weiterhin nicht beschnitten. `clip` erzeugt anders als `hidden` keinen
+   Scroll-Container und hebelt damit position: sticky im Header nicht aus.
+   WebViews ohne `clip`-Unterstützung ignorieren den Block. */
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
 /* Erzählende Fließtexte (Trainingsberichte, Tipps, Beschreibungen) im
    Tagebuch-Serif – unterscheidet die App von einer generischen Dashboard-UI. */
 .prose-serif {

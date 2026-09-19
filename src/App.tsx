@@ -361,7 +361,7 @@ export default function App() {
       )}
 
       {status === 'error' && errorMsg && (
-        <div className="border-b border-red-200 bg-red-50 px-4 py-2 text-center text-xs text-red-700">
+        <div className="border-b border-red-200 bg-red-50 px-4 py-2 text-center text-xs text-red-700 break-words">
           {errorMsg}
         </div>
       )}

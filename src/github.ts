@@ -128,7 +128,7 @@ export class SyncError extends Error {
   }
 }
 
-function friendlyHttpError(status: number, body: string): string {
+function friendlyHttpError(status: number): string {
   if (status === 401 || status === 403) {
     return 'Zugriff verweigert. Bitte Zugangsdaten und Berechtigungen prüfen.';
   }
@@ -141,7 +141,7 @@ function friendlyHttpError(status: number, body: string): string {
   if (status === 429) {
     return 'Zu viele Anfragen – bitte kurz warten und erneut versuchen.';
   }
-  return `Fehler (HTTP ${status})${body ? ': ' + body.slice(0, 120) : ''}`;
+  return `Unerwarteter Fehler (HTTP ${status}). Bitte später erneut versuchen.`;
 }
 
 // Netzwerkfehler (offline, DNS, TLS, aufgehobene Verbindung) landen nicht als
@@ -614,7 +614,7 @@ function headers(cfg: SyncConfig): Record<string, string> {
 async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncState } | null> {
   const res = await safeFetch(apiBase(cfg), { headers: headers(cfg) });
   if (res.status === 404) return null;
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status, await res.text()));
+  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
   const json = await res.json();
   let state: SyncState;
   try {
@@ -650,7 +650,7 @@ async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise
     headers: headers(cfg),
     body: JSON.stringify(body)
   });
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status, await res.text()));
+  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
 }
 
 export async function validateConfig(cfg: SyncConfig): Promise<void> {
@@ -658,7 +658,7 @@ export async function validateConfig(cfg: SyncConfig): Promise<void> {
     `https://api.github.com/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(cfg.repo)}`,
     { headers: headers(cfg) }
   );
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status, await res.text()));
+  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
 }
 
 // ===== Sync-Orchestrierung =====
