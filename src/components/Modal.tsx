@@ -86,7 +86,10 @@ export default function Modal({
         fullScreen ? '' : 'flex items-end justify-center sm:items-center'
       }`}
     >
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div
+        className={`absolute inset-0 ${fullScreen ? 'bg-white' : 'bg-black/60'}`}
+        onClick={fullScreen ? undefined : onClose}
+      />
       <div
         ref={panelRef}
         role="dialog"
@@ -95,7 +98,7 @@ export default function Modal({
         tabIndex={-1}
         className={
           fullScreen
-            ? 'relative flex h-full w-full flex-col overflow-y-auto bg-white px-5 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(1.25rem+env(safe-area-inset-bottom))]'
+            ? 'relative mx-auto flex h-full w-full max-w-2xl flex-col overflow-y-auto bg-white px-5 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(1.25rem+env(safe-area-inset-bottom))]'
             : 'relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5'
         }
       >
