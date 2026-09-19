@@ -12,6 +12,8 @@ export interface HelpTopic {
   steps?: string[];
   // Themen mit einer Aktion bekommen unten einen Knopf.
   action?: 'sync' | 'onboarding';
+  // Themen mit einem Schaubild bekommen es nach den Absätzen.
+  diagram?: 'sync';
 }
 
 export const HELP_TOPICS: HelpTopic[] = [
@@ -39,7 +41,8 @@ export const HELP_TOPICS: HelpTopic[] = [
       'Benutzername, Repo-Name und Token in der App eintragen.',
       'Verbinden und synchronisieren.'
     ],
-    action: 'sync'
+    action: 'sync',
+    diagram: 'sync'
   },
   {
     id: 'sicherung',

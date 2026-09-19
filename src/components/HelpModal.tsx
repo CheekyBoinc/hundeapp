@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from './Modal';
+import SyncDiagram from './SyncDiagram';
 import { HELP_TOPICS, type HelpTopic } from '../helpTopics';
 import { ChevronRightIcon } from './NavIcons';
 
@@ -38,6 +39,8 @@ export default function HelpModal({ onOpenSyncSetup, onStartOnboarding, onClose 
               </p>
             ))}
           </div>
+
+          {topic.diagram === 'sync' && <SyncDiagram />}
 
           {topic.steps && (
             <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-stone-600">
