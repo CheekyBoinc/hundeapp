@@ -1,7 +1,8 @@
 // Sammelt alle sichtbaren Texte der App aus den React-Komponenten und
 // Datenmodulen für ein Review. Heuristisch: JSX-Text, sprechende Attribute
 // (placeholder, title, aria-label, label, hint), Bestätigungsdialoge,
-// Fehlermeldungen und benannte Konstanten. Ausgabe: JSON auf stdout.
+// Fehlermeldungen, benannte Konstanten und Textlisten in Arrays.
+// Ausgabe: JSON auf stdout.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
@@ -30,6 +31,9 @@ const SCREEN_BY_FILE = {
   'components/CalendarPage.tsx': 'Kalender',
   'components/SettingsModal.tsx': 'Einstellungen',
   'components/SyncSetup.tsx': 'GitHub-Sync einrichten',
+  'components/Onboarding.tsx': 'Einführung',
+  'components/HelpModal.tsx': 'Hilfe',
+  'helpTopics.ts': 'Hilfe: Themen',
   'components/ExportMenu.tsx': 'Export',
   'components/Modal.tsx': 'Dialoge allgemein',
   'components/NavIcons.tsx': 'Icons',
@@ -146,6 +150,14 @@ for (const path of walk(srcDir)) {
     /\b(?:[0-9]+|norm|under|over|[a-zA-Z_]+):\s*'([^']*[A-Za-zÄÖÜäöüß][^']*)'/g
   )) {
     add(file, lineOf(src, m.index), m[1], 'Wert');
+  }
+  // Texte in Arrays unter bekanntem Schlüssel: paragraphs: [ '…', '…' ].
+  // Die Muster oben erwarten Schlüssel und Text in derselben Zeile.
+  for (const m of src.matchAll(/\b(?:paragraphs|steps|list)\s*:\s*\[([\s\S]*?)\]/g)) {
+    const blockStart = (m.index ?? 0) + m[0].indexOf('[') + 1;
+    for (const item of m[1].matchAll(/'([^']*[A-Za-zÄÖÜäöüß][^']*)'/g)) {
+      add(file, lineOf(src, blockStart + (item.index ?? 0)), item[1], 'Text');
+    }
   }
 }
 

@@ -4,15 +4,16 @@ import type { ThemeSetting } from '../theme';
 import { exportBackup, formatCounts, importBackup, readBackupFile } from '../backup';
 import { Capacitor } from '@capacitor/core';
 import Modal from './Modal';
-import SyncSetup from './SyncSetup';
 import { CoffeeIcon } from './NavIcons';
 
 interface Props {
   settings: Settings;
   configured: boolean;
   onChange: (s: Settings) => void;
-  onConnected: (user: string, repo: string, token: string) => void;
   onDisconnect: () => void;
+  onOpenSyncSetup: () => void;
+  onOpenHelp: () => void;
+  onStartOnboarding: () => void;
   onClose: () => void;
 }
 
@@ -113,11 +114,12 @@ export default function SettingsModal({
   settings,
   configured,
   onChange,
-  onConnected,
   onDisconnect,
+  onOpenSyncSetup,
+  onOpenHelp,
+  onStartOnboarding,
   onClose
 }: Props) {
-  const [showSyncSetup, setShowSyncSetup] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -191,6 +193,24 @@ export default function SettingsModal({
           />
         </Section>
 
+        <Section title="Hilfe">
+          <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+            <p className="text-sm font-medium text-stone-800">Einführung und Hilfe</p>
+            <p className="mt-0.5 text-xs text-stone-500">
+              Kurze Erklärungen zu den Bereichen der App, zur Sicherung und zum Abgleich zweier
+              Handys.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" className="btn-primary" onClick={onOpenHelp}>
+                Hilfe öffnen
+              </button>
+              <button type="button" className="btn-secondary" onClick={onStartOnboarding}>
+                Einführung erneut zeigen
+              </button>
+            </div>
+          </div>
+        </Section>
+
         <Section title="Sicherung">
           <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
             <p className="text-xs text-stone-500">
@@ -250,11 +270,7 @@ export default function SettingsModal({
                   Automatischer Abgleich zwischen Geräten über ein eigenes privates GitHub-Repo.
                   Braucht ein GitHub-Konto und einen Zugriffstoken.
                 </p>
-                <button
-                  type="button"
-                  className="btn-secondary mt-3"
-                  onClick={() => setShowSyncSetup(true)}
-                >
+                <button type="button" className="btn-secondary mt-3" onClick={onOpenSyncSetup}>
                   Einrichten
                 </button>
               </>
@@ -314,16 +330,6 @@ export default function SettingsModal({
           </div>
         </Section>
       </div>
-
-      {showSyncSetup && (
-        <SyncSetup
-          onClose={() => setShowSyncSetup(false)}
-          onDone={(user, repo, token) => {
-            setShowSyncSetup(false);
-            onConnected(user, repo, token);
-          }}
-        />
-      )}
     </Modal>
   );
 }

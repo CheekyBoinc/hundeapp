@@ -23,6 +23,9 @@ import CommandsPage from './components/CommandsPage';
 import DogsPage from './components/DogsPage';
 import CalendarPage from './components/CalendarPage';
 import SettingsModal from './components/SettingsModal';
+import SyncSetup from './components/SyncSetup';
+import HelpModal from './components/HelpModal';
+import Onboarding from './components/Onboarding';
 import DogPicker from './components/DogPicker';
 import { BrandMark } from './components/BrandMark';
 import {
@@ -54,6 +57,10 @@ export default function App() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showDogPicker, setShowDogPicker] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSyncSetup, setShowSyncSetup] = useState(false);
+  // Beim ersten Start zeigen; danach nur noch über die Hilfe erneut aufrufbar.
+  const [showOnboarding, setShowOnboarding] = useState(() => !loadSettings().onboardingDone);
   const [offline, setOffline] = useState(!navigator.onLine);
   const [dogs, setDogs] = useState<DogProfile[]>([]);
 
@@ -221,6 +228,13 @@ export default function App() {
     setStatus('idle');
     setErrorMsg(null);
     setShowSettings(false);
+  };
+
+  // Jeder Schließweg der Einführung (Knöpfe, Escape, Zurück-Taste, Klick
+  // daneben) läuft über diesen Handler und vermerkt den Abschluss.
+  const closeOnboarding = () => {
+    setShowOnboarding(false);
+    setSettings((prev) => (prev.onboardingDone ? prev : { ...prev, onboardingDone: true }));
   };
 
   const statusDot = {
@@ -406,16 +420,40 @@ export default function App() {
         />
       )}
 
+      {/* Alle Overlays liegen auf z-50; diese Reihenfolge bestimmt, wer oben
+          liegt: Einstellungen → Hilfe → SyncSetup → Einführung. */}
       {showSettings && (
         <SettingsModal
           settings={settings}
           configured={configured}
           onChange={handleSettings}
-          onConnected={handleConnected}
           onDisconnect={handleDisconnect}
+          onOpenSyncSetup={() => setShowSyncSetup(true)}
+          onOpenHelp={() => setShowHelp(true)}
+          onStartOnboarding={() => setShowOnboarding(true)}
           onClose={() => setShowSettings(false)}
         />
       )}
+
+      {showHelp && (
+        <HelpModal
+          onOpenSyncSetup={() => setShowSyncSetup(true)}
+          onStartOnboarding={() => setShowOnboarding(true)}
+          onClose={() => setShowHelp(false)}
+        />
+      )}
+
+      {showSyncSetup && (
+        <SyncSetup
+          onClose={() => setShowSyncSetup(false)}
+          onDone={(user, repo, token) => {
+            setShowSyncSetup(false);
+            handleConnected(user, repo, token);
+          }}
+        />
+      )}
+
+      {showOnboarding && <Onboarding onClose={closeOnboarding} />}
     </div>
   );
 }

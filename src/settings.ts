@@ -9,13 +9,17 @@ export interface Settings {
   theme: ThemeSetting;
   // Hund, der in der Kopfzeile steht und auf der Hunde-Seite vorausgewählt ist.
   activeDogId: string | null;
+  // Einführung beim ersten Start: solange false, zeigt die App sie. Jeder
+  // Schließweg setzt sie auf true; erneut aufrufbar über die Hilfe.
+  onboardingDone: boolean;
 }
 
 const DEFAULTS: Settings = {
   navTop: false,
   headerText: true,
   theme: 'system',
-  activeDogId: null
+  activeDogId: null,
+  onboardingDone: false
 };
 
 export function loadSettings(): Settings {

@@ -5,13 +5,24 @@ interface Props {
   title: string;
   onClose: () => void;
   headerExtra?: ReactNode;
+  // Vollbild statt Dialog: füllt den Bildschirm, inklusive Safe-Areas.
+  fullScreen?: boolean;
+  // Blendet den Schließen-Button aus, wenn der Inhalt die Navigation übernimmt.
+  hideClose?: boolean;
   children: ReactNode;
 }
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export default function Modal({ title, onClose, headerExtra, children }: Props) {
+export default function Modal({
+  title,
+  onClose,
+  headerExtra,
+  fullScreen,
+  hideClose,
+  children
+}: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const [id] = useState(nextModalId);
@@ -70,7 +81,11 @@ export default function Modal({ title, onClose, headerExtra, children }: Props) 
   }, [id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div
+      className={`fixed inset-0 z-50 ${
+        fullScreen ? '' : 'flex items-end justify-center sm:items-center'
+      }`}
+    >
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div
         ref={panelRef}
@@ -78,16 +93,22 @@ export default function Modal({ title, onClose, headerExtra, children }: Props) 
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5"
+        className={
+          fullScreen
+            ? 'relative flex h-full w-full flex-col overflow-y-auto bg-white px-5 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(1.25rem+env(safe-area-inset-bottom))]'
+            : 'relative max-h-[95dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:max-w-lg sm:rounded-3xl sm:pb-5'
+        }
       >
         <div className="mb-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold">{title}</h2>
             {headerExtra}
           </div>
-          <button className="btn-secondary shrink-0 px-3 py-1.5" onClick={onClose}>
-            Schließen
-          </button>
+          {!hideClose && (
+            <button className="btn-secondary shrink-0 px-3 py-1.5" onClick={onClose}>
+              Schließen
+            </button>
+          )}
         </div>
         {children}
       </div>
