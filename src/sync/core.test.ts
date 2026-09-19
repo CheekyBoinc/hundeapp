@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  areEqual,
-  mergeStates,
-  pruneStaleTombstones,
-  sanitizeState,
-  type SyncState
-} from './github';
-import type { Command, Entry } from './types';
+import { areEqual, mergeStates, pruneStaleTombstones, sanitizeState } from './core';
+import type { SyncState } from './types';
+import type { Command, Entry } from '../types';
 
 const T1 = '2026-08-01T10:00:00.000Z';
 const T2 = '2026-08-02T10:00:00.000Z';
@@ -223,7 +218,8 @@ describe('pruneStaleTombstones', () => {
 
 describe('Netzwerkfehler -> verständliche Meldung', () => {
   it('wirft bei Offline einen SyncError mit deutscher Meldung', async () => {
-    const { SyncError, validateConfig } = await import('./github');
+    const { validateConfig } = await import('./github');
+    const { SyncError } = await import('./types');
     const original = globalThis.fetch;
     globalThis.fetch = async () => {
       throw new TypeError('Network request failed');

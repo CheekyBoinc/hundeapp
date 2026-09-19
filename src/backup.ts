@@ -1,6 +1,6 @@
 import type { AppState } from './types';
 import { loadState } from './localStore';
-import { mergeIntoLocal, sanitizeState, schedulePush } from './github';
+import { mergeIntoLocal, sanitizeState, schedulePush } from './sync';
 import { readFileAsText, saveFile } from './files';
 import { todayLocal } from './utils';
 

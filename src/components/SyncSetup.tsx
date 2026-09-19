@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SyncError, validateConfig } from '../github';
+import { SyncError, validateConfig } from '../sync';
 import Modal from './Modal';
 
 interface Props {

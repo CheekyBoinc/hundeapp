@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { onChange } from './github';
+import { onChange } from './sync';
 
 const STORAGE_PREFIX = 'hundeapp.';
 

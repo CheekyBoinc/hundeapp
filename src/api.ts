@@ -1,5 +1,5 @@
 import * as local from './localStore';
-import { schedulePush } from './github';
+import { schedulePush } from './sync';
 import type { Command, DogProfile, Entry } from './types';
 
 function afterMutation() {

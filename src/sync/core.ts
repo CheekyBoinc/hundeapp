@@ -1,5 +1,4 @@
 import type {
-  AppState,
   Command,
   DogProfile,
   Entry,
@@ -7,171 +6,19 @@ import type {
   Vaccination,
   VetVisit,
   WeightEntry
+} from '../types';
+import { loadState, saveState } from '../localStore';
+import {
+  SyncConflictError,
+  type SyncBackend,
+  type SyncState
 } from './types';
-import { Capacitor } from '@capacitor/core';
-import { Preferences } from '@capacitor/preferences';
-import { SecureStorage } from '@aparajita/capacitor-secure-storage';
-import { loadState, saveState } from './localStore';
 
-// ===== Konfiguration =====
-// Token und Repo-Daten liegen nativ in der sicheren Ablage des Systems
-// (iOS Keychain, Android verschlüsselte SharedPreferences), im Browser im
-// localStorage über Capacitor Preferences. Der Zugriff im Code bleibt
-// synchron über einen Cache, der einmalig beim Start per initConfig()
-// gefüllt wird. Ältere Stände (Preferences, davor localStorage) werden
-// beim ersten Start übernommen.
-
-const CONFIG_KEY = 'hundeapp.syncConfig';
-const DATA_PATH = 'daten.json';
-
-// Praktische Obergrenze der GitHub Contents API. Die Datei wird Base64-kodiert
-// in einer einzigen Anfrage übertragen; wir warnen deutlich vor dem Limit.
-const MAX_PAYLOAD_BYTES = 1024 * 1024;
-const WARN_PAYLOAD_BYTES = 700 * 1024;
-
-export interface SyncConfig {
-  user: string;
-  repo: string;
-  token: string;
-}
-
-let configCache: SyncConfig | null = null;
-
-function parseConfig(raw: string | null | undefined): SyncConfig | null {
-  if (!raw) return null;
-  try {
-    const cfg = JSON.parse(raw) as Partial<SyncConfig>;
-    return cfg &&
-      typeof cfg.user === 'string' &&
-      typeof cfg.repo === 'string' &&
-      typeof cfg.token === 'string'
-      ? { user: cfg.user, repo: cfg.repo, token: cfg.token }
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-const useSecureStore = Capacitor.isNativePlatform();
-
-async function readStoredConfig(): Promise<string | null> {
-  if (useSecureStore) {
-    // Keine iCloud-Schlüsselbund-Synchronisierung: Der Token bleibt auf dem Gerät.
-    await SecureStorage.setSynchronize(false).catch(() => undefined);
-    const value = await SecureStorage.get(CONFIG_KEY).catch(() => null);
-    return typeof value === 'string' ? value : null;
-  }
-  return (await Preferences.get({ key: CONFIG_KEY })).value;
-}
-
-async function writeStoredConfig(value: string): Promise<void> {
-  if (useSecureStore) await SecureStorage.set(CONFIG_KEY, value);
-  else await Preferences.set({ key: CONFIG_KEY, value });
-}
-
-async function removeStoredConfig(): Promise<void> {
-  if (useSecureStore) await SecureStorage.remove(CONFIG_KEY);
-  else await Preferences.remove({ key: CONFIG_KEY });
-}
-
-// Einmalig vor dem ersten Render aufrufen.
-export async function initConfig(): Promise<void> {
-  let cfg = await readStoredConfig()
-    .then(parseConfig)
-    .catch(() => null);
-  // Migration 2: Versionen 1.0 bis 1.2.3 haben nativ in Preferences gespeichert.
-  if (!cfg && useSecureStore) {
-    const previous = parseConfig((await Preferences.get({ key: CONFIG_KEY })).value);
-    if (previous) {
-      cfg = previous;
-      await writeStoredConfig(JSON.stringify(previous)).catch(() => undefined);
-      await Preferences.remove({ key: CONFIG_KEY }).catch(() => undefined);
-    }
-  }
-  // Migration 1: Die Web-Version hat die Konfiguration anfangs direkt im localStorage abgelegt.
-  if (!cfg) {
-    const legacy = parseConfig(localStorage.getItem(CONFIG_KEY));
-    if (legacy) {
-      cfg = legacy;
-      await writeStoredConfig(JSON.stringify(legacy)).catch(() => undefined);
-      localStorage.removeItem(CONFIG_KEY);
-    }
-  }
-  configCache = cfg;
-}
-
-export function getConfig(): SyncConfig | null {
-  return configCache;
-}
-
-export function setConfig(cfg: SyncConfig) {
-  configCache = cfg;
-  void writeStoredConfig(JSON.stringify(cfg)).catch(() => undefined);
-}
-
-export function clearConfig() {
-  configCache = null;
-  void removeStoredConfig().catch(() => undefined);
-}
-
-export function isConfigured(): boolean {
-  const cfg = getConfig();
-  return Boolean(cfg?.user && cfg?.repo && cfg?.token);
-}
-
-// ===== Fehler =====
-
-export class SyncError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SyncError';
-  }
-}
-
-function friendlyHttpError(status: number): string {
-  if (status === 401 || status === 403) {
-    return 'Zugriff verweigert. Bitte Zugangsdaten und Berechtigungen prüfen.';
-  }
-  if (status === 404) {
-    return 'Repo oder Datei nicht gefunden. Ist der Repo-Name korrekt?';
-  }
-  if (status === 409) {
-    return 'Konflikt beim Speichern – wird automatisch gelöst.';
-  }
-  if (status === 429) {
-    return 'Zu viele Anfragen – bitte kurz warten und erneut versuchen.';
-  }
-  return `Unerwarteter Fehler (HTTP ${status}). Bitte später erneut versuchen.`;
-}
-
-// Netzwerkfehler (offline, DNS, TLS, aufgehobene Verbindung) landen nicht als
-// HTTP-Status, sondern als TypeError. Hier in eine verständliche Meldung wandeln.
-async function safeFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
-  try {
-    return await fetch(input, init);
-  } catch {
-    throw new SyncError('Keine Verbindung – bitte Internetverbindung prüfen.');
-  }
-}
-
-// ===== Base64 (UTF-8 sicher) =====
-
-function b64encode(s: string): string {
-  const bytes = new TextEncoder().encode(s);
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin);
-}
-
-function b64decode(s: string): string {
-  const bin = atob(s.replace(/\n/g, ''));
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
+// Neutraler Kern der Synchronisierung: Schema-Prüfung, Zusammenführen,
+// Tombstones, Ereignisse und der Ablauf von Push und Pull. Das Transportmittel
+// kommt von außen über das aktive Backend (siehe ./index).
 
 // ===== Zustand =====
-
-export type SyncState = AppState;
 
 function emptyState(): SyncState {
   return {
@@ -595,166 +442,6 @@ export function pruneStaleTombstones(state: SyncState): SyncState {
   };
 }
 
-// ===== GitHub API =====
-
-function apiBase(cfg: SyncConfig): string {
-  return `https://api.github.com/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(
-    cfg.repo
-  )}/contents/${DATA_PATH}`;
-}
-
-function headers(cfg: SyncConfig): Record<string, string> {
-  return {
-    Authorization: `Bearer ${cfg.token}`,
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28'
-  };
-}
-
-async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncState } | null> {
-  const res = await safeFetch(apiBase(cfg), { headers: headers(cfg) });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
-  const json = await res.json();
-  let state: SyncState;
-  try {
-    state = sanitizeState(JSON.parse(b64decode(json.content)));
-  } catch {
-    throw new SyncError('Die Datei konnte nicht gelesen werden (Formatfehler).');
-  }
-  return { sha: json.sha, state };
-}
-
-async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise<void> {
-  const content = b64encode(JSON.stringify(state));
-  // Base64 bläht um ~33 % auf; die Größenangabe der Contents API bezieht sich
-  // auf den codierten Inhalt. Wir messen daher den codierten String.
-  const bytes = content.length;
-  if (bytes > MAX_PAYLOAD_BYTES) {
-    throw new SyncError(
-      'Die Daten sind zu groß (> 1 MB) für eine einzelne Datei. Bitte Datenbestand bereinigen.'
-    );
-  }
-  if (bytes > WARN_PAYLOAD_BYTES) {
-    notifyNotice(
-      `Die Sync-Datei ist mit ${(bytes / 1024).toFixed(0)} KB nahe am Limit von 1 MB. Alte Einträge löschen oder eine Sicherung anlegen.`
-    );
-  }
-  const body: Record<string, unknown> = {
-    message: 'Hundeapp Sync',
-    content
-  };
-  if (sha) body.sha = sha;
-  const res = await safeFetch(apiBase(cfg), {
-    method: 'PUT',
-    headers: headers(cfg),
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
-}
-
-export async function validateConfig(cfg: SyncConfig): Promise<void> {
-  const res = await safeFetch(
-    `https://api.github.com/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(cfg.repo)}`,
-    { headers: headers(cfg) }
-  );
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
-}
-
-// ===== Sync-Orchestrierung =====
-// Alle Sync-Läufe werden serialisiert, damit sich Push und Pull nie überlappen.
-
-let syncChain: Promise<void> = Promise.resolve();
-
-function serialize<T>(fn: () => Promise<T>): Promise<T> {
-  const result = syncChain.then(fn);
-  syncChain = result.then(
-    () => undefined,
-    () => undefined
-  );
-  return result;
-}
-
-let pushTimer: ReturnType<typeof setTimeout> | undefined;
-
-export function schedulePush() {
-  if (!isConfigured()) return;
-  clearTimeout(pushTimer);
-  pushTimer = setTimeout(() => {
-    pushNow().catch((err: unknown) => {
-      // Nicht verschlucken: Die UI soll wissen, dass lokale Änderungen noch
-      // nicht auf dem Server sind (z. B. Token abgelaufen, offline).
-      notifyError(err instanceof Error ? err.message : 'Synchronisierung fehlgeschlagen.');
-    });
-  }, 1200);
-}
-
-// Nach dem Netzwerk-Roundtrip den aktuellen lokalen Stand erneut einmischen,
-// damit Änderungen, die während des Requests entstanden sind, nicht verloren gehen.
-function persistMerged(pushed: SyncState): void {
-  const merged = pruneStaleTombstones(mergeStates(loadState(), pushed));
-  saveState(merged);
-  notifyChanged();
-}
-
-export async function pushNow(): Promise<void> {
-  return serialize(async () => {
-    const cfg = getConfig();
-    if (!cfg) return;
-
-    // Bis zu 3 Versuche: Bei 409 (veralteter SHA) neu laden, erneut mergen, mit frischem SHA speichern.
-    let currentRemote = await fetchFile(cfg);
-    let lastError: unknown;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (attempt > 0) {
-        currentRemote = await fetchFile(cfg);
-      }
-      const remote = currentRemote?.state ?? emptyState();
-      const merged = mergeStates(loadState(), remote);
-      if (currentRemote && areEqual(remote, merged)) {
-        // Keine Änderung gegenüber Remote – nur lokale Konvergenz sicherstellen.
-        persistMerged(merged);
-        return;
-      }
-      try {
-        await putFile(cfg, merged, currentRemote?.sha);
-        persistMerged(merged);
-        return;
-      } catch (err) {
-        lastError = err;
-        if (err instanceof SyncError && /409|Conflict|Konflikt/i.test(err.message)) {
-          continue; // SHA-Konflikt -> neu laden und erneut versuchen
-        }
-        throw err;
-      }
-    }
-    throw lastError;
-  });
-}
-
-// Einen fremden Stand (z. B. Sicherungsdatei) lokal einmischen. Gleiche
-// Regeln wie beim Sync: nichts geht verloren, bei gleicher ID gewinnt der
-// neuere Stand, Löschvermerke bleiben wirksam.
-export function mergeIntoLocal(incoming: SyncState): SyncState {
-  const merged = pruneStaleTombstones(mergeStates(loadState(), incoming));
-  saveState(merged);
-  notifyChanged();
-  return merged;
-}
-
-export async function pullNow(): Promise<SyncState> {
-  return serialize(async () => {
-    const cfg = getConfig();
-    if (!cfg) return loadState();
-    const remoteFile = await fetchFile(cfg);
-    if (!remoteFile) return loadState();
-    const merged = pruneStaleTombstones(mergeStates(loadState(), remoteFile.state));
-    saveState(merged);
-    notifyChanged();
-    return merged;
-  });
-}
-
 // ===== Change-Events =====
 
 type Listener = () => void;
@@ -791,6 +478,124 @@ export function onSyncNotice(fn: ErrorListener): () => void {
   return () => noticeListeners.delete(fn);
 }
 
-function notifyNotice(message: string) {
+export function notifyNotice(message: string) {
   for (const fn of noticeListeners) fn(message);
+}
+
+// ===== Aktives Backend =====
+
+let activeBackend: SyncBackend | null = null;
+
+export function setActiveBackend(backend: SyncBackend | null): void {
+  activeBackend = backend;
+}
+
+export function isConfigured(): boolean {
+  return activeBackend?.isConfigured() ?? false;
+}
+
+// ===== Sync-Orchestrierung =====
+// Alle Sync-Läufe werden serialisiert, damit sich Push und Pull nie überlappen.
+
+let syncChain: Promise<void> = Promise.resolve();
+
+function serialize<T>(fn: () => Promise<T>): Promise<T> {
+  const result = syncChain.then(fn);
+  syncChain = result.then(
+    () => undefined,
+    () => undefined
+  );
+  return result;
+}
+
+let pushTimer: ReturnType<typeof setTimeout> | undefined;
+
+export function schedulePush() {
+  if (!isConfigured()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    pushNow().catch((err: unknown) => {
+      // Nicht verschlucken: Die UI soll wissen, dass lokale Änderungen noch
+      // nicht auf dem Server sind (z. B. Token abgelaufen, offline).
+      notifyError(err instanceof Error ? err.message : 'Synchronisierung fehlgeschlagen.');
+    });
+  }, 1200);
+}
+
+// Holt den Serverstand. 'unchanged' meldet ein Backend, wenn der Server bereits
+// auf der übergebenen Revision steht und deshalb keine Daten geschickt hat. Die
+// Revisionsmarke kommt mit dem Dienst dazu; hier wird dann vollständig geladen.
+async function fetchRemote(
+  backend: SyncBackend
+): Promise<{ rev: string; state: SyncState } | null> {
+  const result = await backend.fetch();
+  if (result === 'unchanged') return null;
+  return result;
+}
+
+// Nach dem Netzwerk-Roundtrip den aktuellen lokalen Stand erneut einmischen,
+// damit Änderungen, die während des Requests entstanden sind, nicht verloren gehen.
+function persistMerged(pushed: SyncState): void {
+  const merged = pruneStaleTombstones(mergeStates(loadState(), pushed));
+  saveState(merged);
+  notifyChanged();
+}
+
+export async function pushNow(): Promise<void> {
+  return serialize(async () => {
+    const backend = activeBackend;
+    if (!backend?.isConfigured()) return;
+
+    // Bis zu 3 Versuche: Bei einer veralteten Revision neu laden, erneut
+    // zusammenführen und mit frischer Revision speichern.
+    let currentRemote = await fetchRemote(backend);
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        currentRemote = await fetchRemote(backend);
+      }
+      const remote = currentRemote?.state ?? emptyState();
+      const merged = mergeStates(loadState(), remote);
+      if (currentRemote && areEqual(remote, merged)) {
+        // Keine Änderung gegenüber dem Server – nur lokale Konvergenz sicherstellen.
+        persistMerged(merged);
+        return;
+      }
+      try {
+        await backend.put(merged, currentRemote?.rev);
+        persistMerged(merged);
+        return;
+      } catch (err) {
+        lastError = err;
+        if (err instanceof SyncConflictError) {
+          continue; // Revision veraltet -> neu laden und erneut versuchen
+        }
+        throw err;
+      }
+    }
+    throw lastError;
+  });
+}
+
+// Einen fremden Stand (z. B. Sicherungsdatei) lokal einmischen. Gleiche
+// Regeln wie beim Sync: nichts geht verloren, bei gleicher ID gewinnt der
+// neuere Stand, Löschvermerke bleiben wirksam.
+export function mergeIntoLocal(incoming: SyncState): SyncState {
+  const merged = pruneStaleTombstones(mergeStates(loadState(), incoming));
+  saveState(merged);
+  notifyChanged();
+  return merged;
+}
+
+export async function pullNow(): Promise<SyncState> {
+  return serialize(async () => {
+    const backend = activeBackend;
+    if (!backend?.isConfigured()) return loadState();
+    const result = await backend.fetch();
+    if (result === null || result === 'unchanged') return loadState();
+    const merged = pruneStaleTombstones(mergeStates(loadState(), result.state));
+    saveState(merged);
+    notifyChanged();
+    return merged;
+  });
 }

@@ -11,7 +11,7 @@ import {
   pullNow,
   pushNow,
   setConfig
-} from './github';
+} from './sync';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { applyTheme } from './theme';
 import { discardUntouchedDemoData } from './localStore';
