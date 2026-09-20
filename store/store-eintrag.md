@@ -95,7 +95,11 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 
 - App-Icon: store/icon-512.png (512 x 512, ohne Transparenz)
 - Feature-Grafik: store/feature-graphic.png (1024 x 500)
-- Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
+- Screenshots App Store, iPhone: store/screenshots/appstore-iphone-1-eintraege.png
+  bis appstore-iphone-4-kommandos.png (1320 x 2868, Grosse 6,9 Zoll)
+- Screenshots App Store, iPad: store/screenshots/appstore-ipad-1-eintraege.png
+  bis appstore-ipad-4-kommandos.png (2064 x 2752, Grosse 13 Zoll)
+- Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
 ## Versionshinweise für Release 1.3.2
