@@ -98,6 +98,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.3.2
+
+<de-DE>
+Behoben: Beim Ausfüllen eines Feldes konnte die App vergrößert stehen bleiben
+und seitlich verschoben sein. Sie bleibt jetzt in der richtigen Größe, und die
+Schrift in den Eingabefeldern ist etwas besser lesbar.
+</de-DE>
+
 ## Versionshinweise für Release 1.3.1
 
 <de-DE>
