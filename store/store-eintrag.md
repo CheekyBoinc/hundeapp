@@ -102,6 +102,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.3.3
+
+<de-DE>
+Behoben: In Formularen konnten sich Felder überlappen oder die Seite breiter
+machen als den Bildschirm. Die zweispaltigen Zeilen wie Datum und Gewicht
+passen sich jetzt der verfügbaren Breite an.
+</de-DE>
+
 ## Versionshinweise für Release 1.3.2
 
 <de-DE>
