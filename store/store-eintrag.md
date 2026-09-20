@@ -98,6 +98,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Smartphone: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.3.1
+
+<de-DE>
+Die Einführung nutzt auf Tablets jetzt eine angenehme Lesebreite statt über
+die ganze Breite zu laufen. Im Hintergrund wurde die Synchronisierung für
+einen künftigen zweiten Weg vorbereitet; am Verhalten ändert sich nichts.
+</de-DE>
+
 ## Versionshinweise für Release 1.3.0
 
 <de-DE>
