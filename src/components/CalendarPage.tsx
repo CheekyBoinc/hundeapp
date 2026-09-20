@@ -200,7 +200,7 @@ export default function CalendarPage() {
                   <button
                     key={cell.date}
                     onClick={() => setSelectedDate(cell.date)}
-                    className={`flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors ${
+                    className={`flex aspect-square max-h-14 flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors ${
                       isToday
                         ? 'bg-accent text-white'
                         : hasEntries
