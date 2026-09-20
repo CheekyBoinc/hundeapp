@@ -87,6 +87,14 @@
   }
 }
 
+/* Formularspalten dürfen schrumpfen. Eingabefelder und Auswahllisten bringen
+   sonst ihre eigene Mindestbreite mit: Sie schieben sich über die Nachbarspalte
+   (auf iOS besonders bei Datumsfeldern) oder machen die Seite breiter als den
+   Bildschirm, sodass der Inhalt seitlich verschoben wirkt. */
+.grid > * {
+  min-width: 0;
+}
+
 /* Vergrößert die Trefferfläche kleiner Text-Buttons auf mindestens 44×44 px,
    ohne das Layout zu verändern (Pseudo-Element hinter dem Text). */
 .tap-target {
