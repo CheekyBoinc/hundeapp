@@ -44,8 +44,11 @@
   /* Feste Höhe 44 px für einzeilige Felder und Auswahllisten, damit alle
      Seiten dieselbe Zeilenhöhe haben (Richtwert für Touch-Ziele: Apple 44 pt,
      Google 48 dp). Mehrzeilige Felder bekommen nur die Mindesthöhe. */
+  /* Schriftgröße bewusst 16 px: Darunter zoomt iOS beim Fokussieren eines
+     Feldes den gesamten Inhalt heran, und die Seite bleibt vergrößert und
+     seitlich verschoben stehen (beobachtet auf iPhone mit iOS 26). */
   .input {
-    @apply min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-accent-mid focus:outline-none focus:ring-2 focus:ring-accent-ring;
+    @apply min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-base text-stone-900 placeholder-stone-400 focus:border-accent-mid focus:outline-none focus:ring-2 focus:ring-accent-ring;
   }
   input.input,
   select.input {
