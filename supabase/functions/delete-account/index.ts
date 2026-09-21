@@ -1,7 +1,9 @@
 // Löscht das angemeldete Konto samt Daten. Wird vom Gerät mit dem
 // Sitzungs-Token aufgerufen; die Zeilen in sync_state und entitlement
 // verschwinden über "on delete cascade".
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+//
+// Bewusst ohne fremde Bibliothek: Ein JSR-Import ließ die Funktion nicht
+// starten (BOOT_ERROR). Die beiden Aufrufe an die Auth-Schnittstelle genügen.
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -24,18 +26,25 @@ Deno.serve(async (req) => {
 
   // Zuerst prüfen, wer anruft: Löschen darf nur, wer angemeldet ist, und dann
   // auch nur das eigene Konto.
-  const asUser = createClient(url, publicKey, {
-    global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
-    auth: { persistSession: false }
+  const userRes = await fetch(`${url}/auth/v1/user`, {
+    headers: {
+      apikey: publicKey,
+      Authorization: req.headers.get('Authorization') ?? ''
+    }
   });
-  const { data, error } = await asUser.auth.getUser();
-  if (error || !data.user) {
+  if (!userRes.ok) {
+    return new Response('unauthorized', { status: 401, headers: cors });
+  }
+  const user = (await userRes.json()) as { id?: string };
+  if (!user?.id) {
     return new Response('unauthorized', { status: 401, headers: cors });
   }
 
-  const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
-  const { error: deleteError } = await admin.auth.admin.deleteUser(data.user.id);
-  if (deleteError) {
+  const deleteRes = await fetch(`${url}/auth/v1/admin/users/${user.id}`, {
+    method: 'DELETE',
+    headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }
+  });
+  if (!deleteRes.ok) {
     return new Response('delete failed', { status: 500, headers: cors });
   }
 
