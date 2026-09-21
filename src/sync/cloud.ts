@@ -106,6 +106,25 @@ export async function requestCode(email: string): Promise<void> {
   throw new SyncError('Der Code konnte nicht verschickt werden. Bitte E-Mail-Adresse prüfen.');
 }
 
+// Übernimmt die Antwort der Anmeldung und merkt sich die Sitzung.
+interface Tokens {
+  access_token: string;
+  refresh_token: string;
+  expires_in?: number;
+  user?: { id?: string; email?: string };
+}
+
+async function startSession(res: Response, fallbackEmail: string): Promise<void> {
+  const data = (await res.json()) as Tokens;
+  await saveSession({
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: Math.floor(Date.now() / 1000) + (data.expires_in ?? 3600),
+    userId: data.user?.id ?? '',
+    email: data.user?.email ?? fallbackEmail
+  });
+}
+
 // Bestätigt den Code und merkt sich die Sitzung.
 //
 // Bei einem neuen Konto schickt Supabase die Bestätigung als "signup", bei
@@ -121,20 +140,18 @@ export async function confirmCode(email: string, code: string): Promise<void> {
   let res = await verify('email');
   if (!res.ok) res = await verify('signup');
   if (!res.ok) throw new SyncError('Der Code stimmt nicht oder ist abgelaufen.');
+  await startSession(res, email);
+}
 
-  const data = (await res.json()) as {
-    access_token: string;
-    refresh_token: string;
-    expires_in?: number;
-    user?: { id?: string };
-  };
-  await saveSession({
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: Math.floor(Date.now() / 1000) + (data.expires_in ?? 3600),
-    userId: data.user?.id ?? '',
-    email
+// Anmeldung mit Passwort. Gedacht für das Prüfkonto der Stores: Apple und
+// Google können keinen Code per E-Mail empfangen.
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const res = await api('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email: email.trim(), password })
   });
+  if (!res.ok) throw new SyncError('E-Mail-Adresse oder Passwort stimmt nicht.');
+  await startSession(res, email.trim());
 }
 
 // Gültiges Zugangstoken, erneuert es bei Bedarf.

@@ -27,12 +27,12 @@ Tipps deiner Trainerin oder deines Trainers
 
 Deine Daten gehören dir:
 
-• Alles wird nur auf deinem Gerät gespeichert. Kein Konto, keine Anmeldung,
-keine Werbung, kein Tracking.
+• Alles wird nur auf deinem Gerät gespeichert. Keine Werbung, kein Tracking.
 • Mit der Sicherung als Datei nimmst du deine Daten beim Handywechsel mit oder
-gibst sie einem zweiten Gerät.
-• Wer mag, kann optional eine Synchronisierung über ein eigenes privates
-GitHub-Repository einrichten.
+  gibst sie einem zweiten Gerät.
+• Auf Wunsch gleichen sich zwei Geräte ab: entweder über ein Konto bei uns
+  (kostenlos in der Einführungsphase, Anmeldung per E-Mail-Code) oder über ein
+  eigenes privates GitHub-Repository.
 
 Die App ist kostenlos und ohne Einschränkungen nutzbar. Sie ist aus dem
 eigenen Bedarf entstanden und wird nebenbei weiterentwickelt.
@@ -49,9 +49,13 @@ Hund, Hundeschule, Hundetraining, Tagebuch, Welpe, Impfpass, Gewicht
 
 ### App-Zugriff
 
-Alle Funktionen sind ohne Anmeldung verfügbar. Die GitHub-Synchronisierung ist
-optional und nutzt ein vom Nutzer selbst angelegtes Konto; für die Prüfung
-werden keine Zugangsdaten benötigt.
+Alle Funktionen sind ohne Anmeldung nutzbar. Der Abgleich zwischen Geräten ist
+optional: Entweder über ein Konto bei uns (Anmeldung per E-Mail-Code) oder über
+ein eigenes privates GitHub-Repository des Nutzers.
+
+Für die Prüfung: Die App lässt sich vollständig ohne Konto testen. Soll auch der
+Abgleich geprüft werden, steht ein Prüfkonto bereit (Zugangsdaten in den
+Review-Notizen bei App Store Connect bzw. Play Console).
 
 ### Werbung
 
@@ -70,22 +74,27 @@ Digitale Käufe: Nein.
 
 ### Datensicherheit
 
-- Erhebt oder teilt die App Nutzerdaten? Nein.
-- Werden Daten verschlüsselt übertragen? Ja (die optionale GitHub-Verbindung
-  nutzt HTTPS; die App selbst überträgt nichts an den Entwickler).
-- Können Nutzer die Löschung ihrer Daten verlangen? Daten liegen nur auf dem
-  Gerät und werden mit der App gelöscht.
+- Erhebt oder teilt die App Nutzerdaten? **Ja**, aber nur wenn der optionale
+  Abgleich über den Dienst genutzt wird: E-Mail-Adresse und die Einträge der App.
+  Ohne Konto werden keine Daten erhoben.
+- Werden Daten verschlüsselt übertragen? Ja (HTTPS bei Dienst und GitHub).
+- Können Nutzer die Löschung ihrer Daten verlangen? Ja – direkt in der App
+  (Einstellungen → Abgleich zwischen Geräten → Konto löschen) und per E-Mail.
 - Unabhängige Sicherheitsprüfung: Nein.
 
-Begründung, falls nachgefragt: Die App hat keinen Server des Entwicklers. Die
-optionale Synchronisierung ist eine vom Nutzer konfigurierte Verbindung zu
-seinem eigenen GitHub-Konto und gilt laut Google-Richtlinie nicht als
-Datenerhebung durch den Entwickler.
+Angaben für das Formular, falls gefragt wird:
 
-### Behördliche App, Finanzfunktionen, Gesundheits-App, Nachrichten-App
+- Datentypen: E-Mail-Adresse; nutzergenerierte Inhalte (Trainings-, Gewichts-,
+  Kot-, Tierarzt- und Impfeinträge, Hundeprofile).
+- Zweck: Anmeldung und Abgleich zwischen den Geräten desselben Nutzers.
+- Keine Weitergabe an Dritte zu Werbe- oder Analysezwecken.
+- Auftragsverarbeiter: Supabase Inc. (Vertrag nach Art. 28 DSGVO), Rechenzentrum
+  London (Vereinigtes Königreich). Mailversand über einen E-Mail-Dienstleister.
+- Ohne Abgleich liegen alle Daten ausschließlich auf dem Gerät.
 
-Jeweils Nein. (Gesundheits-App bezieht sich auf menschliche Gesundheitsdaten;
-Tiergesundheit fällt nicht darunter.)
+### Kontolöschung
+
+https://cheekyboinc.github.io/hundeapp/konto-loeschen.html
 
 ### Datenschutzerklärung
 
@@ -96,11 +105,22 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - App-Icon: store/icon-512.png (512 x 512, ohne Transparenz)
 - Feature-Grafik: store/feature-graphic.png (1024 x 500)
 - Screenshots App Store, iPhone: store/screenshots/appstore-iphone-1-eintraege.png
-  bis appstore-iphone-4-kommandos.png (1320 x 2868, Grosse 6,9 Zoll)
+  bis appstore-iphone-4-kommandos.png (1320 x 2868, Größe 6,9 Zoll)
 - Screenshots App Store, iPad: store/screenshots/appstore-ipad-1-eintraege.png
-  bis appstore-ipad-4-kommandos.png (2064 x 2752, Grosse 13 Zoll)
+  bis appstore-ipad-4-kommandos.png (2064 x 2752, Größe 13 Zoll)
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
+
+## Versionshinweise für Release 1.4.0
+
+<de-DE>
+Neu: Der Abgleich zwischen zwei Geräten geht jetzt auch ohne GitHub. Du legst
+dafür ein Konto an und meldest dich mit einem Code per E-Mail an; in der
+Einführungsphase ist der Dienst kostenlos. Wer lieber ein eigenes privates
+GitHub-Repository nutzt, kann das weiterhin tun.
+
+Die Hilfe in den Einstellungen erklärt beide Wege.
+</de-DE>
 
 ## Versionshinweise für Release 1.3.3
 

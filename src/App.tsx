@@ -467,7 +467,7 @@ export default function App() {
       )}
 
       {/* Alle Overlays liegen auf z-50; diese Reihenfolge bestimmt, wer oben
-          liegt: Einstellungen → Hilfe → SyncSetup → Einführung. */}
+          liegt: Einstellungen → Hilfe → Anmeldung → SyncSetup → Einführung. */}
       {showSettings && (
         <SettingsModal
           settings={settings}
@@ -486,18 +486,19 @@ export default function App() {
         />
       )}
 
+      {showHelp && (
+        <HelpModal
+          onOpenSyncSetup={() => setShowSyncSetup(true)}
+          onOpenAccountSetup={() => setShowAccountSetup(true)}
+          onStartOnboarding={() => setShowOnboarding(true)}
+          onClose={() => setShowHelp(false)}
+        />
+      )}
+
       {showAccountSetup && (
         <AccountSetup
           onConnected={handleAccountConnected}
           onClose={() => setShowAccountSetup(false)}
-        />
-      )}
-
-      {showHelp && (
-        <HelpModal
-          onOpenSyncSetup={() => setShowSyncSetup(true)}
-          onStartOnboarding={() => setShowOnboarding(true)}
-          onClose={() => setShowHelp(false)}
         />
       )}
 

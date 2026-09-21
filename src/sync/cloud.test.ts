@@ -1,6 +1,13 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
-import { cloudBackend, cloudSignedIn, confirmCode, initCloud, requestCode } from './cloud';
+import {
+  cloudBackend,
+  cloudSignedIn,
+  confirmCode,
+  initCloud,
+  requestCode,
+  signInWithPassword
+} from './cloud';
 import { SyncConflictError, SyncError } from './types';
 
 // Die Aufrufe gegen Supabase werden durch einen Scheinserver ersetzt: Damit
@@ -75,6 +82,24 @@ describe('Sync-Dienst', () => {
     await initCloud();
     await confirmCode('neu@example.com', '123456');
     expect(seen.filter((c) => c.url.includes('/auth/v1/verify')).length).toBe(2);
+    expect(cloudSignedIn()).toBe(true);
+  });
+
+  it('meldet sich auch mit Passwort an', async () => {
+    serve((url) =>
+      url.includes('grant_type=password')
+        ? {
+            body: {
+              access_token: 't',
+              refresh_token: 'r',
+              expires_in: 3600,
+              user: { id: 'u9', email: 'pruefung@example.com' }
+            }
+          }
+        : {}
+    );
+    await initCloud();
+    await signInWithPassword('pruefung@example.com', 'geheim');
     expect(cloudSignedIn()).toBe(true);
   });
 

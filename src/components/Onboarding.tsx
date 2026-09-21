@@ -52,7 +52,7 @@ const STEPS: Step[] = [
     Icon: ShieldIcon,
     paragraphs: [
       'Alles bleibt auf dem Gerät. Über Einstellungen → Sicherung schreibst du eine Datei, die du für den Handywechsel oder ein zweites Gerät nutzen kannst.',
-      'Für Fortgeschrittene gibt es einen Abgleich zweier Handys über ein privates GitHub-Repo. Wie das geht, steht in den Einstellungen unter Hilfe.'
+      'Wenn sich zwei Geräte von selbst abgleichen sollen, verbindest du sie in den Einstellungen: mit einem Konto per E-Mail-Code oder mit einem eigenen privaten GitHub-Repo. Wie das geht, steht in den Einstellungen unter Hilfe.'
     ]
   }
 ];

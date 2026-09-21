@@ -1,9 +1,11 @@
 # Hundeapp
 
-Trainingstagebuch für die Hundeschule. Läuft auf iPhone und Android, komplett
-auf dem Gerät. Ein Konto oder Server ist nicht nötig.
+Trainingstagebuch für die Hundeschule. Läuft auf iPhone und Android, die Daten
+liegen auf dem Gerät.
 
-Optional gleichen sich zwei Handys über ein privates GitHub-Repo ab.
+Auf Wunsch gleichen sich zwei Geräte ab: über ein Konto (Anmeldung per
+E-Mail-Code, in der Einführungsphase kostenlos) oder über ein eigenes privates
+GitHub-Repo.
 
 ## Was die App kann
 
@@ -17,9 +19,11 @@ Optional gleichen sich zwei Handys über ein privates GitHub-Repo ab.
 
 ## Wo die Daten liegen
 
-Alles liegt im Speicher des Geräts. Beim Abgleich schreibt die App eine
-`daten.json` in ein privates GitHub-Repo. Der Zugangsschlüssel bleibt im
-Schlüsselbund des Handys und steht nie im Code.
+Alles liegt im Speicher des Geräts. Beim Abgleich kommt der gesamte Stand
+zusätzlich auf einen Server des Anbieters (E-Mail-Adresse und Einträge, damit
+sich die Geräte abgleichen können) oder in ein eigenes privates GitHub-Repo.
+Zugangsschlüssel und Sitzung bleiben im Schlüsselbund des Handys und stehen nie
+im Code.
 
 ## Loslegen
 

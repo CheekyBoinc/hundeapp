@@ -45,10 +45,6 @@
         padding: 1rem 1.25rem;
         margin: 1rem 0;
       }
-      .todo {
-        background: #fff7ed;
-        border-color: #fed7aa;
-      }
       a {
         color: #b5561a;
       }
@@ -63,13 +59,17 @@
         <p><strong>Das Wichtigste in Kürze</strong></p>
         <ul>
           <li>
-            Die Hundeapp sammelt keine Daten über dich. Es gibt keine Analyse, keine Werbung, kein
-            Tracking und keinen eigenen Server des Anbieters.
+            Ohne Abgleich bleibt alles auf deinem Gerät. Keine Analyse, keine Werbung, kein
+            Tracking.
           </li>
-          <li>Alle Einträge liegen ausschließlich auf deinem Gerät.</li>
           <li>
-            Nur wenn du die optionale GitHub-Synchronisierung einrichtest, werden deine Einträge in
-            ein von dir gewähltes, privates GitHub-Repository übertragen.
+            Wenn du den Abgleich zwischen deinen Geräten nutzt, legst du dafür ein Konto an. Dann
+            werden deine <strong>E-Mail-Adresse</strong> und deine <strong>Einträge</strong> auf
+            einem Server des Anbieters gespeichert, damit deine Geräte sich abgleichen können.
+          </li>
+          <li>
+            Stattdessen kannst du auch dein eigenes privates GitHub-Repository verwenden. Dann
+            liegen die Daten bei GitHub und nicht beim Anbieter.
           </li>
         </ul>
       </div>
@@ -87,18 +87,62 @@
       <p>
         Du gibst in der App selbst Daten ein: Trainingseinträge, Kommandos, Hundeprofile (z. B.
         Name, Rasse, Geburtsdatum, Chipnummer, Tierarzt, Allergien), Gewichts-, Kot-, Tierarzt- und
-        Impfeinträge. Diese Daten werden ausschließlich lokal im Speicher der App auf deinem Gerät
-        abgelegt. Der Anbieter der App hat keinen Zugriff darauf.
+        Impfeinträge.
       </p>
-      <p>Die App verlangt keine Registrierung und legt kein Nutzerkonto an.</p>
-
-      <h2>3. Optionale Synchronisierung über GitHub</h2>
       <p>
-        Du kannst freiwillig eine Synchronisierung einrichten. Dafür hinterlegst du in der App
-        deinen GitHub-Benutzernamen, den Namen eines von dir angelegten privaten Repositories und
-        ein von dir erstelltes Zugriffstoken. Die App überträgt deine Einträge dann verschlüsselt
-        (HTTPS) an die GitHub-API und speichert sie als Datei <code>daten.json</code> in diesem
-        Repository. Ebenso werden Daten von dort geladen.
+        Diese Daten werden zunächst ausschließlich lokal im Speicher der App auf deinem Gerät
+        abgelegt. Erst wenn du einen Abgleich einrichtest (Abschnitt 3 oder 4), werden sie
+        zusätzlich übertragen.
+      </p>
+      <p>
+        Die Nutzung ohne Abgleich verlangt keine Registrierung und legt kein Nutzerkonto an.
+      </p>
+
+      <h2>3. Abgleich über den Dienst des Anbieters</h2>
+      <p>
+        Für den Abgleich zwischen deinen Geräten kannst du ein Konto anlegen. Dafür gibst du deine
+        <strong>E-Mail-Adresse</strong> an; du erhältst per E-Mail einen Anmeldecode. Ein Passwort
+        wird nicht verlangt. Gespeichert werden:
+      </p>
+      <ul>
+        <li>deine E-Mail-Adresse (für die Anmeldung),</li>
+        <li>
+          der gesamte Stand deiner App – also Trainings-, Gewichts-, Kot-, Tierarzt- und
+          Impfeinträge sowie Hundeprofile – in einer Datei je Konto.
+        </li>
+      </ul>
+      <p>
+        Zweck ist ausschließlich der Abgleich zwischen deinen Geräten. Es gibt keine Auswertung, keine
+        Weitergabe an Dritte zu Werbezwecken und kein Profiling.
+      </p>
+      <p>
+        Der Dienst läuft bei der <strong>Supabase Inc.</strong> (Auftragsverarbeiter, mit
+        Vertrag nach Art. 28 DSGVO). Die Daten liegen in einem Rechenzentrum in
+        <strong>London, Vereinigtes Königreich</strong>; für das Vereinigte Königreich besteht ein
+        Angemessenheitsbeschluss der Europäischen Kommission. Es gilt ergänzend die
+        <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer"
+          >Datenschutzerklärung von Supabase</a
+        >.
+      </p>
+      <p>
+        Für den Versand der Anmeldecodes nutzt der Anbieter ein eigenes Postfach; die Mail wird dabei
+        über einen E-Mail-Dienstleister übertragen. Die Adresse wird nur zum Versand des Codes
+        verwendet.
+      </p>
+      <p>
+        Rechtsgrundlage ist deine Einwilligung durch das aktive Anlegen des Kontos (Art. 6 Abs. 1
+        lit. a DSGVO). Du kannst sie jederzeit widerrufen, indem du die Verbindung trennst oder dein
+        Konto löschst.
+      </p>
+
+      <h2>4. Abgleich über dein eigenes GitHub-Repository (Alternative)</h2>
+      <p>
+        Statt des Dienstes kannst du ein eigenes privates GitHub-Repository verwenden. Dafür
+        hinterlegst du in der App deinen GitHub-Benutzernamen, den Namen des Repositories und ein von
+        dir erstelltes Zugriffstoken. Die App überträgt deine Einträge dann verschlüsselt (HTTPS) an
+        die GitHub-API und speichert sie als Datei <code>daten.json</code> in diesem Repository.
+        Ebenso werden Daten von dort geladen. In diesem Fall erhält der Anbieter keine Kenntnis von
+        deinen Daten.
       </p>
       <p>
         Verantwortlich für die Verarbeitung bei GitHub ist die GitHub, Inc., 88 Colin P. Kelly Jr.
@@ -114,15 +158,14 @@
       <p>
         Das Zugriffstoken wird nur auf deinem Gerät gespeichert. Auf Android ist es von der
         automatischen Datensicherung und Geräteübertragung ausgenommen. Über „Einstellungen →
-        Synchronisierung trennen" wird es vom Gerät entfernt.
+        Abgleich zwischen Geräten → Trennen" wird es vom Gerät entfernt.
       </p>
       <p>
-        Rechtsgrundlage ist deine Einwilligung durch das aktive Einrichten der Synchronisierung
-        (Art. 6 Abs. 1 lit. a DSGVO). Du kannst sie jederzeit durch Trennen der Synchronisierung
-        widerrufen.
+        Rechtsgrundlage ist deine Einwilligung durch das aktive Einrichten des Abgleichs (Art. 6
+        Abs. 1 lit. a DSGVO). Du kannst sie jederzeit durch Trennen widerrufen.
       </p>
 
-      <h2>4. Sicherung und Export</h2>
+      <h2>5. Sicherung und Export</h2>
       <p>
         Über „Einstellungen → Sicherung“ erzeugst du eine Sicherungsdatei mit allen Daten der App,
         über die Export-Funktion CSV- oder PDF-Dateien. Diese Dateien entstehen lokal auf deinem
@@ -130,37 +173,50 @@
         über das Teilen-Menü deines Geräts. Der Anbieter erhält davon nichts.
       </p>
 
-      <h2>5. Externe Links</h2>
+      <h2>6. Externe Links</h2>
       <p>
         Die App enthält einen Link zur Unterstützungsseite des Anbieters bei Ko-fi. Erst wenn du
         diesen Link antippst, öffnet sich die Seite in deinem Browser und es gelten die
         Datenschutzbestimmungen von Ko-fi Labs Limited.
       </p>
 
-      <h2>6. Berechtigungen</h2>
+      <h2>7. Berechtigungen</h2>
       <p>
-        Die App benötigt lediglich Internetzugriff, und zwar ausschließlich für die optionale
-        GitHub-Synchronisierung. Es werden keine Standortdaten, Kontakte, Kamera, Mikrofon oder
+        Die App benötigt lediglich Internetzugriff, und zwar ausschließlich für den optionalen
+        Abgleich (Abschnitt 3 oder 4). Es werden keine Standortdaten, Kontakte, Kamera, Mikrofon oder
         andere Gerätefunktionen abgefragt.
       </p>
 
-      <h2>7. Löschen deiner Daten</h2>
+      <h2>8. Löschen deiner Daten</h2>
       <p>
-        Da alle Daten auf deinem Gerät liegen, löschst du sie, indem du Einträge in der App
-        entfernst oder die App deinstallierst. Daten in deinem GitHub-Repository löschst du direkt
-        bei GitHub.
+        Daten auf deinem Gerät löschst du, indem du Einträge in der App entfernst oder die App
+        deinstallierst.
+      </p>
+      <p>
+        Beim Dienst des Anbieters löschst du alles über „Einstellungen → Abgleich zwischen Geräten →
+        <strong>Konto löschen</strong>". Damit werden dein Konto und der gespeicherte Stand
+        unverzüglich aus der Datenbank entfernt. Sicherungskopien, die der Anbieter zum Schutz vor
+        Datenverlust anlegt, werden spätestens nach 30 Tagen gelöscht. Du kannst die Löschung auch
+        per E-Mail an die oben genannte Adresse verlangen.
+      </p>
+      <p>
+        Daten in deinem eigenen GitHub-Repository löschst du direkt bei GitHub (Datei
+        <code>daten.json</code> oder das ganze Repository).
       </p>
 
-      <h2>8. Deine Rechte</h2>
+      <h2>9. Deine Rechte</h2>
       <p>
-        Da der Anbieter keine personenbezogenen Daten von dir erhebt oder speichert, gibt es beim
-        Anbieter auch keine Daten, über die Auskunft erteilt oder die berichtigt oder gelöscht
-        werden könnten. Solltest du dennoch Fragen zum Datenschutz haben, wende dich an die oben
-        genannte Kontaktadresse. Du hast außerdem das Recht, dich bei einer
-        Datenschutz-Aufsichtsbehörde zu beschweren.
+        Wenn du den Dienst nutzt, verarbeitet der Anbieter deine E-Mail-Adresse und deine Einträge.
+        Du hast dann das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+        Datenübertragbarkeit und Widerspruch. Wende dich dafür an die oben genannte Kontaktadresse.
+        Du hast außerdem das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren.
+      </p>
+      <p>
+        Nutzt du die App ohne Abgleich oder ausschließlich über dein eigenes GitHub-Repository,
+        liegen beim Anbieter keine personenbezogenen Daten über dich vor.
       </p>
 
-      <h2>9. Änderungen</h2>
+      <h2>10. Änderungen</h2>
       <p>
         Diese Datenschutzerklärung wird angepasst, wenn sich die App-Funktionen ändern. Die jeweils
         aktuelle Fassung ist unter dieser Adresse abrufbar.

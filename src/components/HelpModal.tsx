@@ -6,17 +6,24 @@ import { ChevronRightIcon } from './NavIcons';
 
 interface Props {
   onOpenSyncSetup: () => void;
+  onOpenAccountSetup: () => void;
   onStartOnboarding: () => void;
   onClose: () => void;
 }
 
 // Kurze Hilfe mit Themenliste. Die Texte stehen in src/helpTopics.ts.
-export default function HelpModal({ onOpenSyncSetup, onStartOnboarding, onClose }: Props) {
+export default function HelpModal({
+  onOpenSyncSetup,
+  onOpenAccountSetup,
+  onStartOnboarding,
+  onClose
+}: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const topic = HELP_TOPICS.find((t) => t.id === openId) ?? null;
 
   function runAction(t: HelpTopic) {
-    if (t.action === 'sync') onOpenSyncSetup();
+    if (t.action === 'cloud') onOpenAccountSetup();
+    if (t.action === 'github') onOpenSyncSetup();
     if (t.action === 'onboarding') onStartOnboarding();
   }
 
@@ -56,7 +63,11 @@ export default function HelpModal({ onOpenSyncSetup, onStartOnboarding, onClose 
               className="btn-primary mt-4 w-full"
               onClick={() => runAction(topic)}
             >
-              {topic.action === 'sync' ? 'Abgleich einrichten' : 'Einführung starten'}
+              {topic.action === 'cloud'
+                ? 'Konto verbinden'
+                : topic.action === 'github'
+                  ? 'GitHub-Repo einrichten'
+                  : 'Einführung starten'}
             </button>
           )}
         </div>

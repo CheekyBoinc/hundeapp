@@ -49,7 +49,8 @@ export {
   cloudSignedIn,
   confirmCode,
   deleteAccount,
-  requestCode
+  requestCode,
+  signInWithPassword
 } from './cloud';
 export {
   areEqual,

@@ -11,7 +11,7 @@ export interface HelpTopic {
   paragraphs: string[];
   steps?: string[];
   // Themen mit einer Aktion bekommen unten einen Knopf.
-  action?: 'sync' | 'onboarding';
+  action?: 'cloud' | 'github' | 'onboarding';
   // Themen mit einem Schaubild bekommen es nach den Absätzen.
   diagram?: 'sync';
 }
@@ -28,12 +28,29 @@ export const HELP_TOPICS: HelpTopic[] = [
     ]
   },
   {
-    id: 'abgleich',
-    title: 'Abgleich einrichten',
-    summary: 'Zwei Handys über ein privates GitHub-Repo abgleichen.',
+    id: 'abgleich-sync',
+    title: 'Abgleich über Hundeapp-Sync',
+    summary: 'Zwei Geräte mit einem Konto abgleichen, Anmeldung per E-Mail-Code.',
     paragraphs: [
-      'Der Abgleich ist optional. Ohne ihn bleiben die Daten auf dem Gerät. Mit Abgleich schreibt die App den gesamten Stand in eine Datei in deinem privaten GitHub-Repo.',
-      'Beide Handys benutzen dasselbe Repo und denselben Token. Läuft der Abgleich, zeigt die Kopfzeile den Zustand: grün heißt abgeglichen, gelb läuft gerade, rot ist ein Fehler.'
+      'Der Abgleich ist optional. Ohne ihn bleiben die Daten auf dem Gerät. Mit Konto schreibt die App den gesamten Stand auf einen Server und holt ihn auf deinen anderen Geräten wieder ab.',
+      'Die Anmeldung läuft ohne Passwort: Du gibst deine E-Mail-Adresse ein und bekommst einen sechsstelligen Code zugeschickt. In der Einführungsphase ist der Dienst kostenlos.',
+      'Läuft der Abgleich, zeigt die Kopfzeile den Zustand: grün heißt abgeglichen, gelb läuft gerade, rot ist ein Fehler.'
+    ],
+    steps: [
+      'Einstellungen öffnen und unter „Abgleich zwischen Geräten" bei Hundeapp-Sync auf „Verbinden" tippen.',
+      'E-Mail-Adresse eingeben und „Code senden" wählen.',
+      'Den Code aus der Mail eintragen und „Verbinden" wählen.',
+      'Auf jedem weiteren Gerät dasselbe mit derselben Adresse tun.'
+    ],
+    action: 'cloud'
+  },
+  {
+    id: 'abgleich-github',
+    title: 'Abgleich über ein eigenes GitHub-Repo',
+    summary: 'Für Fortgeschrittene: Abgleich über ein privates Repository.',
+    paragraphs: [
+      'Statt des Kontos kannst du ein eigenes privates GitHub-Repository verwenden. Die Daten liegen dann bei GitHub und nicht beim Anbieter.',
+      'Beide Handys benutzen dasselbe Repo und denselben Token.'
     ],
     steps: [
       'Auf github.com ein privates Repo anlegen, zum Beispiel hundeapp-daten.',
@@ -41,7 +58,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       'Benutzername, Repo-Name und Token in der App eintragen.',
       'Verbinden und synchronisieren.'
     ],
-    action: 'sync',
+    action: 'github',
     diagram: 'sync'
   },
   {
@@ -60,9 +77,9 @@ export const HELP_TOPICS: HelpTopic[] = [
     summary: 'Was auf dem Gerät bleibt und was beim Abgleich passiert.',
     paragraphs: [
       'Alle Einträge liegen auf dem Gerät. Ohne eingerichteten Abgleich verlässt nichts das Handy.',
-      'Beim Abgleich liegt der gesamte Stand als daten.json in deinem privaten GitHub-Repo. Der Zugangsschlüssel wird nur auf dem Gerät gespeichert, nie im Code.',
-      'Geht ein Handy verloren, lösche den Token auf GitHub. Er gilt nur für dieses eine Repo und lässt sich dort jederzeit entfernen.',
-      'Der Token hat ein Ablaufdatum. Läuft er ab, zeigt die App einen Sync-Fehler. Erstelle dann einen neuen und trage ihn in den Einstellungen ein.'
+      'Beim Abgleich über Hundeapp-Sync liegen deine E-Mail-Adresse und der gesamte Stand auf einem Server des Anbieters, damit sich deine Geräte abgleichen können.',
+      'Beim Abgleich über GitHub liegt der Stand als daten.json in deinem eigenen privaten Repository. Der Zugangsschlüssel wird nur auf dem Gerät gespeichert. Er hat ein Ablaufdatum; läuft er ab, zeigt die App einen Sync-Fehler.',
+      'Dein Konto beim Dienst kannst du jederzeit löschen. In den Einstellungen unter „Abgleich zwischen Geräten" bei Hundeapp-Sync auf „Konto löschen". Damit verschwinden auch die Daten auf dem Server; die Einträge auf dem Gerät bleiben.'
     ]
   },
   {
