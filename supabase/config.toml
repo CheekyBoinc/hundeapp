@@ -1,0 +1,10 @@
+# Konfiguration für die Supabase-CLI.
+project_id = "wfqcawzzngutyffcdetg"
+
+# Der Health-Endpunkt wird vom Uptime-Dienst ohne Anmeldung aufgerufen.
+[functions.health]
+verify_jwt = false
+
+# Kontolöschung nur mit gültiger Sitzung; geprüft wird zusätzlich im Code.
+[functions.delete-account]
+verify_jwt = true
