@@ -1,6 +1,6 @@
 import type { DogProfile, Vaccination, VetVisit } from './types';
 
-export interface UpcomingItem {
+interface UpcomingItem {
   id: string;
   date: string; // YYYY-MM-DD
   kind: 'impfung' | 'tierarzt';

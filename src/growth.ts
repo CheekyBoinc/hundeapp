@@ -2,9 +2,7 @@
 // von mir geschätzte Orientierungswerte und NICHT aus verifizierten FCI-/Studien-
 // Quellen übernommen. Vor einer fachlichen Verwendung prüfen. Der erste Name ist
 // die kanonische Schreibweise, weitere sind Aliase für das freie Rassen-Feld.
-import type { WeightStatus } from './breeds';
-
-export interface GrowthPoint {
+interface GrowthPoint {
   months: number;
   minKg: number;
   maxKg: number;
@@ -15,7 +13,7 @@ interface GrowthEntry {
   points: GrowthPoint[];
 }
 
-export const GROWTH: GrowthEntry[] = [
+const GROWTH: GrowthEntry[] = [
   {
     names: ['Australian Shepherd', 'aus', 'australian shepherd'],
     points: [
@@ -132,21 +130,6 @@ for (const entry of GROWTH) {
 export function findGrowth(rasse: string | null): GrowthPoint[] | null {
   if (!rasse) return null;
   return GROWTH_LOOKUP.get(rasse.trim().toLowerCase()) ?? null;
-}
-
-// Lineare Interpolation zwischen den Stützpunkten. Liefert null, wenn das Alter
-// außerhalb des hinterlegten Bereichs liegt (jünger als der erste Punkt oder
-// älter als der letzte Punkt = erwachsen).
-export function classifyGrowth(
-  weightKg: number,
-  ageMonths: number,
-  points: GrowthPoint[]
-): WeightStatus | null {
-  const range = rangeAt(ageMonths, points);
-  if (!range) return null;
-  if (weightKg < range.minKg) return 'under';
-  if (weightKg > range.maxKg) return 'over';
-  return 'norm';
 }
 
 function segmentFor(ageMonths: number, points: GrowthPoint[]): GrowthPoint | null {

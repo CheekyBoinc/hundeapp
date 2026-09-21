@@ -72,6 +72,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Entry | null>(null);
+  const [creatingDate, setCreatingDate] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -302,6 +303,12 @@ export default function CalendarPage() {
           {selectedDate && (
             <div className="mt-3">
               <Modal title={dayLabel} onClose={() => setSelectedDate(null)}>
+                <button
+                  className="btn-primary mb-3 w-full"
+                  onClick={() => setCreatingDate(selectedDate)}
+                >
+                  Eintrag für diesen Tag
+                </button>
                 {dayEntries.length === 0 ? (
                   <p className="py-6 text-center text-sm text-stone-500">
                     Keine Einträge an diesem Tag.
@@ -361,12 +368,16 @@ export default function CalendarPage() {
             />
           )}
 
-          {editing && (
+          {(editing || creatingDate) && (
             <EntryModal
               entry={editing}
+              defaultDate={creatingDate}
               commands={commands}
               dogs={dogs}
-              onClose={() => setEditing(null)}
+              onClose={() => {
+                setEditing(null);
+                setCreatingDate(null);
+              }}
               onChanged={load}
             />
           )}

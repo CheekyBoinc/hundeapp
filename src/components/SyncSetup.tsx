@@ -41,8 +41,8 @@ export default function SyncSetup({ onDone, onClose }: Props) {
     <Modal title="GitHub-Synchronisierung" onClose={onClose}>
       <p className="mb-4 text-sm text-stone-600">
         Für Fortgeschrittene: Die Daten werden in einem privaten GitHub-Repo gespeichert und
-        zwischen allen Geräten abgeglichen, die denselben Token benutzen. Ohne GitHub-Konto nutze
-        stattdessen die Sicherung als Datei.
+        zwischen allen Geräten abgeglichen, die denselben Token benutzen. Wer kein GitHub-Konto hat,
+        nutzt den Weg über Hundeapp-Sync oder die Sicherung als Datei.
       </p>
 
       <form onSubmit={submit} className="space-y-4">

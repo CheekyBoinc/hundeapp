@@ -13,7 +13,7 @@ interface BreedEntry {
   range: BreedRange;
 }
 
-export const BREEDS: BreedEntry[] = [
+const BREEDS: BreedEntry[] = [
   { names: ['Australian Shepherd', 'aus', 'australian shepherd'], range: { minKg: 18, maxKg: 27 } },
   { names: ['Labrador Retriever', 'labrador'], range: { minKg: 25, maxKg: 36 } },
   { names: ['Golden Retriever', 'golden'], range: { minKg: 25, maxKg: 34 } },

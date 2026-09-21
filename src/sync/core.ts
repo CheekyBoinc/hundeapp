@@ -486,7 +486,14 @@ export function notifyNotice(message: string) {
 
 let activeBackend: SyncBackend | null = null;
 
+// Zuletzt gesehene Revision des Servers. Ein Abruf fragt damit zuerst nur die
+// Revisionsmarke ab und lädt den vollständigen Stand nur, wenn sich wirklich
+// etwas geändert hat. Sie gilt nur für das aktuelle Backend und die aktuelle
+// Anmeldung, deshalb wird sie beim Wechsel zurückgesetzt.
+let lastServerRev: string | null = null;
+
 export function setActiveBackend(backend: SyncBackend | null): void {
+  if (backend !== activeBackend) lastServerRev = null;
   activeBackend = backend;
 }
 
@@ -523,13 +530,13 @@ export function schedulePush() {
 }
 
 // Holt den Serverstand. 'unchanged' meldet ein Backend, wenn der Server bereits
-// auf der übergebenen Revision steht und deshalb keine Daten geschickt hat. Die
-// Revisionsmarke kommt mit dem Dienst dazu; hier wird dann vollständig geladen.
+// auf der zuletzt gesehenen Revision steht und deshalb keine Daten geschickt hat.
 async function fetchRemote(
   backend: SyncBackend
 ): Promise<{ rev: string; state: SyncState } | null> {
-  const result = await backend.fetch();
+  const result = await backend.fetch(lastServerRev ?? undefined);
   if (result === 'unchanged') return null;
+  lastServerRev = result?.rev ?? null;
   return result;
 }
 
@@ -562,7 +569,7 @@ export async function pushNow(): Promise<void> {
         return;
       }
       try {
-        await backend.put(merged, currentRemote?.rev);
+        lastServerRev = await backend.put(merged, currentRemote?.rev);
         persistMerged(merged);
         return;
       } catch (err) {
@@ -591,8 +598,8 @@ export async function pullNow(): Promise<SyncState> {
   return serialize(async () => {
     const backend = activeBackend;
     if (!backend?.isConfigured()) return loadState();
-    const result = await backend.fetch();
-    if (result === null || result === 'unchanged') return loadState();
+    const result = await fetchRemote(backend);
+    if (result === null) return loadState();
     const merged = pruneStaleTombstones(mergeStates(loadState(), result.state));
     saveState(merged);
     notifyChanged();

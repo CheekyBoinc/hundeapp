@@ -7,8 +7,9 @@ npm install
 npm run dev   # http://localhost:5173
 ```
 
-Ohne GitHub-Verbindung speichert die App lokal im Browser. Beim ersten Start
-sind Beispieldaten (11.08. und 18.08.2026, Kommando-Übersicht) eingespielt.
+Ohne eingerichteten Abgleich speichert die App nur auf dem Gerät. Beim ersten
+Start sind Beispieldaten eingespielt (zwei Trainingseinträge von vor einer und
+vor zwei Wochen, dazu die Kommando-Übersicht).
 
 | Befehl | Wirkung |
 | --- | --- |
@@ -16,6 +17,8 @@ sind Beispieldaten (11.08. und 18.08.2026, Kommando-Übersicht) eingespielt.
 | `npm test` | Unit-Tests mit Vitest |
 | `npm run lint` | ESLint |
 | `npm run assets` | Icons und Splash-Screens aus dem Pfoten-Icon |
+| `npm run icons` | Icons, Splash-Bilder und Store-Grafiken aus dem Pfoten-Icon |
+| `npm run texts` | Sichtbare Texte der Oberfläche als JSON ausgeben |
 
 ## Zugangsdaten des Sync-Dienstes
 
@@ -30,14 +33,22 @@ VITE_CLOUD_SYNC=1
 
 Der Schlüssel ist öffentlich gedacht und für den Client bestimmt; die
 Zugriffsregeln schützen die Daten. Der **Secret-Key** (`sb_secret_…`) gehört
-ausschließlich in die Supabase-Secrets und niemals in die App.
+ausschließlich in die Supabase-Secrets und niemals in die App; die
+Serverfunktionen lesen ihn dort aus `SUPABASE_SERVICE_ROLE_KEY`.
+
+Das Repo ist öffentlich (GitHub Pages braucht das für die Rechtsseiten).
+Persönliche Notizen, Zugangsdaten und Schlüssel gehören deshalb nicht hinein –
+sie liegen außerhalb des Repos, zum Beispiel in `~/hundeapp-signing/`.
 
 Ohne `VITE_CLOUD_SYNC=1` erscheint der Dienst nirgends in der Oberfläche – der
 Weg über GitHub bleibt unberührt.
 
 Der Dienst selbst (Tabellen, Regeln, Serverfunktionen) wird mit
 `npx supabase@latest db push` und `npx supabase@latest functions deploy`
-ausgerollt; `supabase/test-sync.sh` prüft ihn anschließend vollständig.
+ausgerollt; `supabase/test-sync.sh` prüft ihn anschließend von außen: Konto und
+Freischaltung, Schreiben mit Revisionsprüfung, Lesen ohne Freischaltung, das
+Größenlimit, die Erreichbarkeit der `health`-Funktion und das Löschen des
+Kontos. Ein Abbruch räumt das Testkonto auf.
 
 ### Anmeldemails
 
@@ -59,9 +70,11 @@ den eingebauten Versand von Supabase.
 React, TypeScript und Vite, verpackt mit
 [Capacitor](https://capacitorjs.com) als native App für Android und iOS.
 
-Die Daten liegen im `localStorage`. Der Abgleich nutzt die GitHub Contents API
-und schreibt eine Base64-kodierte `daten.json`. Zusammengeführt wird pro Objekt
-nach `updated_at`. Löschungen bleiben als Tombstones erhalten, damit kein Gerät
+Die Daten liegen im `localStorage`. Für den Abgleich gibt es zwei Wege hinter
+derselben Schnittstelle in `src/sync/`: das eigene private GitHub-Repo (Contents
+API, Base64-kodierte `daten.json`) oder den Dienst (Supabase, Tabelle
+`sync_state` mit Revisionsnummer). Zusammengeführt wird pro Objekt nach
+`updated_at`. Löschungen bleiben als Tombstones erhalten, damit kein Gerät
 gelöschte Einträge zurücklädt.
 
 ## Android (Play Store)
@@ -75,10 +88,10 @@ npm run android            # Web-Build, nach android/ kopieren, Android Studio �
 npm run cap:sync           # nur Web-Build und Kopieren
 ```
 
-Ein Release baut ein Befehl: `npm run release:android -- 1.3` zählt `versionCode`
-hoch, setzt `versionName` auf 1.3, baut das signierte Bundle und legt es unter
-`store/` ab. Danach `build.gradle` committen und das Bundle in der Play Console
-hochladen.
+Ein Release baut ein Befehl: `npm run release:android -- 1.4.5` zählt `versionCode`
+hoch, setzt `versionName` auf 1.4.5, gleicht `package.json` und das iOS-Projekt
+an, baut das signierte Bundle und legt es unter `store/` ab. Danach das Bundle
+in der Play Console hochladen und den Versionssprung committen.
 
 Die Signatur kommt aus `android/keystore.properties`, die auf den
 Upload-Schlüssel in `~/hundeapp-signing/` zeigt. Beide liegen nicht im Repo und
@@ -120,9 +133,12 @@ Release:
 Version und Build stehen in `ios/App/App.xcodeproj/project.pbxproj`. Das Paket
 nutzt Swift Package Manager, CocoaPods ist nicht nötig.
 
-## Hosten
+## Rechtsseiten und Hosting
 
-Die mitgelieferte `.github/workflows/deploy.yml` veröffentlicht den Build über
-GitHub Actions. GitHub Pages eignet sich dafür nur bei öffentlichen Repos, und
-die veröffentlichte Seite ist ohnehin für jeden erreichbar. Bei einem privaten
-Repo bieten Cloudflare Pages, Netlify oder Vercel das kostenlos an.
+Die Web-Fassung der App wird nicht mehr weiterentwickelt. Der Workflow
+`.github/workflows/deploy.yml` prüft bei jedem Push Lint, Tests und Build und
+veröffentlicht danach nur noch `site/`: Startseite, Datenschutz,
+Nutzungsbedingungen und Kontolöschung. Diese Seiten müssen erreichbar bleiben,
+weil beide Stores sie verlangen. GitHub Pages braucht dafür ein öffentliches
+Repo; soll das Repo privat werden, veröffentlicht `site/` stattdessen über
+Cloudflare Pages, Netlify oder Vercel.

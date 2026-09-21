@@ -19,7 +19,18 @@ REF=$(grep -m1 '^project_id' "$root/supabase/config.toml" | cut -d'"' -f2)
 URL="https://$REF.supabase.co"
 MGMT="https://api.supabase.com/v1/projects/$REF"
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
+uid=""
+
+# Räumt auch bei einem Abbruch auf: Das Testkonto samt Zeilen darf nicht
+# liegen bleiben, sonst sammeln sich Karteileichen im Projekt.
+cleanup() {
+  rm -rf "$TMP"
+  if [ -n "${uid:-}" ] && [ -n "${SERVICE:-}" ]; then
+    curl -s -X DELETE "$URL/auth/v1/admin/users/$uid" \
+      -H "apikey: $SERVICE" -H "Authorization: Bearer $SERVICE" > /dev/null || true
+  fi
+}
+trap cleanup EXIT
 
 jget() {
   node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const o=JSON.parse(s);process.stdout.write(String(eval('o'+process.argv[1])??''))}catch(e){process.stdout.write('')}})" "$1"
@@ -67,7 +78,11 @@ echo "8. Ohne Freischaltung:            $(rpc sync_put '{"p_expected":2,"p_data"
 echo "9. Lesen trotz Sperre:            $(curl -s "$URL/rest/v1/sync_state?select=revision" -H "apikey: $ANON" -H "Authorization: Bearer $jwt")"
 sqlq "update entitlement set active = true where user_id = '$uid'" > /dev/null
 
-echo "10. Zu großes Dokument:           $(sqlq "insert into sync_state (user_id, data) values ('$uid', to_jsonb(repeat('a', 1100000)))" | head -c 120)"
+# Über die bestehende Zeile gehen: Ein zweites insert würde schon am
+# Primärschlüssel scheitern und die Größenprüfung gar nicht erreichen.
+echo "10. Zu großes Dokument:           $(sqlq "update sync_state set data = to_jsonb(repeat('a', 1100000)) where user_id = '$uid'" | head -c 120)"
+echo "11. Dienst erreichbar:            $(curl -s "$URL/functions/v1/health" | head -c 120)"
+echo "12. Löschen ohne Anmeldung:       $(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL/functions/v1/delete-account")   (erwartet 401)"
 
 curl -s -X DELETE "$URL/auth/v1/admin/users/$uid" -H "apikey: $SERVICE" -H "Authorization: Bearer $SERVICE" > /dev/null
-echo "11. Nach dem Löschen:             sync_state=$(sqlq "select count(*) from sync_state where user_id = '$uid'") entitlement=$(sqlq "select count(*) from entitlement where user_id = '$uid'")   (erwartet je 0)"
+echo "13. Nach dem Löschen:             sync_state=$(sqlq "select count(*) from sync_state where user_id = '$uid'") entitlement=$(sqlq "select count(*) from entitlement where user_id = '$uid'")   (erwartet je 0)"

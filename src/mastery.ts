@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-export interface CommandMastery {
+interface CommandMastery {
   count: number;
   lastDate: string | null;
 }
@@ -33,7 +33,7 @@ export function daysSince(date: string | null): number | null {
 // 0 = noch nie geübt, 1 = angefangen, 2 = in Übung, 3 = sitzt.
 // Liegt die letzte Übung länger als `idleDays` zurück, fällt die Stufe um eins,
 // damit „sitzt“ nicht ewig stehen bleibt.
-export type MasteryLevel = 0 | 1 | 2 | 3;
+type MasteryLevel = 0 | 1 | 2 | 3;
 
 export const MASTERY_LABEL: Record<MasteryLevel, string> = {
   0: 'Neu',

@@ -111,6 +111,17 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.4.5
+
+<de-DE>
+Neu: Im Kalender legst du mit einem Tipp auf einen Tag direkt einen Eintrag für
+genau diesen Tag an.
+
+Der Abgleich fragt beim Zurückkehren in die App nur noch nach, ob sich etwas
+geändert hat, und lädt den vollständigen Stand nur bei Bedarf. Das spart
+Datenvolumen.
+</de-DE>
+
 ## Versionshinweise für Release 1.4.0
 
 <de-DE>

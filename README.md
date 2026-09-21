@@ -32,7 +32,8 @@ npm install
 npm run dev
 ```
 
-Ohne GitHub-Verbindung läuft die App im Demo-Modus mit Beispieldaten.
+Ohne eingerichteten Abgleich läuft die App zunächst mit Beispieldaten; sie
+lassen sich auf der Einträge-Seite mit einem Tipp entfernen.
 
 - Abgleich einrichten: [docs/einrichtung.md](docs/einrichtung.md)
 - Entwicklung und Releases: [docs/entwicklung.md](docs/entwicklung.md)

@@ -7,14 +7,14 @@ import { todayLocal } from './utils';
 // Sicherung als Datei: alle Daten der App als JSON. Dient dem Handywechsel
 // und dem Weitergeben an ein zweites Gerät ohne GitHub-Konto.
 
-export interface BackupFile {
+interface BackupFile {
   app: 'hundeapp';
   version: 1;
   exportedAt: string;
   data: AppState;
 }
 
-export interface BackupCounts {
+interface BackupCounts {
   entries: number;
   commands: number;
   dogs: number;

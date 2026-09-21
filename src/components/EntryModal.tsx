@@ -9,6 +9,7 @@ interface Props {
   commands: Command[];
   dogs: DogProfile[];
   defaultDogId?: string | null;
+  defaultDate?: string | null;
   onClose: () => void;
   onChanged: () => void;
 }
@@ -18,10 +19,11 @@ export default function EntryModal({
   commands: commandsProp,
   dogs,
   defaultDogId,
+  defaultDate,
   onClose,
   onChanged
 }: Props) {
-  const [date, setDate] = useState(entry?.date ?? todayLocal());
+  const [date, setDate] = useState(entry?.date ?? defaultDate ?? todayLocal());
   const [dogId, setDogId] = useState<string>(entry?.dogId ?? defaultDogId ?? '');
   const [ort, setOrt] = useState(entry?.ort ?? '');
   const [wasGemacht, setWasGemacht] = useState(entry?.was_gemacht ?? '');

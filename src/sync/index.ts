@@ -46,27 +46,21 @@ export async function clearActiveConfig(): Promise<void> {
 export {
   cloudAvailable,
   cloudEmail,
-  cloudSignedIn,
   confirmCode,
   deleteAccount,
   requestCode,
   signInWithPassword
 } from './cloud';
 export {
-  areEqual,
   isConfigured,
   mergeIntoLocal,
-  mergeStates,
   onChange,
   onSyncError,
   onSyncNotice,
-  pruneStaleTombstones,
   pullNow,
   pushNow,
   sanitizeState,
   schedulePush
 } from './core';
-export { clearConfig, getConfig, setConfig, validateConfig } from './github';
-export type { SyncConfig } from './github';
-export { SyncConflictError, SyncError } from './types';
-export type { SyncState } from './types';
+export { clearConfig, setConfig, validateConfig } from './github';
+export { SyncError } from './types';

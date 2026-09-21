@@ -48,16 +48,6 @@ function encodePng(width, rgba, height = width) {
   ]);
 }
 
-function roundedRectInside(x, y, size, r) {
-  const min = r;
-  const max = size - r;
-  const cx = Math.min(Math.max(x, min), max);
-  const cy = Math.min(Math.max(y, min), max);
-  const dx = x - cx;
-  const dy = y - cy;
-  return dx * dx + dy * dy <= r * r;
-}
-
 function inEllipse(x, y, cx, cy, rx, ry) {
   const dx = (x - cx) / rx;
   const dy = (y - cy) / ry;
@@ -157,17 +147,6 @@ function drawIcon(size, background = PAGE) {
   });
 }
 
-// Web-Icon mit abgerundeten Ecken (Favicon, Apple Touch Icon, PWA).
-function drawIconRounded(size) {
-  const r = size * 0.22;
-  return render(size, (fx, fy) => {
-    if (!roundedRectInside(fx, fy, size, r)) return null;
-    const c = tagPixel(fx / size, fy / size, 0.92);
-    if (c === null || c === 'hole') return PAGE;
-    return c;
-  });
-}
-
 // Adaptive Icon (Android): nur die Marke auf transparent, in der sicheren Zone.
 function drawForeground(size) {
   return render(size, (fx, fy) => {
@@ -191,9 +170,6 @@ function drawSplash(size, background) {
   });
 }
 
-for (const size of [192, 512]) {
-  writeFileSync(join(outDir, `icon-${size}.png`), encodePng(size, drawIconRounded(size)));
-}
 writeFileSync(join(outDir, 'apple-touch-icon.png'), encodePng(180, drawIcon(180)));
 console.log('Icons generiert in', outDir);
 

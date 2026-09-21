@@ -20,7 +20,7 @@ const DATA_PATH = 'daten.json';
 const MAX_PAYLOAD_BYTES = 1024 * 1024;
 const WARN_PAYLOAD_BYTES = 700 * 1024;
 
-export interface SyncConfig {
+interface SyncConfig {
   user: string;
   repo: string;
   token: string;
@@ -69,7 +69,7 @@ export async function initConfig(): Promise<void> {
   configCache = cfg;
 }
 
-export function getConfig(): SyncConfig | null {
+function getConfig(): SyncConfig | null {
   return configCache;
 }
 
@@ -83,7 +83,7 @@ export function clearConfig() {
   void removeStored(CONFIG_KEY).catch(() => undefined);
 }
 
-export function isConfigured(): boolean {
+function isConfigured(): boolean {
   const cfg = getConfig();
   return Boolean(cfg?.user && cfg?.repo && cfg?.token);
 }

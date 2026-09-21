@@ -1,11 +1,12 @@
 node_modules
 dist
-.env
-.env.local
+.env*
+!.env.test
 .DS_Store
 .commandcode/
 # Debug-Screenshots
 hundeapp-*.png
 .claude/
-# Signierte Bundles nicht einchecken
+# Signierte Bundles und Exporte nicht einchecken
 store/*.aab
+store/*.ipa
