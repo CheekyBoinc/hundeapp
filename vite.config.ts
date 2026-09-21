@@ -12,7 +12,7 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 function csp(): Plugin {
   const policy = [
     "default-src 'self'",
-    "connect-src 'self' https://api.github.com",
+    "connect-src 'self' https://api.github.com https://*.supabase.co",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",

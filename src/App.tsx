@@ -3,15 +3,22 @@ import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { closeTopModal } from './modalStack';
 import {
-  clearConfig,
+  activeProvider,
+  clearActiveConfig,
+  cloudAvailable,
+  cloudEmail,
+  deleteAccount,
   isConfigured,
   onChange,
   onSyncError,
   onSyncNotice,
   pullNow,
   pushNow,
-  setConfig
+  setConfig,
+  setProvider,
+  type Provider
 } from './sync';
+import AccountSetup from './components/AccountSetup';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { applyTheme } from './theme';
 import { discardUntouchedDemoData } from './localStore';
@@ -59,6 +66,9 @@ export default function App() {
   const [showDogPicker, setShowDogPicker] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showSyncSetup, setShowSyncSetup] = useState(false);
+  const [showAccountSetup, setShowAccountSetup] = useState(false);
+  // Welcher Weg gerade aktiv ist; die Modulwahl selbst liegt in src/sync.
+  const [provider, setProviderState] = useState<Provider>(activeProvider());
   // Beim ersten Start zeigen; danach nur noch über die Hilfe erneut aufrufbar.
   const [showOnboarding, setShowOnboarding] = useState(() => !loadSettings().onboardingDone);
   const [offline, setOffline] = useState(!navigator.onLine);
@@ -206,7 +216,18 @@ export default function App() {
     // Unveränderte Beispieldaten nicht in ein (bestehendes) Repo mischen.
     discardUntouchedDemoData();
     setConfig({ user, repo, token });
+    void setProvider('github');
+    setProviderState('github');
     setConfigured(true);
+  };
+
+  // Die Sitzung des Dienstes ist beim Bestätigen des Codes schon gespeichert.
+  const handleAccountConnected = () => {
+    discardUntouchedDemoData();
+    void setProvider('cloud');
+    setProviderState('cloud');
+    setConfigured(true);
+    setShowAccountSetup(false);
   };
 
   const handleSyncNow = () => {
@@ -223,11 +244,36 @@ export default function App() {
   };
 
   const handleDisconnect = () => {
-    clearConfig();
+    if (
+      !window.confirm(
+        'Verbindung trennen? Die Zugangsdaten werden von diesem Gerät entfernt. Deine Einträge bleiben lokal erhalten.'
+      )
+    )
+      return;
+    void clearActiveConfig();
     setConfigured(false);
     setStatus('idle');
     setErrorMsg(null);
     setShowSettings(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        'Konto wirklich löschen? Damit verschwinden auch alle Daten auf dem Server. Deine Einträge auf diesem Gerät bleiben erhalten.'
+      )
+    )
+      return;
+    try {
+      await deleteAccount();
+      await setProvider('github');
+      setProviderState('github');
+      setConfigured(false);
+      setStatus('idle');
+      setShowSettings(false);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Das Konto konnte nicht gelöscht werden.');
+    }
   };
 
   // Jeder Schließweg der Einführung (Knöpfe, Escape, Zurück-Taste, Klick
@@ -426,12 +472,24 @@ export default function App() {
         <SettingsModal
           settings={settings}
           configured={configured}
+          provider={provider}
+          cloudAvailable={cloudAvailable}
+          cloudEmail={cloudEmail()}
           onChange={handleSettings}
           onDisconnect={handleDisconnect}
           onOpenSyncSetup={() => setShowSyncSetup(true)}
+          onOpenAccountSetup={() => setShowAccountSetup(true)}
+          onDeleteAccount={() => void handleDeleteAccount()}
           onOpenHelp={() => setShowHelp(true)}
           onStartOnboarding={() => setShowOnboarding(true)}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showAccountSetup && (
+        <AccountSetup
+          onConnected={handleAccountConnected}
+          onClose={() => setShowAccountSetup(false)}
         />
       )}
 

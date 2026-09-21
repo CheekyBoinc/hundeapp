@@ -9,9 +9,14 @@ import { CoffeeIcon } from './NavIcons';
 interface Props {
   settings: Settings;
   configured: boolean;
+  provider: 'github' | 'cloud';
+  cloudAvailable: boolean;
+  cloudEmail: string | null;
   onChange: (s: Settings) => void;
   onDisconnect: () => void;
   onOpenSyncSetup: () => void;
+  onOpenAccountSetup: () => void;
+  onDeleteAccount: () => void;
   onOpenHelp: () => void;
   onStartOnboarding: () => void;
   onClose: () => void;
@@ -113,9 +118,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function SettingsModal({
   settings,
   configured,
+  provider,
+  cloudAvailable,
+  cloudEmail,
   onChange,
   onDisconnect,
   onOpenSyncSetup,
+  onOpenAccountSetup,
+  onDeleteAccount,
   onOpenHelp,
   onStartOnboarding,
   onClose
@@ -123,6 +133,9 @@ export default function SettingsModal({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  const activeCloud = provider === 'cloud' && configured;
+  const activeGithub = provider === 'github' && configured;
 
   async function handleExport() {
     setBusy(true);
@@ -159,16 +172,6 @@ export default function SettingsModal({
       setBusy(false);
       if (fileInput.current) fileInput.current.value = '';
     }
-  }
-
-  function handleDisconnect() {
-    if (
-      !window.confirm(
-        'Synchronisierung trennen? Die Zugangsdaten werden von diesem Gerät entfernt. Deine Einträge bleiben lokal erhalten.'
-      )
-    )
-      return;
-    onDisconnect();
   }
 
   return (
@@ -252,22 +255,54 @@ export default function SettingsModal({
           </div>
         </Section>
 
-        <Section title="Erweitert">
+        <Section title="Abgleich zwischen Geräten">
+          {cloudAvailable && (
+            <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+              <p className="text-sm font-medium text-stone-800">Hundeapp-Sync</p>
+              {activeCloud ? (
+                <>
+                  <p className="mt-0.5 text-xs text-stone-500">
+                    {cloudEmail ? `Verbunden als ${cloudEmail}.` : 'Verbunden.'} Beim Trennen bleiben
+                    alle Einträge auf diesem Gerät erhalten.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button type="button" className="btn-danger" onClick={onDisconnect}>
+                      Verbindung trennen
+                    </button>
+                    <button type="button" className="btn-secondary" onClick={onDeleteAccount}>
+                      Konto löschen
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mt-0.5 text-xs text-stone-500">
+                    Konto per E-Mail, in der Einführungsphase kostenlos. Einträge, Kommandos und
+                    Hunde gleichen sich dann von selbst zwischen deinen Geräten ab.
+                  </p>
+                  <button type="button" className="btn-secondary mt-3" onClick={onOpenAccountSetup}>
+                    Verbinden
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-            <p className="text-sm font-medium text-stone-800">GitHub-Synchronisierung</p>
-            {configured ? (
+            <p className="text-sm font-medium text-stone-800">Eigenes GitHub-Repo</p>
+            {activeGithub ? (
               <>
                 <p className="mt-0.5 text-xs text-stone-500">
                   Verbunden. Beim Trennen bleiben alle Einträge auf diesem Gerät erhalten.
                 </p>
-                <button type="button" className="btn-danger mt-3" onClick={handleDisconnect}>
+                <button type="button" className="btn-danger mt-3" onClick={onDisconnect}>
                   Synchronisierung trennen
                 </button>
               </>
             ) : (
               <>
                 <p className="mt-0.5 text-xs text-stone-500">
-                  Automatischer Abgleich zwischen Geräten über ein eigenes privates GitHub-Repo.
+                  Kostenlos, für Fortgeschrittene: Abgleich über ein eigenes privates GitHub-Repo.
                   Braucht ein GitHub-Konto und einen Zugriffstoken.
                 </p>
                 <button type="button" className="btn-secondary mt-3" onClick={onOpenSyncSetup}>

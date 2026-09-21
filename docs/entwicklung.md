@@ -17,6 +17,28 @@ sind Beispieldaten (11.08. und 18.08.2026, Kommando-Übersicht) eingespielt.
 | `npm run lint` | ESLint |
 | `npm run assets` | Icons und Splash-Screens aus dem Pfoten-Icon |
 
+## Zugangsdaten des Sync-Dienstes
+
+Der Abgleich über den Dienst läuft über ein Supabase-Projekt. Zwei Werte landen
+im Build und stehen deshalb in `.env` (nicht im Repo):
+
+```
+VITE_SUPABASE_URL=https://<projekt>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…
+VITE_CLOUD_SYNC=1
+```
+
+Der Schlüssel ist öffentlich gedacht und für den Client bestimmt; die
+Zugriffsregeln schützen die Daten. Der **Secret-Key** (`sb_secret_…`) gehört
+ausschließlich in die Supabase-Secrets und niemals in die App.
+
+Ohne `VITE_CLOUD_SYNC=1` erscheint der Dienst nirgends in der Oberfläche – der
+Weg über GitHub bleibt unberührt.
+
+Der Dienst selbst (Tabellen, Regeln, Serverfunktionen) wird mit
+`npx supabase@latest db push` und `npx supabase@latest functions deploy`
+ausgerollt; `supabase/test-sync.sh` prüft ihn anschließend vollständig.
+
 ## Technik
 
 React, TypeScript und Vite, verpackt mit

@@ -1,18 +1,56 @@
+import { Preferences } from '@capacitor/preferences';
 import { setActiveBackend } from './core';
-import { githubBackend, initConfig } from './github';
+import { clearConfig, githubBackend, initConfig } from './github';
+import { cloudAvailable, cloudBackend, initCloud } from './cloud';
 
 // Einstiegspunkt der Sync-Schicht. Nach außen gelten weiterhin die gewohnten
 // Namen; welches Transportmittel dahinter steckt, entscheidet sich hier.
 //
-// Bis Phase D ist GitHub der einzige Weg. Danach wählt der gespeicherte Wert
-// unter `hundeapp.syncProvider` zwischen GitHub und dem Dienst.
+// Es ist immer genau ein Weg aktiv. Die Wahl wird gespeichert, damit sie einen
+// Neustart übersteht.
+
+const PROVIDER_KEY = 'hundeapp.syncProvider';
+
+export type Provider = 'github' | 'cloud';
+
+let provider: Provider = 'github';
+
+export function activeProvider(): Provider {
+  return provider;
+}
+
+// Wechselt den Weg und merkt sich die Wahl.
+export async function setProvider(next: Provider): Promise<void> {
+  provider = next === 'cloud' && cloudAvailable ? 'cloud' : 'github';
+  await Preferences.set({ key: PROVIDER_KEY, value: provider }).catch(() => undefined);
+  setActiveBackend(provider === 'cloud' ? cloudBackend : githubBackend);
+}
 
 // Einmalig vor dem ersten Render aufrufen.
 export async function initSync(): Promise<void> {
   await initConfig();
-  setActiveBackend(githubBackend);
+  await initCloud().catch(() => undefined);
+
+  const stored = (await Preferences.get({ key: PROVIDER_KEY })).value;
+  provider = stored === 'cloud' && cloudAvailable ? 'cloud' : 'github';
+  setActiveBackend(provider === 'cloud' ? cloudBackend : githubBackend);
 }
 
+// Entfernt die Zugangsdaten des aktiven Wegs von diesem Gerät. Die Daten
+// bleiben lokal erhalten.
+export async function clearActiveConfig(): Promise<void> {
+  if (provider === 'cloud') await cloudBackend.clear();
+  else clearConfig();
+}
+
+export {
+  cloudAvailable,
+  cloudEmail,
+  cloudSignedIn,
+  confirmCode,
+  deleteAccount,
+  requestCode
+} from './cloud';
 export {
   areEqual,
   isConfigured,
