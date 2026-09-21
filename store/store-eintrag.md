@@ -111,6 +111,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.4.6
+
+<de-DE>
+Klarstellung in den Nutzungsbedingungen und in der Hilfe: Der Abgleich ist in
+der Einführungsphase kostenlos. Änderungen daran kündigen wir mindestens
+30 Tage vorher in der App an.
+</de-DE>
+
 ## Versionshinweise für Release 1.4.5
 
 <de-DE>

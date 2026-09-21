@@ -40,8 +40,9 @@ revoke insert, update, delete on public.entitlement from authenticated, anon;
 
 -- ===== Freischaltung für neue Konten =====
 -- In der Einführungsphase ist der Dienst kostenlos: Jedes neue Konto bekommt
--- eine aktive Freischaltung mit der Quelle 'beta'. Für den späteren Kauf wird
--- nur dieser Auslöser abgeschaltet; bestehende Zeilen bleiben aktiv.
+-- eine aktive Freischaltung mit der Quelle 'beta'. Mit dem Start des Kaufs wird
+-- dieser Auslöser abgeschaltet und die beta-Zeilen werden deaktiviert; Familie
+-- und Tester erhalten stattdessen eine Zeile mit der Quelle 'gift'.
 
 create or replace function public.grant_beta_entitlement()
 returns trigger

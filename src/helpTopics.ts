@@ -33,7 +33,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     summary: 'Zwei Geräte mit einem Konto abgleichen, Anmeldung per E-Mail-Code.',
     paragraphs: [
       'Der Abgleich ist optional. Ohne ihn bleiben die Daten auf dem Gerät. Mit Konto schreibt die App den gesamten Stand auf einen Server und holt ihn auf deinen anderen Geräten wieder ab.',
-      'Die Anmeldung läuft ohne Passwort: Du gibst deine E-Mail-Adresse ein und bekommst einen sechsstelligen Code zugeschickt. In der Einführungsphase ist der Dienst kostenlos.',
+      'Die Anmeldung läuft ohne Passwort: Du gibst deine E-Mail-Adresse ein und bekommst einen sechsstelligen Code zugeschickt. In der Einführungsphase ist der Dienst kostenlos. Danach kann ein einmaliger Preis dazukommen; das wird rechtzeitig angekündigt.',
       'Läuft der Abgleich, zeigt die Kopfzeile den Zustand: grün heißt abgeglichen, gelb läuft gerade, rot ist ein Fehler.'
     ],
     steps: [
