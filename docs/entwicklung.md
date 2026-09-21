@@ -39,6 +39,21 @@ Der Dienst selbst (Tabellen, Regeln, Serverfunktionen) wird mit
 `npx supabase@latest db push` und `npx supabase@latest functions deploy`
 ausgerollt; `supabase/test-sync.sh` prüft ihn anschließend vollständig.
 
+### Anmeldemails
+
+Die Anmeldung läuft über einen sechsstelligen Code per E-Mail, nicht über
+einen Link. Dafür müssen im Supabase-Dashboard **beide** Vorlagen auf den Code
+umgestellt sein, denn Supabase wählt sie danach aus, ob das Konto neu ist:
+
+| Vorlage | Verwendung |
+| --- | --- |
+| Confirm signup | neues Konto |
+| Magic link | bestehendes Konto |
+
+Beide enthalten `{{ .Token }}`; die Länge steht unter Authentication → Providers
+(6 Ziffern). Der Mailversand läuft über das eigene Postfach (SMTP), nicht über
+den eingebauten Versand von Supabase.
+
 ## Technik
 
 React, TypeScript und Vite, verpackt mit

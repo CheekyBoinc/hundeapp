@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
-import { cloudBackend, confirmCode, initCloud, requestCode } from './cloud';
+import { cloudBackend, cloudSignedIn, confirmCode, initCloud, requestCode } from './cloud';
 import { SyncConflictError, SyncError } from './types';
 
 // Die Aufrufe gegen Supabase werden durch einen Scheinserver ersetzt: Damit
@@ -59,6 +59,23 @@ describe('Sync-Dienst', () => {
   it('meldet einen falschen Code', async () => {
     serve(() => ({ status: 403, body: { msg: 'Token has expired or is invalid' } }));
     await expect(confirmCode('test@example.com', '000000')).rejects.toThrow('Der Code stimmt nicht');
+  });
+
+  it('nimmt auch die Bestätigung eines neuen Kontos an', async () => {
+    let calls = 0;
+    serve((url) => {
+      if (url.includes('/auth/v1/verify')) {
+        calls += 1;
+        return calls === 1
+          ? { status: 403, body: { msg: 'invalid' } }
+          : { body: { access_token: 't', refresh_token: 'r', expires_in: 3600, user: { id: 'u1' } } };
+      }
+      return {};
+    });
+    await initCloud();
+    await confirmCode('neu@example.com', '123456');
+    expect(seen.filter((c) => c.url.includes('/auth/v1/verify')).length).toBe(2);
+    expect(cloudSignedIn()).toBe(true);
   });
 
   it('lädt den Stand und meldet unverändert, wenn die Revision passt', async () => {

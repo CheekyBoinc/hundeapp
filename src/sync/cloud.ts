@@ -107,11 +107,19 @@ export async function requestCode(email: string): Promise<void> {
 }
 
 // Bestätigt den Code und merkt sich die Sitzung.
+//
+// Bei einem neuen Konto schickt Supabase die Bestätigung als "signup", bei
+// einem bestehenden als "email". Beide Formen werden angenommen, damit die
+// Anmeldung in jedem Fall klappt.
 export async function confirmCode(email: string, code: string): Promise<void> {
-  const res = await api('/auth/v1/verify', {
-    method: 'POST',
-    body: JSON.stringify({ email, token: code.trim(), type: 'email' })
-  });
+  const verify = (type: 'email' | 'signup') =>
+    api('/auth/v1/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, token: code.trim(), type })
+    });
+
+  let res = await verify('email');
+  if (!res.ok) res = await verify('signup');
   if (!res.ok) throw new SyncError('Der Code stimmt nicht oder ist abgelaufen.');
 
   const data = (await res.json()) as {
