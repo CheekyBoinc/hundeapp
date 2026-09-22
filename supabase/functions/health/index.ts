@@ -4,10 +4,17 @@
 //
 // Bewusst ohne fremde Bibliothek: Ein JSR-Import ließ die Funktion nicht
 // starten (BOOT_ERROR), und ein REST-Aufruf genügt hier vollständig.
+//
+// Der Anon-Key reicht: Er darf nur lesen, was die Regeln freigeben, und die
+// leere Liste genügt als Lebenszeichen. Der Service-Role-Key wäre hier mehr
+// Berechtigung als nötig.
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return new Response('method not allowed', { status: 405 });
+  }
   const url = Deno.env.get('SUPABASE_URL');
-  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const key = Deno.env.get('SUPABASE_ANON_KEY');
   if (!url || !key) {
     return new Response('not configured', { status: 500 });
   }

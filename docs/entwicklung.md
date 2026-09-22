@@ -20,6 +20,10 @@ vor zwei Wochen, dazu die Kommando-Übersicht).
 | `npm run icons` | Icons, Splash-Bilder und Store-Grafiken aus dem Pfoten-Icon |
 | `npm run texts` | Sichtbare Texte der Oberfläche als JSON ausgeben |
 
+`npm run assets` bleibt bewusst außerhalb der Abhängigkeiten: Das Werkzeug von
+Capacitor zieht einen alten Abhängigkeitsbaum mit. Stattdessen ist seine Version
+im Skript festgenagelt (3.0.5); der Aufruf holt sie bei Bedarf aus der Registry.
+
 ## Zugangsdaten des Sync-Dienstes
 
 Der Abgleich über den Dienst läuft über ein Supabase-Projekt. Zwei Werte landen
@@ -76,6 +80,13 @@ API, Base64-kodierte `daten.json`) oder den Dienst (Supabase, Tabelle
 `sync_state` mit Revisionsnummer). Zusammengeführt wird pro Objekt nach
 `updated_at`. Löschungen bleiben als Tombstones erhalten, damit kein Gerät
 gelöschte Einträge zurücklädt.
+
+## Bekannte Meldung von npm audit
+
+`npm audit` meldet eine Schwachstelle in `uuid` über `@capacitor/cli` und
+`xcode` (GHSA-w5hq-g745-h8pq). Betroffen ist nur das lokale Entwicklerwerkzeug,
+kein Code davon landet in der App; bis Capacitor das auflöst, bleibt der
+Eintrag bewusst stehen.
 
 ## Android (Play Store)
 

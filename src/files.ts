@@ -29,17 +29,43 @@ function downloadInBrowser(filename: string, content: Blob): void {
   URL.revokeObjectURL(url);
 }
 
+// Exporte liegen in einem eigenen Ordner im Cache. Er ist der einzige Pfad,
+// den der FileProvider nach außen freigibt.
+const EXPORT_DIR = 'exports';
+
+// Vor jedem Export aufräumen. Nicht direkt nach dem Teilen: Die Ziel-App liest
+// die Datei je nach Plattform erst nach dem Schließen des Dialogs.
+async function prepareExportDir(): Promise<void> {
+  // mkdir meldet einen vorhandenen Ordner je nach Plattform als Fehler; das
+  // darf das Aufräumen nicht überspringen.
+  await Filesystem.mkdir({ path: EXPORT_DIR, directory: Directory.Cache, recursive: true }).catch(
+    () => undefined
+  );
+  const { files } = await Filesystem.readdir({ path: EXPORT_DIR, directory: Directory.Cache });
+  for (const entry of files) {
+    if (entry.type !== 'file') continue;
+    await Filesystem.deleteFile({
+      path: `${EXPORT_DIR}/${entry.name}`,
+      directory: Directory.Cache
+    });
+  }
+}
+
 async function shareNative(filename: string, content: string | Blob): Promise<void> {
+  // Aufräumen darf den Export nicht verhindern: Eine liegen gebliebene alte
+  // Datei ist ärgerlich, aber kein Grund, die neue nicht zu schreiben.
+  await prepareExportDir().catch(() => undefined);
+  const path = `${EXPORT_DIR}/${filename}`;
   const written =
     typeof content === 'string'
       ? await Filesystem.writeFile({
-          path: filename,
+          path,
           data: content,
           directory: Directory.Cache,
           encoding: Encoding.UTF8
         })
       : await Filesystem.writeFile({
-          path: filename,
+          path,
           data: await blobToBase64(content),
           directory: Directory.Cache
         });

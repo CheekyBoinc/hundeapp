@@ -55,7 +55,9 @@ ein eigenes privates GitHub-Repository des Nutzers.
 
 Für die Prüfung: Die App lässt sich vollständig ohne Konto testen. Soll auch der
 Abgleich geprüft werden, steht ein Prüfkonto bereit (Zugangsdaten in den
-Review-Notizen bei App Store Connect bzw. Play Console).
+Review-Notizen bei App Store Connect bzw. Play Console). Anmeldung mit Passwort:
+Im Dialog Hundeapp-Sync fünfmal auf die Überschrift tippen, dann erscheint
+„Mit Passwort anmelden".
 
 ### Werbung
 

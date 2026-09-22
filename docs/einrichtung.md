@@ -64,7 +64,9 @@ und kurz nach jeder Änderung.
 - Gespeichert werden die E-Mail-Adresse und der gesamte Stand der App, damit sich
   die Geräte abgleichen können. Einzelheiten in der
   [Datenschutzerklärung](https://cheekyboinc.github.io/hundeapp/datenschutz.html).
-- Die Anmeldung erfolgt ohne Passwort über einen Code per E-Mail.
+- Die Anmeldung erfolgt ohne Passwort über einen Code per E-Mail. Für die Prüfkonten der Stores
+  ist der Umschalter für die Passwort-Anmeldung im Sync-Dialog versteckt: fünfmal auf die
+  Überschrift tippen.
 - Konto löschen: Einstellungen → Abgleich zwischen Geräten → **Konto löschen**.
 
 **Eigenes GitHub-Repo**

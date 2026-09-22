@@ -1,7 +1,14 @@
 import { useRef, useState } from 'react';
 import type { Settings } from '../settings';
 import type { ThemeSetting } from '../theme';
-import { exportBackup, formatCounts, importBackup, readBackupFile } from '../backup';
+import {
+  exportBackup,
+  formatCounts,
+  formatImportSummary,
+  importBackup,
+  previewImport,
+  readBackupFile
+} from '../backup';
 import { Capacitor } from '@capacitor/core';
 import Modal from './Modal';
 import { CoffeeIcon } from './NavIcons';
@@ -157,9 +164,7 @@ export default function SettingsModal({
     setNotice(null);
     try {
       const { state, counts } = await readBackupFile(file);
-      const ok = window.confirm(
-        `Die Datei enthält ${formatCounts(counts)}. Sie werden mit den vorhandenen Daten zusammengeführt, nichts wird überschrieben. Fortfahren?`
-      );
+      const ok = window.confirm(formatImportSummary(counts, previewImport(state)));
       if (!ok) return;
       importBackup(state);
       setNotice({ kind: 'ok', text: `Sicherung eingespielt: ${formatCounts(counts)}.` });

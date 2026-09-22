@@ -10,3 +10,7 @@ hundeapp-*.png
 # Signierte Bundles und Exporte nicht einchecken
 store/*.aab
 store/*.ipa
+# Signatur-Zugangsdaten (liegen in ~/hundeapp-signing)
+android/keystore.properties
+*.jks
+*.keystore

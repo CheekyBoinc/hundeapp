@@ -3,6 +3,8 @@ import { isTopModal, nextModalId, popModal, pushModal } from '../modalStack';
 
 interface Props {
   title: string;
+  // Optional: macht die Überschrift antippbar (Prüf-Zugang im Sync-Dialog).
+  onTitleClick?: () => void;
   onClose: () => void;
   headerExtra?: ReactNode;
   // Vollbild statt Dialog: füllt den Bildschirm, inklusive Safe-Areas.
@@ -17,6 +19,7 @@ const FOCUSABLE =
 
 export default function Modal({
   title,
+  onTitleClick,
   onClose,
   headerExtra,
   fullScreen,
@@ -104,7 +107,9 @@ export default function Modal({
       >
         <div className="mb-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold">{title}</h2>
+            <h2 className="text-lg font-bold" onClick={onTitleClick}>
+              {title}
+            </h2>
             {headerExtra}
           </div>
           {!hideClose && (

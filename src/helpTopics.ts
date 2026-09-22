@@ -67,7 +67,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     summary: 'Datei-Sicherung, CSV-Export und PDF-Bericht.',
     paragraphs: [
       'Unter Einstellungen → Sicherung schreibst du alle Daten in eine Datei. Sie eignet sich für den Handywechsel oder für ein zweites Gerät.',
-      'Beim Einspielen wird zusammengeführt, nichts wird überschrieben.',
+      'Beim Einspielen wird zusammengeführt: Gibt es einen Datensatz auf beiden Seiten, gewinnt der neuere Stand.',
       'Auf der Seite „Hunde" gibt es zusätzlich einen Export: CSV für Tabellenprogramme und einen PDF-Bericht pro Hund.'
     ]
   },

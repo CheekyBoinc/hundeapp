@@ -1,0 +1,8 @@
+# Hält die auf Commit-SHAs gepinnten Actions aktuell. npm und Gradle bleiben
+# außen vor, die werden gezielt von Hand gepflegt.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
