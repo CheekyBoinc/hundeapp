@@ -113,6 +113,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.5.0
+
+<de-DE>
+Beim Einspielen einer Sicherung zeigt die App vorher, was sich ändert, und
+überspringt fehlerhafte Datensätze. Alte Exportdateien werden aufgeräumt. Die
+Datenschutzerklärung nennt jetzt auch die Sicherung des Betriebssystems.
+</de-DE>
+
 ## Versionshinweise für Release 1.4.6
 
 <de-DE>
