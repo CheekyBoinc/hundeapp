@@ -35,3 +35,15 @@ describe('settings', () => {
     expect(JSON.parse(localStorage.getItem(KEY) ?? '{}').onboardingDone).toBe(true);
   });
 });
+
+describe('Erinnerungen', () => {
+  it('ergänzt die Felder aus einem älteren Stand', () => {
+    localStorage.setItem(KEY, JSON.stringify({ navTop: true }));
+    const s = loadSettings();
+    expect(s.remindHealth).toBe(false);
+    expect(s.remindTraining).toBe(false);
+    expect(s.trainingDays).toEqual([1, 3, 5]);
+    expect(s.trainingTime).toBe('18:00');
+    expect(s.reminderHintDismissed).toBe(false);
+  });
+});

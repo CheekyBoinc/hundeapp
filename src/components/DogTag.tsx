@@ -1,13 +1,20 @@
+import { useId } from 'react';
+
 interface Props {
   name: string;
   size?: number; // Höhe in px
+  // Kleines JPEG als Data-URL; ersetzt den Anfangsbuchstaben.
+  photo?: string | null;
   className?: string;
 }
 
-// Hundemarke als Avatar: Anhänger mit Öse, darin der Anfangsbuchstabe.
-export default function DogTag({ name, size = 56, className = '' }: Props) {
+// Hundemarke als Avatar: Anhänger mit Öse, darin der Anfangsbuchstabe oder das
+// Foto des Hundes.
+export default function DogTag({ name, size = 56, photo, className = '' }: Props) {
   const letter = name.trim().slice(0, 1).toUpperCase() || '?';
   const width = Math.round(size * 0.86);
+  // useId enthält Doppelpunkte; die sind in url(#…) nicht brauchbar.
+  const clipId = `dogtag-${useId().replace(/:/g, '')}`;
   return (
     <svg
       viewBox="0 0 43 50"
@@ -30,17 +37,36 @@ export default function DogTag({ name, size = 56, className = '' }: Props) {
         stroke="var(--color-accent-deep)"
         strokeWidth="1.2"
       />
-      <text
-        x="21.5"
-        y="34.5"
-        textAnchor="middle"
-        fontSize="20"
-        fontWeight="700"
-        fontFamily="inherit"
-        fill="#fffaf4"
-      >
-        {letter}
-      </text>
+      {photo ? (
+        <>
+          <defs>
+            <clipPath id={clipId}>
+              <rect x="4.5" y="18" width="34" height="28" rx="5" />
+            </clipPath>
+          </defs>
+          <image
+            href={photo}
+            x="4.5"
+            y="18"
+            width="34"
+            height="28"
+            preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#${clipId})`}
+          />
+        </>
+      ) : (
+        <text
+          x="21.5"
+          y="34.5"
+          textAnchor="middle"
+          fontSize="20"
+          fontWeight="700"
+          fontFamily="inherit"
+          fill="#fffaf4"
+        >
+          {letter}
+        </text>
+      )}
     </svg>
   );
 }

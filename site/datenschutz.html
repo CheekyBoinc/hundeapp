@@ -87,7 +87,8 @@
       <p>
         Du gibst in der App selbst Daten ein: Trainingseinträge, Kommandos, Hundeprofile (z. B.
         Name, Rasse, Geburtsdatum, Chipnummer, Tierarzt, Allergien), Gewichts-, Kot-, Tierarzt- und
-        Impfeinträge.
+        Vorsorge-Einträge (Impfungen, Entwurmung, Parasitenschutz). Optional kannst du ein Foto
+        deines Hundes hinterlegen.
       </p>
       <p>
         Diese Daten werden zunächst ausschließlich lokal im Speicher der App auf deinem Gerät
@@ -113,7 +114,8 @@
         <li>deine E-Mail-Adresse (für die Anmeldung),</li>
         <li>
           der gesamte Stand deiner App – also Trainings-, Gewichts-, Kot-, Tierarzt- und
-          Impfeinträge sowie Hundeprofile – in einer Datei je Konto.
+          Vorsorge-Einträge, Hundeprofile und das Profilfoto des Hundes, falls du eines hinterlegt
+          hast – in einer Datei je Konto.
         </li>
       </ul>
       <p>
@@ -144,7 +146,8 @@
       <p>
         Statt des Dienstes kannst du ein eigenes privates GitHub-Repository verwenden. Dafür
         hinterlegst du in der App deinen GitHub-Benutzernamen, den Namen des Repositories und ein von
-        dir erstelltes Zugriffstoken. Die App überträgt deine Einträge dann verschlüsselt (HTTPS) an
+        dir erstelltes Zugriffstoken. Die App überträgt deinen Stand (inklusive Profilfoto) dann
+        verschlüsselt (HTTPS) an
         die GitHub-API und speichert sie als Datei <code>daten.json</code> in diesem Repository.
         Ebenso werden Daten von dort geladen. In diesem Fall erhält der Anbieter keine Kenntnis von
         deinen Daten.
@@ -172,7 +175,8 @@
 
       <h2>5. Sicherung und Export</h2>
       <p>
-        Über „Einstellungen → Sicherung“ erzeugst du eine Sicherungsdatei mit allen Daten der App,
+        Über „Einstellungen → Sicherung“ erzeugst du eine Sicherungsdatei mit allen Daten der App
+        (auch dem Profilfoto),
         über die Export-Funktion CSV- oder PDF-Dateien. Diese Dateien entstehen lokal auf deinem
         Gerät. Du entscheidest selbst, wo du sie speicherst oder an wen du sie weitergibst, etwa
         über das Teilen-Menü deines Geräts. Der Anbieter erhält davon nichts.
@@ -184,12 +188,18 @@
         diesen Link antippst, öffnet sich die Seite in deinem Browser und es gelten die
         Datenschutzbestimmungen von Ko-fi Labs Limited.
       </p>
+      <p>
+        Schreibst du uns eine Feedback-Mail, verwenden wir deine Adresse und den Inhalt nur, um dir
+        zu antworten.
+      </p>
 
       <h2>7. Berechtigungen</h2>
       <p>
-        Die App benötigt lediglich Internetzugriff, und zwar ausschließlich für den optionalen
-        Abgleich (Abschnitt 3 oder 4). Es werden keine Standortdaten, Kontakte, Kamera, Mikrofon oder
-        andere Gerätefunktionen abgefragt.
+        Die App benötigt Internetzugriff für den optionalen Abgleich (Abschnitt 3 oder 4) und für
+        nichts anderes. Benachrichtigungen plant sie nur, wenn du eine Erinnerung einschaltest; sie
+        entstehen auf dem Gerät und werden nicht übertragen. Wählst du ein Foto für das Hundeprofil,
+        greift die App auf die Bildauswahl deines Geräts zu (auf Wunsch mit der Kamera); gespeichert
+        wird nur das verkleinerte Bild. Standort, Kontakte und Mikrofon nutzt die App nicht.
       </p>
 
       <h2>8. Löschen deiner Daten</h2>

@@ -17,7 +17,7 @@ const SUB_TABS: [SubTab, string][] = [
   ['gewicht', 'Gewicht'],
   ['kot', 'Kot'],
   ['tierarzt', 'Tierarzt'],
-  ['impfungen', 'Impfungen']
+  ['impfungen', 'Vorsorge']
 ];
 
 interface Props {

@@ -22,7 +22,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'Erste Schritte',
     summary: 'Hund anlegen, ersten Eintrag schreiben, Kommandos pflegen.',
     paragraphs: [
-      'Lege zuerst deinen Hund unter „Hunde" an. Dort verwaltest du auch Gewicht, Kot-Tagebuch, Tierarztbesuche und Impfungen.',
+      'Lege zuerst deinen Hund unter „Hunde" an. Dort verwaltest du auch Gewicht, Kot-Tagebuch, Tierarztbesuche und die Vorsorge: Impfungen, Entwurmung und Parasitenschutz.',
       'Nach jedem Besuch in der Hundeschule schreibst du unter „Einträge" auf, was ihr gemacht habt: Ort, geübte Kommandos, Aufgaben und die Tipps der Trainerin.',
       'Unter „Kommandos" sammelst du die Übungen mit Beschreibung und Tipp. Die App zeigt dir, was du lange nicht geübt hast.'
     ]
@@ -77,9 +77,31 @@ export const HELP_TOPICS: HelpTopic[] = [
     summary: 'Was auf dem Gerät bleibt und was beim Abgleich passiert.',
     paragraphs: [
       'Alle Einträge liegen auf dem Gerät. Ohne eingerichteten Abgleich verlässt nichts das Handy.',
+      'Ein Foto im Hundeprofil gehört zum Stand: Es wird mit abgeglichen und steckt in der Sicherungsdatei.',
+      'Erinnerungen plant jedes Gerät für sich; dabei werden keine Daten übertragen.',
       'Beim Abgleich über Hundeapp-Sync liegen deine E-Mail-Adresse und der gesamte Stand auf einem Server des Anbieters, damit sich deine Geräte abgleichen können.',
       'Beim Abgleich über GitHub liegt der Stand als daten.json in deinem eigenen privaten Repository. Der Zugangsschlüssel wird nur auf dem Gerät gespeichert. Er hat ein Ablaufdatum; läuft er ab, zeigt die App einen Sync-Fehler.',
       'Dein Konto beim Dienst kannst du jederzeit löschen. In den Einstellungen unter „Abgleich zwischen Geräten" bei Hundeapp-Sync auf „Konto löschen". Damit verschwinden auch die Daten auf dem Server; die Einträge auf dem Gerät bleiben.'
+    ]
+  },
+  {
+    id: 'ueben-zwischen-den-stunden',
+    title: 'Üben zwischen den Stunden',
+    summary: 'Die Aufgaben aus der letzten Stunde im Blick behalten.',
+    paragraphs: [
+      'Nach jedem Besuch in der Hundeschule trägst du unter „Einträge" ein, was ihr geübt habt und was bis zur nächsten Stunde zu Hause dran ist.',
+      'Solange diese Aufgaben offen sind, steht auf der Einträge-Seite oben eine Karte mit dem Text aus der Stunde und ihrem Datum.',
+      'Mit „Heute geübt" hältst du in wenigen Tipps fest, dass du geübt hast; die Kommandos aus der Stunde sind schon ausgewählt. Ist die Aufgabe geschafft, tippst du auf „Erledigt".'
+    ]
+  },
+  {
+    id: 'erinnerungen',
+    title: 'Erinnerungen',
+    summary: 'Fällige Vorsorge und Übungstage als Benachrichtigung.',
+    paragraphs: [
+      'Die App kann dich an fällige Impfungen, Entwurmung, Parasitenschutz und Tierarzt-Folgetermine erinnern: sieben Tage vorher und am Tag selbst, morgens um 9 Uhr.',
+      'Fürs Üben stellst du Wochentage und eine Uhrzeit ein. Die Erinnerung greift die aktuellen Übungsaufgaben auf.',
+      'Erinnerungen plant jedes Gerät für sich. Möchtest du sie nur auf einem Handy, schaltest du sie auf dem anderen aus. Alles bleibt auf dem Gerät; es werden keine Daten übertragen.'
     ]
   },
   {

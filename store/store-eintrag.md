@@ -24,6 +24,9 @@ Tipps deiner Trainerin oder deines Trainers
 • Gewichtsverlauf mit Richtwerten für viele Rassen, auch für Welpen
 • Kot-Beobachtungen, Tierarztbesuche und Impfpass mit Fälligkeiten
 • Export als PDF-Bericht oder CSV-Tabelle
+• Erinnerungen an fällige Vorsorge und Tierarzttermine sowie an Übungstage
+• Vorsorge mit Entwurmung, Parasitenschutz und Impfungen
+• Profilfoto für jeden Hund
 
 Deine Daten gehören dir:
 
@@ -77,7 +80,8 @@ Digitale Käufe: Nein.
 ### Datensicherheit
 
 - Erhebt oder teilt die App Nutzerdaten? **Ja**, aber nur wenn der optionale
-  Abgleich über den Dienst genutzt wird: E-Mail-Adresse und die Einträge der App.
+  Abgleich über den Dienst genutzt wird: E-Mail-Adresse, die Einträge der App und ein
+  hinterlegtes Profilfoto des Hundes.
   Ohne Konto werden keine Daten erhoben.
 - Werden Daten verschlüsselt übertragen? Ja (HTTPS bei Dienst und GitHub).
 - Können Nutzer die Löschung ihrer Daten verlangen? Ja – direkt in der App
@@ -87,7 +91,8 @@ Digitale Käufe: Nein.
 Angaben für das Formular, falls gefragt wird:
 
 - Datentypen: E-Mail-Adresse; nutzergenerierte Inhalte (Trainings-, Gewichts-,
-  Kot-, Tierarzt- und Impfeinträge, Hundeprofile).
+  Kot-, Tierarzt- und Vorsorge-Einträge, Hundeprofile, optional ein Profilfoto des
+  Hundes).
 - Zweck: Anmeldung und Abgleich zwischen den Geräten desselben Nutzers.
 - Keine Weitergabe an Dritte zu Werbe- oder Analysezwecken.
 - Auftragsverarbeiter: Supabase Inc. (Vertrag nach Art. 28 DSGVO), Rechenzentrum
@@ -112,6 +117,16 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
   bis appstore-ipad-4-kommandos.png (2064 x 2752, Größe 13 Zoll)
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
+
+## Versionshinweise für Release 1.5.5
+
+<de-DE>
+Neu: Erinnerungen an fällige Impfungen, Entwurmung und Tierarzttermine sowie an
+Übungstage. Die Karte „Übungsaufgaben" zeigt, was aus der letzten Stunde noch
+offen ist; mit „Heute geübt" ist es in einem Tipp notiert. „Impfungen" heißt
+jetzt „Vorsorge" und umfasst auch Entwurmung und Parasitenschutz, und jeder Hund
+kann ein Foto bekommen. Bitte die App auf allen Geräten aktualisieren.
+</de-DE>
 
 ## Versionshinweise für Release 1.5.0
 

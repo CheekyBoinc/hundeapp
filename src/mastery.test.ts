@@ -54,3 +54,31 @@ describe('masteryStats', () => {
     expect(s.get('c1')).toEqual({ count: 2, lastDate: '2026-08-20' });
   });
 });
+
+describe('Übungseinträge aus „Heute geübt"', () => {
+  it('zählen für den Übungsstand mit', () => {
+    const cmd = {
+      id: 'c1',
+      dogId: null,
+      name: 'Sitz',
+      beschreibung: null,
+      tipp: null,
+      created_at: '2026-08-01T00:00:00.000Z'
+    };
+    const uebung: Entry = {
+      id: 'p1',
+      dogId: null,
+      date: '2026-08-25',
+      ort: null,
+      was_gemacht: 'Kurz geübt',
+      uebungsaufgaben: null,
+      tipps: null,
+      erledigt: false,
+      created_at: '2026-08-25T00:00:00.000Z',
+      commands: [cmd]
+    };
+    const s = masteryStats([uebung]);
+    expect(s.get('c1')).toEqual({ count: 1, lastDate: '2026-08-25' });
+    expect(masteryLevel(s.get('c1'), 30, today)).toBe(1);
+  });
+});

@@ -11,14 +11,14 @@ Ohne eingerichteten Abgleich speichert die App nur auf dem Gerät. Beim ersten
 Start sind Beispieldaten eingespielt (zwei Trainingseinträge von vor einer und
 vor zwei Wochen, dazu die Kommando-Übersicht).
 
-| Befehl | Wirkung |
-| --- | --- |
-| `npm run build` | Typecheck und Produktions-Build nach `dist/` |
-| `npm test` | Unit-Tests mit Vitest |
-| `npm run lint` | ESLint |
-| `npm run assets` | Icons und Splash-Screens aus dem Pfoten-Icon |
-| `npm run icons` | Icons, Splash-Bilder und Store-Grafiken aus dem Pfoten-Icon |
-| `npm run texts` | Sichtbare Texte der Oberfläche als JSON ausgeben |
+| Befehl           | Wirkung                                                     |
+| ---------------- | ----------------------------------------------------------- |
+| `npm run build`  | Typecheck und Produktions-Build nach `dist/`                |
+| `npm test`       | Unit-Tests mit Vitest                                       |
+| `npm run lint`   | ESLint                                                      |
+| `npm run assets` | Icons und Splash-Screens aus dem Pfoten-Icon                |
+| `npm run icons`  | Icons, Splash-Bilder und Store-Grafiken aus dem Pfoten-Icon |
+| `npm run texts`  | Sichtbare Texte der Oberfläche als JSON ausgeben            |
 
 `npm run assets` bleibt bewusst außerhalb der Abhängigkeiten: Das Werkzeug von
 Capacitor zieht einen alten Abhängigkeitsbaum mit. Stattdessen ist seine Version
@@ -60,10 +60,10 @@ Die Anmeldung läuft über einen sechsstelligen Code per E-Mail, nicht über
 einen Link. Dafür müssen im Supabase-Dashboard **beide** Vorlagen auf den Code
 umgestellt sein, denn Supabase wählt sie danach aus, ob das Konto neu ist:
 
-| Vorlage | Verwendung |
-| --- | --- |
-| Confirm signup | neues Konto |
-| Magic link | bestehendes Konto |
+| Vorlage        | Verwendung        |
+| -------------- | ----------------- |
+| Confirm signup | neues Konto       |
+| Magic link     | bestehendes Konto |
 
 Beide enthalten `{{ .Token }}`; die Länge steht unter Authentication → Providers
 (6 Ziffern). Der Mailversand läuft über das eigene Postfach (SMTP), nicht über
@@ -80,6 +80,32 @@ API, Base64-kodierte `daten.json`) oder den Dienst (Supabase, Tabelle
 `sync_state` mit Revisionsnummer). Zusammengeführt wird pro Objekt nach
 `updated_at`. Löschungen bleiben als Tombstones erhalten, damit kein Gerät
 gelöschte Einträge zurücklädt.
+
+### Neue Felder im Datenmodell
+
+Neue Felder an bestehenden Datensätzen sind immer optional, flach und ohne neue
+Sammlungen. Der Abgleich reicht unbekannte einfache Werte (Text, Zahl,
+Wahrheitswert, null) durch, damit neuere Geräte nichts verlieren. Texte bleiben
+dabei unter 20.000 Zeichen: Längere unbekannte Werte kappt der Abgleich, und die
+Prüfung beim Einspielen würde sonst den ganzen Datensatz verwerfen. Wer ein
+längeres Feld braucht wie `photo` beim Hund, muss es in `clean*` prüfen und in
+`plausibleRecord` (`src/backup.ts`) von der Längengrenze ausnehmen — dann müssen
+alle Geräte die neue Version haben.
+
+### Test-Erinnerung
+
+`VITE_DEBUG_REMINDERS=1 npm run dev` (nur auf der Kommandozeile, nie in `.env`)
+blendet in den Einstellungen „Test-Erinnerung in 1 Minute" ein. Das Release-Skript
+bricht ab, wenn die Variable gesetzt ist.
+
+### Plugins
+
+Erinnerungen kommen von `@capacitor/local-notifications`, der Bewertungsdialog
+von `@capacitor-community/in-app-review`. Nach jedem neuen Plugin einmal
+`npx cap sync` für beide Plattformen laufen lassen, sonst fehlt es im
+iOS-Projekt. Erinnerungen werden bewusst ohne exakte Alarme geplant
+(`isExactNotification: false`) und mit `allowWhileIdle: true`, damit Android
+nicht nach der Erlaubnis für „Wecker und Erinnerungen" fragt.
 
 ## Bekannte Meldung von npm audit
 

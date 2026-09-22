@@ -12,6 +12,15 @@ export interface Settings {
   // Einführung beim ersten Start: solange false, zeigt die App sie. Jeder
   // Schließweg setzt sie auf true; erneut aufrufbar über die Hilfe.
   onboardingDone: boolean;
+  // Erinnerungen: pro Gerät, nicht abgeglichen.
+  remindHealth: boolean;
+  remindTraining: boolean;
+  // 0 = Sonntag … 6 = Samstag.
+  trainingDays: number[];
+  // Uhrzeit als HH:MM.
+  trainingTime: string;
+  // „Nicht jetzt" beim Hinweis unter „Demnächst".
+  reminderHintDismissed: boolean;
 }
 
 const DEFAULTS: Settings = {
@@ -19,7 +28,12 @@ const DEFAULTS: Settings = {
   headerText: true,
   theme: 'system',
   activeDogId: null,
-  onboardingDone: false
+  onboardingDone: false,
+  remindHealth: false,
+  remindTraining: false,
+  trainingDays: [1, 3, 5],
+  trainingTime: '18:00',
+  reminderHintDismissed: false
 };
 
 export function loadSettings(): Settings {

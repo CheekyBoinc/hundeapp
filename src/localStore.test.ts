@@ -4,6 +4,7 @@ import {
   deleteDog,
   discardUntouchedDemoData,
   fetchCommands,
+  fetchDogs,
   fetchEntries,
   hasOnlyDemoData,
   loadState,
@@ -181,5 +182,31 @@ describe('Hund löschen', () => {
     expect(state.deleted.dogs).toContain(d.id);
     expect(state.deleted.weight).toHaveLength(1);
     expect(state.entries[0].dogId).toBeNull();
+  });
+});
+
+describe('Hundefoto', () => {
+  it('bleibt beim Bearbeiten ohne Foto unverändert', () => {
+    const foto = `data:image/jpeg;base64,${'A'.repeat(40)}`;
+    const d = dog();
+    saveDogProfile({ ...d, photo: foto });
+    expect(fetchDogs()[0].photo).toBe(foto);
+
+    // So speichert das Formular: ohne den Schlüssel photo.
+    const ohne = {
+      id: d.id,
+      name: 'Luna neu',
+      rasse: null,
+      geburtsdatum: null,
+      geschlecht: null,
+      chipNr: null,
+      registerNr: null,
+      tierarzt: null,
+      allergien: null,
+      besonderheiten: null
+    };
+    saveDogProfile(ohne);
+    expect(fetchDogs()[0].name).toBe('Luna neu');
+    expect(fetchDogs()[0].photo).toBe(foto);
   });
 });

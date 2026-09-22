@@ -350,3 +350,47 @@ describe('formatImportSummary', () => {
     expect(text.endsWith('Fortfahren?')).toBe(true);
   });
 });
+
+describe('Zusatzfelder beim Einspielen', () => {
+  it('unbekannte Felder überstehen den Import', () => {
+    const text = JSON.stringify({
+      app: 'hundeapp',
+      version: 1,
+      exportedAt: T1,
+      data: { ...leererZustand(), dogs: [{ ...hund('d1'), fellfarbe: 'rot' }] }
+    });
+    const { state, counts } = parseBackup(text);
+    expect(counts.ignored).toBe(0);
+    expect(state.dogs[0]).toMatchObject({ id: 'd1', fellfarbe: 'rot' });
+  });
+
+  it('ein unbekannter Text über 20.000 Zeichen kostet nicht den Datensatz', () => {
+    const text = JSON.stringify({
+      app: 'hundeapp',
+      version: 1,
+      exportedAt: T1,
+      data: { ...leererZustand(), dogs: [{ ...hund('d1'), notiz: 'x'.repeat(20001) }] }
+    });
+    const { state, counts } = parseBackup(text);
+    expect(counts.ignored).toBe(0);
+    expect(state.dogs).toHaveLength(1);
+    expect(state.dogs[0]).not.toHaveProperty('notiz');
+  });
+});
+
+describe('Hundefoto in der Sicherung', () => {
+  it('verwirft den Hund mit Foto nicht', () => {
+    const foto = `data:image/jpeg;base64,${'A'.repeat(40000)}`;
+    const text = JSON.stringify({
+      app: 'hundeapp',
+      version: 1,
+      exportedAt: T1,
+      data: { ...leererZustand(), dogs: [{ ...hund('d1'), photo: foto }] }
+    });
+    const { state, counts } = parseBackup(text);
+    expect(counts.ignored).toBe(0);
+    expect(state.dogs).toHaveLength(1);
+    expect(state.dogs[0].photo).toBe(foto);
+  });
+});
+

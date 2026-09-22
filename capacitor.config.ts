@@ -8,6 +8,14 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   android: {
     allowMixedContent: false
+  },
+  plugins: {
+    LocalNotifications: {
+      // Eigenes Statussymbol in der Akzentfarbe; auf iOS ohne Badge.
+      smallIcon: 'ic_stat_hundeapp',
+      iconColor: '#ea7c3a',
+      presentationOptions: ['banner', 'list', 'sound']
+    }
   }
 };
 

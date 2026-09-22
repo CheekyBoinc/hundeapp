@@ -1,18 +1,16 @@
+import { PHOTO_MAX_CHARS, PHOTO_PREFIX } from '../types';
 import type {
   Command,
   DogProfile,
   Entry,
   StoolEntry,
   Vaccination,
+  VaccinationKind,
   VetVisit,
   WeightEntry
 } from '../types';
 import { loadState, saveState } from '../localStore';
-import {
-  SyncConflictError,
-  type SyncBackend,
-  type SyncState
-} from './types';
+import { SyncConflictError, type SyncBackend, type SyncState } from './types';
 
 // Neutraler Kern der Synchronisierung: Schema-Prüfung, Zusammenführen,
 // Tombstones, Ereignisse und der Ablauf von Push und Pull. Das Transportmittel
@@ -81,20 +79,56 @@ function withTimestamps<T extends object>(
   return { ...obj, created_at: created, ...(updated ? { updated_at: updated } : {}) };
 }
 
+// ===== Unbekannte Felder =====
+// Neue Felder an Datensätzen sollen den Abgleich überstehen, auch wenn diese
+// Version sie noch nicht kennt. Durchgereicht werden nur einfache Werte;
+// Listen und Objekte werden verworfen, damit die Prüfungen beim Einspielen
+// nicht umgangen werden.
+
+const MAX_EXTRA_FIELDS = 20;
+const MAX_EXTRA_TEXT = 20000;
+const EXTRA_KEY_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{0,39}$/;
+
+function isExtraValue(value: unknown): boolean {
+  if (value === null) return true;
+  if (typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  // Längere unbekannte Texte würden beim Einspielen den ganzen Datensatz
+  // kosten (plausibleRecord), deshalb bleiben sie schon hier draußen.
+  if (typeof value === 'string') return value.length <= MAX_EXTRA_TEXT;
+  return false;
+}
+
+// Bekannte Felder gewinnen immer; höchstens MAX_EXTRA_FIELDS Zusatzfelder.
+function withExtras<T extends object>(known: T, source: Record<string, unknown>): T {
+  const extras: Record<string, unknown> = {};
+  let count = 0;
+  for (const [key, value] of Object.entries(source)) {
+    if (count >= MAX_EXTRA_FIELDS) break;
+    if (key in known || !EXTRA_KEY_PATTERN.test(key) || !isExtraValue(value)) continue;
+    extras[key] = value;
+    count += 1;
+  }
+  return { ...extras, ...known } as T;
+}
+
 function cleanCommand(v: unknown): Command | null {
   const r = asRecord(v);
   if (!r) return null;
   const id = asString(r.id);
   const name = asString(r.name);
   if (!id || !name) return null;
-  return withTimestamps(
-    {
-      id,
-      dogId: asString(r.dogId),
-      name,
-      beschreibung: asString(r.beschreibung),
-      tipp: asString(r.tipp)
-    },
+  return withExtras(
+    withTimestamps(
+      {
+        id,
+        dogId: asString(r.dogId),
+        name,
+        beschreibung: asString(r.beschreibung),
+        tipp: asString(r.tipp)
+      },
+      r
+    ),
     r
   );
 }
@@ -105,18 +139,21 @@ function cleanEntry(v: unknown): Entry | null {
   const id = asString(r.id);
   const date = asString(r.date);
   if (!id || !date) return null;
-  return withTimestamps(
-    {
-      id,
-      dogId: asString(r.dogId),
-      date,
-      ort: asString(r.ort),
-      was_gemacht: asString(r.was_gemacht),
-      uebungsaufgaben: asString(r.uebungsaufgaben),
-      tipps: asString(r.tipps),
-      erledigt: r.erledigt === true,
-      commands: cleanList(r.commands, cleanCommand)
-    },
+  return withExtras(
+    withTimestamps(
+      {
+        id,
+        dogId: asString(r.dogId),
+        date,
+        ort: asString(r.ort),
+        was_gemacht: asString(r.was_gemacht),
+        uebungsaufgaben: asString(r.uebungsaufgaben),
+        tipps: asString(r.tipps),
+        erledigt: r.erledigt === true,
+        commands: cleanList(r.commands, cleanCommand)
+      },
+      r
+    ),
     r
   );
 }
@@ -129,19 +166,30 @@ function cleanDog(v: unknown): DogProfile | null {
   if (!id || !name) return null;
   const g = asString(r.geschlecht);
   const geschlecht: DogProfile['geschlecht'] = g === 'w' || g === 'm' ? g : null;
-  return withTimestamps(
-    {
-      id,
-      name,
-      rasse: asString(r.rasse),
-      geburtsdatum: asString(r.geburtsdatum),
-      geschlecht,
-      chipNr: asString(r.chipNr),
-      registerNr: asString(r.registerNr),
-      tierarzt: asString(r.tierarzt),
-      allergien: asString(r.allergien),
-      besonderheiten: asString(r.besonderheiten)
-    },
+  // Das Foto ist ein langes Feld: Es wird hier geprüft und beim Einspielen von
+  // der Längengrenze ausgenommen (siehe plausibleRecord in src/backup.ts).
+  const foto = asString(r.photo);
+  const photo =
+    foto && foto.startsWith(PHOTO_PREFIX) && foto.length <= PHOTO_MAX_CHARS ? foto : undefined;
+  return withExtras(
+    withTimestamps(
+      {
+        id,
+        name,
+        rasse: asString(r.rasse),
+        geburtsdatum: asString(r.geburtsdatum),
+        geschlecht,
+        chipNr: asString(r.chipNr),
+        registerNr: asString(r.registerNr),
+        tierarzt: asString(r.tierarzt),
+        allergien: asString(r.allergien),
+        besonderheiten: asString(r.besonderheiten),
+        // Auch wenn das Foto nicht passt: Der Schlüssel bleibt bekannt, sonst
+        // würde ihn das Durchreichen unbekannter Felder wieder einsammeln.
+        photo
+      },
+      r
+    ),
     r
   );
 }
@@ -154,7 +202,7 @@ function cleanWeight(v: unknown): WeightEntry | null {
   const date = asString(r.date);
   const weightKg = asNumber(r.weightKg);
   if (!id || !dogId || !date || weightKg === null) return null;
-  return withTimestamps({ id, dogId, date, weightKg, note: asString(r.note) }, r);
+  return withExtras(withTimestamps({ id, dogId, date, weightKg, note: asString(r.note) }, r), r);
 }
 
 function cleanStool(v: unknown): StoolEntry | null {
@@ -167,17 +215,20 @@ function cleanStool(v: unknown): StoolEntry | null {
   const amount = asString(r.amount);
   const amountValue: StoolEntry['amount'] =
     amount === 'wenig' || amount === 'normal' || amount === 'viel' ? amount : null;
-  return withTimestamps(
-    {
-      id,
-      dogId,
-      date,
-      consistency: asNumber(r.consistency) ?? 0,
-      color: asString(r.color),
-      amount: amountValue,
-      abnormal: r.abnormal === true,
-      note: asString(r.note)
-    },
+  return withExtras(
+    withTimestamps(
+      {
+        id,
+        dogId,
+        date,
+        consistency: asNumber(r.consistency) ?? 0,
+        color: asString(r.color),
+        amount: amountValue,
+        abnormal: r.abnormal === true,
+        note: asString(r.note)
+      },
+      r
+    ),
     r
   );
 }
@@ -189,19 +240,22 @@ function cleanVet(v: unknown): VetVisit | null {
   const dogId = asString(r.dogId);
   const date = asString(r.date);
   if (!id || !dogId || !date) return null;
-  return withTimestamps(
-    {
-      id,
-      dogId,
-      date,
-      clinic: asString(r.clinic),
-      reason: asString(r.reason),
-      diagnosis: asString(r.diagnosis),
-      treatment: asString(r.treatment),
-      medication: asString(r.medication),
-      followUp: asString(r.followUp),
-      note: asString(r.note)
-    },
+  return withExtras(
+    withTimestamps(
+      {
+        id,
+        dogId,
+        date,
+        clinic: asString(r.clinic),
+        reason: asString(r.reason),
+        diagnosis: asString(r.diagnosis),
+        treatment: asString(r.treatment),
+        medication: asString(r.medication),
+        followUp: asString(r.followUp),
+        note: asString(r.note)
+      },
+      r
+    ),
     r
   );
 }
@@ -214,8 +268,24 @@ function cleanVaccination(v: unknown): Vaccination | null {
   const date = asString(r.date);
   const name = asString(r.name);
   if (!id || !dogId || !date || !name) return null;
-  return withTimestamps(
-    { id, dogId, date, name, nextDue: asString(r.nextDue), note: asString(r.note) },
+  const kind = asString(r.kind);
+  const kindValue: VaccinationKind | undefined =
+    kind === 'impfung' || kind === 'entwurmung' || kind === 'parasiten' || kind === 'sonstiges'
+      ? kind
+      : undefined;
+  return withExtras(
+    withTimestamps(
+      {
+        id,
+        dogId,
+        date,
+        name,
+        nextDue: asString(r.nextDue),
+        note: asString(r.note),
+        ...(kindValue ? { kind: kindValue } : {})
+      },
+      r
+    ),
     r
   );
 }

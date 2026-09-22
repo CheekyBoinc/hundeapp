@@ -60,7 +60,13 @@ function buildMonthGrid(monthDate: Date): GridCell[] {
   return cells;
 }
 
-export default function CalendarPage() {
+interface Props {
+  showRemindHint: boolean;
+  onRemind: () => void;
+  onDismissRemindHint: () => void;
+}
+
+export default function CalendarPage({ showRemindHint, onRemind, onDismissRemindHint }: Props) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [dogs, setDogs] = useState<DogProfile[]>([]);
   const [commands, setCommands] = useState<Command[]>([]);
@@ -254,6 +260,22 @@ export default function CalendarPage() {
                 ))}
               </div>
             </section>
+          )}
+
+          {showRemindHint && upcoming.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5">
+              <span className="text-sm text-stone-600">
+                Soll die App an fällige Termine erinnern?
+              </span>
+              <span className="flex shrink-0 items-center gap-3">
+                <button className="text-sm font-semibold underline" onClick={onRemind}>
+                  Erinnern lassen
+                </button>
+                <button className="text-sm text-stone-500 underline" onClick={onDismissRemindHint}>
+                  Nicht jetzt
+                </button>
+              </span>
+            </div>
           )}
 
           <section className="mt-4">

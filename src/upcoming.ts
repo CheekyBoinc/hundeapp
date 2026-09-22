@@ -1,4 +1,5 @@
 import type { DogProfile, Vaccination, VetVisit } from './types';
+import { vaccinationLabel } from './utils';
 
 interface UpcomingItem {
   id: string;
@@ -35,7 +36,7 @@ export function upcomingItems(
       id: `vax-${v.id}`,
       date: v.nextDue,
       kind: 'impfung',
-      title: `Impfung: ${v.name}`,
+      title: `${vaccinationLabel(v.kind)}: ${v.name}`,
       dogName: dogName(v.dogId),
       daysLeft: days
     });

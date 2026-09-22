@@ -49,6 +49,16 @@ if (dryRun) {
   process.exit(0);
 }
 
+// Die Test-Erinnerung darf nie in einen Store-Build geraten.
+const envFile = join(root, '.env');
+const envText = existsSync(envFile) ? readFileSync(envFile, 'utf8') : '';
+if (process.env.VITE_DEBUG_REMINDERS || /^VITE_DEBUG_REMINDERS=/m.test(envText)) {
+  console.error(
+    'VITE_DEBUG_REMINDERS ist gesetzt. Bitte entfernen; die Test-Erinnerung gehört nicht in einen Release.'
+  );
+  process.exit(1);
+}
+
 writeFileSync(
   gradleFile,
   gradle

@@ -249,3 +249,95 @@ describe('areEqual', () => {
     expect(areEqual(a, b)).toBe(false);
   });
 });
+
+describe('unbekannte Felder (Vorwärtskompatibilität)', () => {
+  it('übersteht sanitizeState, mergeStates und erneut sanitizeState', () => {
+    const remote = sanitizeState({
+      dogs: [{ id: 'd1', name: 'Luna', created_at: T1, fellfarbe: 'rot' }]
+    });
+    const merged = mergeStates(base(), remote);
+    const again = sanitizeState(JSON.parse(JSON.stringify(merged)) as unknown);
+    expect(again.dogs[0]).toMatchObject({ id: 'd1', fellfarbe: 'rot' });
+  });
+
+  it('reicht Felder auch in verschachtelten Kommandos durch', () => {
+    const state = sanitizeState({
+      entries: [
+        {
+          id: 'e1',
+          date: '2026-08-20',
+          commands: [{ id: 'c1', name: 'Sitz', handzeichen: 'flache Hand' }]
+        }
+      ]
+    });
+    expect(state.entries[0].commands[0]).toMatchObject({ handzeichen: 'flache Hand' });
+  });
+
+  it('verwirft Listen und Objekte', () => {
+    const state = sanitizeState({
+      commands: [{ id: 'c1', name: 'Sitz', tief: { a: 1 }, liste: [1, 2] }]
+    });
+    expect(state.commands[0]).not.toHaveProperty('tief');
+    expect(state.commands[0]).not.toHaveProperty('liste');
+  });
+
+  it('lässt bekannte Felder gewinnen', () => {
+    const state = sanitizeState({
+      commands: [{ id: 'c1', name: 'Sitz', tipp: 'echt', erledigt: 'kein Boolean' }]
+    });
+    expect(state.commands[0].name).toBe('Sitz');
+    expect(state.commands[0].tipp).toBe('echt');
+  });
+
+  it('ignoriert __proto__ und Schlüssel mit Unterstrich', () => {
+    const roh = JSON.parse(
+      '{"commands":[{"id":"c1","name":"Sitz","__proto__":{"boese":true},"_intern":1}]}'
+    ) as unknown;
+    const state = sanitizeState(roh);
+    expect(state.commands[0]).not.toHaveProperty('_intern');
+    expect(Object.getPrototypeOf(state.commands[0])).toBe(Object.prototype);
+  });
+
+  it('kappt mehr als 20 Zusatzfelder', () => {
+    const roh: Record<string, unknown> = { id: 'c1', name: 'Sitz' };
+    for (let i = 0; i < 25; i += 1) roh[`feld${i}`] = i;
+    const state = sanitizeState({ commands: [roh] });
+    const keys = Object.keys(state.commands[0]).filter((k) => k.startsWith('feld'));
+    expect(keys).toHaveLength(20);
+  });
+
+  it('verwirft einen unbekannten Text über 20.000 Zeichen und behält den Datensatz', () => {
+    const state = sanitizeState({
+      commands: [{ id: 'c1', name: 'Sitz', notiz: 'x'.repeat(20001) }]
+    });
+    expect(state.commands).toHaveLength(1);
+    expect(state.commands[0]).not.toHaveProperty('notiz');
+  });
+});
+
+describe('Hundefoto', () => {
+  const foto = `data:image/jpeg;base64,${'A'.repeat(40)}`;
+
+  function hund(photo: unknown): Record<string, unknown> {
+    return { id: 'd1', name: 'Luna', created_at: T1, photo };
+  }
+
+  it('übernimmt ein gültiges Foto', () => {
+    const state = sanitizeState({ dogs: [hund(foto)] });
+    expect(state.dogs[0].photo).toBe(foto);
+  });
+
+  it('lässt bei falschem Präfix nur das Feld weg', () => {
+    const state = sanitizeState({ dogs: [hund('data:image/png;base64,AAA')] });
+    expect(state.dogs).toHaveLength(1);
+    expect(state.dogs[0].photo).toBeUndefined();
+  });
+
+  it('lässt bei Überlänge nur das Feld weg', () => {
+    const zuLang = `data:image/jpeg;base64,${'A'.repeat(100001)}`;
+    const state = sanitizeState({ dogs: [hund(zuLang)] });
+    expect(state.dogs).toHaveLength(1);
+    expect(state.dogs[0].photo).toBeUndefined();
+  });
+});
+

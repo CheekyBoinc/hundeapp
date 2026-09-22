@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { fetchWeights } from '../api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { fetchWeights, saveDogProfile } from '../api';
 import { useLiveReload } from '../hooks';
 import type { DogProfile, WeightEntry } from '../types';
 import { formatAge, formatDateShort, formatKg } from '../utils';
+import { shrinkPhoto } from '../photo';
 import DogTag from './DogTag';
 
 interface Props {
@@ -30,7 +31,55 @@ function Stat({ label, value }: { label: string; value: string | null }) {
 
 export default function DogProfileTab({ dog, onEdit }: Props) {
   const [weights, setWeights] = useState<WeightEntry[]>([]);
+  const [photo, setPhoto] = useState<string | null>(dog.photo ?? null);
+  const [fotoBusy, setFotoBusy] = useState(false);
+  const [fotoError, setFotoError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const dogId = dog.id;
+
+  useEffect(() => {
+    setPhoto(dog.photo ?? null);
+  }, [dog.photo]);
+
+  // Foto speichern: die Felder des Hundes unverändert mitschicken, nur das Foto
+  // kommt dazu. So bleibt der übrige Stand unberührt.
+  async function savePhoto(naechstes: string | null) {
+    setFotoBusy(true);
+    setFotoError(null);
+    try {
+      await saveDogProfile({
+        id: dog.id,
+        name: dog.name,
+        rasse: dog.rasse,
+        geburtsdatum: dog.geburtsdatum,
+        geschlecht: dog.geschlecht,
+        chipNr: dog.chipNr,
+        registerNr: dog.registerNr,
+        tierarzt: dog.tierarzt,
+        allergien: dog.allergien,
+        besonderheiten: dog.besonderheiten,
+        photo: naechstes
+      });
+      setPhoto(naechstes);
+    } catch (err) {
+      setFotoError(err instanceof Error ? err.message : 'Das Bild konnte nicht gelesen werden.');
+    } finally {
+      setFotoBusy(false);
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  }
+
+  async function handleFile(file: File) {
+    setFotoBusy(true);
+    setFotoError(null);
+    try {
+      await savePhoto(await shrinkPhoto(file));
+    } catch (err) {
+      setFotoError(err instanceof Error ? err.message : 'Das Bild konnte nicht gelesen werden.');
+      setFotoBusy(false);
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -53,7 +102,7 @@ export default function DogProfileTab({ dog, onEdit }: Props) {
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <DogTag name={dog.name} size={64} />
+        <DogTag name={dog.name} size={64} photo={photo} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-2xl font-bold tracking-tight">{dog.name}</h3>
           <p className="truncate text-sm text-stone-500">{subtitle || 'Profil ausfüllen'}</p>
@@ -62,6 +111,36 @@ export default function DogProfileTab({ dog, onEdit }: Props) {
           Bearbeiten
         </button>
       </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          className="btn-secondary px-3 py-1.5 text-xs"
+          disabled={fotoBusy}
+          onClick={() => fileInput.current?.click()}
+        >
+          {photo ? 'Foto ändern' : 'Foto wählen'}
+        </button>
+        {photo && (
+          <button
+            className="btn-secondary px-3 py-1.5 text-xs"
+            disabled={fotoBusy}
+            onClick={() => void savePhoto(null)}
+          >
+            Foto entfernen
+          </button>
+        )}
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(ev) => {
+            const datei = ev.target.files?.[0];
+            if (datei) void handleFile(datei);
+          }}
+        />
+      </div>
+      {fotoError && <p className="mt-2 text-xs text-red-700">{fotoError}</p>}
 
       <div className="mt-4 flex gap-2">
         <Stat label="Alter" value={formatAge(dog.geburtsdatum)} />

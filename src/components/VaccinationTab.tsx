@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { deleteVaccination, fetchVaccinations } from '../api';
 import { useLiveReload } from '../hooks';
 import type { Vaccination } from '../types';
-import { formatDateShort, startOfToday } from '../utils';
+import { formatDateShort, startOfToday, vaccinationLabel } from '../utils';
 import VaccinationModal from './VaccinationModal';
 import DateStamp from './DateStamp';
 import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
@@ -46,7 +46,7 @@ export default function VaccinationTab({ dogId }: Props) {
   useLiveReload(load);
 
   async function handleDelete(e: Vaccination) {
-    if (!window.confirm(`Impfung „${e.name}" wirklich löschen?`)) return;
+    if (!window.confirm(`Eintrag „${e.name}" wirklich löschen?`)) return;
     try {
       await deleteVaccination(e.id);
       load();
@@ -59,7 +59,7 @@ export default function VaccinationTab({ dogId }: Props) {
     <div>
       <div className="mb-3">
         <button className="btn-primary" onClick={() => setAdding(true)}>
-          Impfung hinzufügen
+          Vorsorge hinzufügen
         </button>
       </div>
 
@@ -76,12 +76,12 @@ export default function VaccinationTab({ dogId }: Props) {
         <p className="py-8 text-center text-stone-500">Wird geladen…</p>
       ) : entries.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-10 text-center">
-          <p className="font-semibold text-stone-700">Keine Impfungen eingetragen</p>
+          <p className="font-semibold text-stone-700">Noch nichts eingetragen</p>
           <p className="mt-1 text-sm text-stone-500">
-            Pflege hier den Impfpass mit Fälligkeitsdatum.
+            Pflege hier Impfungen, Entwurmung und Parasitenschutz mit Fälligkeitsdatum.
           </p>
           <button className="btn-primary mt-4" onClick={() => setAdding(true)}>
-            Impfung hinzufügen
+            Vorsorge hinzufügen
           </button>
         </div>
       ) : (
@@ -109,6 +109,9 @@ export default function VaccinationTab({ dogId }: Props) {
                     </span>
                   </div>
                   <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
+                    <span className="chip bg-stone-100 text-stone-700">
+                      {vaccinationLabel(e.kind)}
+                    </span>
                     <span>
                       {e.nextDue
                         ? `Nächste Fälligkeit ${formatDateShort(e.nextDue)}`

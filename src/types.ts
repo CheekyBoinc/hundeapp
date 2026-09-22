@@ -22,9 +22,15 @@ export interface Entry {
   commands: Command[];
 }
 
+// Grenzen für das Hundefoto (JPEG als Data-URL); Prüfung und Erzeugung
+// arbeiten mit denselben Werten.
+export const PHOTO_PREFIX = 'data:image/jpeg;base64,';
+export const PHOTO_MAX_CHARS = 100000;
+
 export interface DogProfile {
   id: string;
   name: string;
+  photo?: string | null;
   rasse: string | null;
   geburtsdatum: string | null;
   geschlecht: 'w' | 'm' | null;
@@ -75,11 +81,14 @@ export interface VetVisit {
   updated_at?: string;
 }
 
+export type VaccinationKind = 'impfung' | 'entwurmung' | 'parasiten' | 'sonstiges';
+
 export interface Vaccination {
   id: string;
   dogId: string;
   date: string;
   name: string;
+  kind?: VaccinationKind;
   nextDue: string | null;
   note: string | null;
   created_at: string;

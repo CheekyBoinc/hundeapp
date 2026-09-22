@@ -76,3 +76,20 @@ describe('formatDaysLeft', () => {
     expect(formatDaysLeft(12)).toBe('in 12 Tagen');
   });
 });
+
+describe('Titel nach Art', () => {
+  it('nennt die Art der Vorsorge', () => {
+    const items = upcomingItems(
+      [{ ...vax('v1', '2026-09-10'), kind: 'entwurmung' }],
+      [],
+      dogs,
+      '2026-09-05'
+    );
+    expect(items[0].title).toBe('Entwurmung: Tollwut');
+  });
+
+  it('behandelt Einträge ohne Art als Impfung', () => {
+    const items = upcomingItems([vax('v1', '2026-09-10')], [], dogs, '2026-09-05');
+    expect(items[0].title).toBe('Impfung: Tollwut');
+  });
+});

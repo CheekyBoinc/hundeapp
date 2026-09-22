@@ -11,9 +11,12 @@ import { ChevronRightIcon } from './NavIcons';
 import DateStamp from './DateStamp';
 import { useLiveReload } from '../hooks';
 import type { Command, DogProfile, Entry } from '../types';
-import { formatDate, preview } from '../utils';
+import { currentHomework } from '../homework';
+import { formatDate, preview, todayLocal } from '../utils';
 import EntryDetail from './EntryDetail';
 import EntryModal from './EntryModal';
+import HomeworkCard from './HomeworkCard';
+import PracticeModal from './PracticeModal';
 
 export default function EntriesPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -27,6 +30,7 @@ export default function EntriesPage() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Entry | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [practicing, setPracticing] = useState<Entry | null>(null);
   const [demoOnly, setDemoOnly] = useState(false);
 
   const load = useCallback(async () => {
@@ -83,6 +87,23 @@ export default function EntriesPage() {
       return hay.includes(q);
     });
   }, [entries, search, dogFilter, commandFilter]);
+
+  // Übungsaufgaben der jüngsten Stunde, passend zum Hundefilter der Seite.
+  const homework = useMemo(() => {
+    const today = todayLocal();
+    if (dogFilter === 'none') {
+      return currentHomework(
+        entries.filter((e) => e.dogId === null),
+        null,
+        today
+      );
+    }
+    return currentHomework(entries, dogFilter === 'all' ? null : dogFilter, today);
+  }, [entries, dogFilter]);
+
+  const homeworkDogName = homework?.dogId
+    ? (dogs.find((d) => d.id === homework.dogId)?.name ?? null)
+    : null;
 
   return (
     <div>
@@ -146,6 +167,17 @@ export default function EntriesPage() {
             Alle entfernen
           </button>
         </div>
+      )}
+
+      {homework && !loading && (
+        <HomeworkCard
+          entry={homework}
+          dogName={homeworkDogName}
+          onPractice={() => setPracticing(homework)}
+          onDone={() => {
+            void toggleEntryDone(homework.id, true).then(load);
+          }}
+        />
       )}
 
       {error && (
@@ -279,6 +311,10 @@ export default function EntriesPage() {
             })}
           </div>
         </>
+      )}
+
+      {practicing && (
+        <PracticeModal source={practicing} onClose={() => setPracticing(null)} onSaved={load} />
       )}
 
       {detailEntry && (

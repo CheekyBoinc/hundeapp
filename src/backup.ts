@@ -71,8 +71,9 @@ function plausibleRecord(record: Record<string, unknown>): boolean {
   if (typeof record.id !== 'string' || record.id.length > MAX_ID_LENGTH) return false;
   if (!plausibleStamp(record.created_at) || !plausibleStamp(record.updated_at)) return false;
   for (const [key, value] of Object.entries(record)) {
-    // Verschachtelte Kommandos prüft der Eintrag selbst.
-    if (key === 'commands') continue;
+    // Verschachtelte Kommandos prüft der Eintrag selbst; das Hundefoto hat
+    // seine eigene Prüfung in cleanDog.
+    if (key === 'commands' || key === 'photo') continue;
     if (typeof value === 'string' && value.length > MAX_TEXT_LENGTH) return false;
   }
   return true;

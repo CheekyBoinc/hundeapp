@@ -19,6 +19,12 @@ import {
   type Provider
 } from './sync';
 import AccountSetup from './components/AccountSetup';
+import {
+  onNotificationTab,
+  requestNotificationPermission,
+  rescheduleIfStale,
+  rescheduleReminders
+} from './notify';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { applyTheme } from './theme';
 import { discardUntouchedDemoData } from './localStore';
@@ -73,8 +79,20 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !loadSettings().onboardingDone);
   const [offline, setOffline] = useState(!navigator.onLine);
   const [dogs, setDogs] = useState<DogProfile[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const handleSettings = useCallback((s: Settings) => setSettings(s), []);
+
+  // „Erinnern lassen" unter „Demnächst": Erlaubnis abfragen und einschalten.
+  const enableHealthReminders = useCallback(async () => {
+    if (await requestNotificationPermission()) {
+      setSettings((prev) => ({ ...prev, remindHealth: true }));
+    } else {
+      setNotice(
+        'Benachrichtigungen sind für die Hundeapp ausgeschaltet. Du kannst sie in den Systemeinstellungen erlauben.'
+      );
+    }
+  }, []);
   // Speichern und Design als Effekte, damit Setter stabil bleiben und keine
   // veralteten Einstellungen überschrieben werden.
   useEffect(() => {
@@ -83,7 +101,6 @@ export default function App() {
   useEffect(() => {
     applyTheme(settings.theme);
   }, [settings.theme]);
-  const [notice, setNotice] = useState<string | null>(null);
 
   // Hunde für die Kopfzeile; der aktive Hund wird in den Einstellungen gemerkt.
   const loadDogs = useCallback(async () => {
@@ -123,6 +140,37 @@ export default function App() {
     return () => {
       void handle.then((h) => h.remove());
     };
+  }, []);
+
+  // Erinnerungen neu planen: bei geänderten Einstellungen und nach jedem
+  // Abgleich (der Abgleich deckt auch den Sicherungsimport ab).
+  useEffect(() => {
+    rescheduleReminders();
+  }, [
+    settings.remindHealth,
+    settings.remindTraining,
+    settings.trainingDays,
+    settings.trainingTime
+  ]);
+
+  useEffect(() => {
+    const off = onChange(() => rescheduleReminders());
+    return off;
+  }, []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) rescheduleIfStale();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, []);
+
+  // Tippen auf eine Erinnerung öffnet den passenden Tab.
+  useEffect(() => {
+    onNotificationTab((ziel) => setTab(ziel));
   }, []);
 
   useEffect(() => {
@@ -448,7 +496,15 @@ export default function App() {
         {tab === 'hunde' && (
           <DogsPage activeDogId={activeDog?.id ?? null} onActiveDogChange={setActiveDog} />
         )}
-        {tab === 'kalender' && <CalendarPage />}
+        {tab === 'kalender' && (
+          <CalendarPage
+            showRemindHint={!settings.remindHealth && !settings.reminderHintDismissed}
+            onRemind={() => void enableHealthReminders()}
+            onDismissRemindHint={() =>
+              setSettings((prev) => ({ ...prev, reminderHintDismissed: true }))
+            }
+          />
+        )}
       </main>
 
       {!settings.navTop && (

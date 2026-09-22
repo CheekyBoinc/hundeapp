@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   // Schalter: Ohne "1" erscheint der Dienst nirgends in der Oberfläche.
   readonly VITE_CLOUD_SYNC?: string;
+  // Nur für Test-Builds: blendet die Test-Erinnerung in den Einstellungen ein.
+  readonly VITE_DEBUG_REMINDERS?: string;
 }
 
 interface ImportMeta {

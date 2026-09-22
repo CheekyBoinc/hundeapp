@@ -1,4 +1,5 @@
 import * as local from './localStore';
+import { maybeRequestReview } from './review';
 import { schedulePush } from './sync';
 import type { Command, DogProfile, Entry } from './types';
 
@@ -28,7 +29,17 @@ export async function fetchEntries(): Promise<Entry[]> {
   return local.fetchEntries();
 }
 
-export const saveEntry = withSync(local.saveEntry);
+const saveEntryWithSync = withSync(local.saveEntry);
+
+// Nach einem gespeicherten Eintrag kann der Bewertungsdialog kommen; die Regeln
+// stehen in review.ts.
+export async function saveEntry(
+  input: Parameters<typeof local.saveEntry>[0],
+  commandIds: string[]
+): Promise<void> {
+  await saveEntryWithSync(input, commandIds);
+  void maybeRequestReview();
+}
 export const toggleEntryDone = withSync(local.toggleEntryDone);
 export const deleteEntry = withSync(local.deleteEntry);
 

@@ -1,3 +1,5 @@
+import type { VaccinationKind } from './types';
+
 export function todayLocal(): string {
   const d = new Date();
   const off = d.getTimezoneOffset();
@@ -64,6 +66,31 @@ export function dateParts(date: string): { weekday: string; day: string; month: 
     day: String(d.getDate()),
     month: d.toLocaleDateString('de-DE', { month: 'short' }).replace('.', '')
   };
+}
+
+// Monate addieren, ohne über das Monatsende zu rutschen: 31.01. + 1 Monat ist
+// der 28.02., im Schaltjahr der 29.02.
+export function addMonths(date: string, months: number): string {
+  const d = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return date;
+  const ziel = new Date(d.getFullYear(), d.getMonth() + months, 1);
+  const letzterTag = new Date(ziel.getFullYear(), ziel.getMonth() + 1, 0).getDate();
+  ziel.setDate(Math.min(d.getDate(), letzterTag));
+  const off = ziel.getTimezoneOffset();
+  return new Date(ziel.getTime() - off * 60000).toISOString().slice(0, 10);
+}
+
+// Die vier Arten der Vorsorge, in der Reihenfolge der Auswahl.
+export const VACCINATION_KINDS: { value: VaccinationKind; label: string }[] = [
+  { value: 'impfung', label: 'Impfung' },
+  { value: 'entwurmung', label: 'Entwurmung' },
+  { value: 'parasiten', label: 'Parasitenschutz' },
+  { value: 'sonstiges', label: 'Sonstiges' }
+];
+
+// Fehlt die Art, gilt der Eintrag als Impfung (so sind alte Einträge gemeint).
+export function vaccinationLabel(kind?: VaccinationKind): string {
+  return VACCINATION_KINDS.find((k) => k.value === (kind ?? 'impfung'))?.label ?? 'Impfung';
 }
 
 // "06.09." – Tag und Monat ohne Jahr, für kompakte Listen.

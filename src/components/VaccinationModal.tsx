@@ -1,9 +1,24 @@
 import { useState } from 'react';
 import { saveVaccination } from '../api';
 import { useFormSave } from '../hooks';
-import type { Vaccination } from '../types';
-import { todayLocal } from '../utils';
+import type { Vaccination, VaccinationKind } from '../types';
+import { addMonths, todayLocal, VACCINATION_KINDS } from '../utils';
 import Modal from './Modal';
+
+// Platzhalter je Art, ohne Markennamen.
+const PLACEHOLDERS: Record<VaccinationKind, string> = {
+  impfung: 'z. B. Tollwut, Staupe',
+  entwurmung: 'Name des Präparats',
+  parasiten: 'z. B. Zeckenschutz',
+  sonstiges: 'z. B. Zahnkontrolle'
+};
+
+const DUE_CHOICES = [
+  { label: 'in 1 Monat', months: 1 },
+  { label: 'in 3 Monaten', months: 3 },
+  { label: 'in 1 Jahr', months: 12 },
+  { label: 'in 3 Jahren', months: 36 }
+];
 
 interface Props {
   dogId: string;
@@ -15,6 +30,7 @@ interface Props {
 export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Props) {
   const [date, setDate] = useState(entry?.date ?? todayLocal());
   const [name, setName] = useState(entry?.name ?? '');
+  const [kind, setKind] = useState<VaccinationKind>(entry?.kind ?? 'impfung');
   const [nextDue, setNextDue] = useState(entry?.nextDue ?? '');
   const [note, setNote] = useState(entry?.note ?? '');
   const [inputError, setInputError] = useState<string | null>(null);
@@ -25,6 +41,7 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
         dogId,
         date,
         name: name.trim(),
+        kind,
         nextDue: nextDue || null,
         note: note.trim() || null
       });
@@ -41,7 +58,7 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
       return;
     }
     if (!name.trim()) {
-      setInputError('Bitte einen Impfstoff angeben.');
+      setInputError('Bitte eine Bezeichnung angeben.');
       return;
     }
     setInputError(null);
@@ -49,7 +66,7 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
   }
 
   return (
-    <Modal title={entry ? 'Impfung bearbeiten' : 'Impfung hinzufügen'} onClose={onClose}>
+    <Modal title={entry ? 'Vorsorge bearbeiten' : 'Vorsorge hinzufügen'} onClose={onClose}>
       {(error || inputError) && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
           {error ?? inputError}
@@ -57,6 +74,26 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
       )}
 
       <div className="space-y-4">
+        <div>
+          <label className="label">Art</label>
+          <div className="flex flex-wrap gap-2">
+            {VACCINATION_KINDS.map((k) => (
+              <button
+                key={k.value}
+                type="button"
+                onClick={() => setKind(k.value)}
+                className={`chip-toggle ${
+                  kind === k.value
+                    ? 'border-accent bg-accent text-white'
+                    : 'border-stone-300 bg-white text-stone-700'
+                }`}
+              >
+                {k.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Datum</label>
@@ -75,14 +112,26 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
               value={nextDue}
               onChange={(ev) => setNextDue(ev.target.value)}
             />
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {DUE_CHOICES.map((choice) => (
+                <button
+                  key={choice.label}
+                  type="button"
+                  className="chip-toggle border-stone-300 bg-white text-stone-700"
+                  onClick={() => setNextDue(addMonths(date || todayLocal(), choice.months))}
+                >
+                  {choice.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         <div>
-          <label className="label">Impfstoff</label>
+          <label className="label">Bezeichnung</label>
           <input
             className="input"
-            placeholder="z. B. Tollwut, Staupe, Leptospirose"
+            placeholder={PLACEHOLDERS[kind]}
             value={name}
             onChange={(ev) => setName(ev.target.value)}
           />

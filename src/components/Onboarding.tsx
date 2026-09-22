@@ -35,7 +35,7 @@ const STEPS: Step[] = [
     title: 'Der Hund',
     Icon: PawOutlineIcon,
     paragraphs: [
-      'Unter „Hunde" legst du Profil, Gewicht, Kot-Tagebuch, Tierarztbesuche und Impfungen an.',
+      'Unter „Hunde" legst du Profil, Gewicht, Kot-Tagebuch, Tierarztbesuche und die Vorsorge an: Impfungen, Entwurmung und Parasitenschutz.',
       'Beim Gewicht siehst du den Verlauf und ob er im Idealbereich für die Rasse liegt.'
     ]
   },
@@ -44,7 +44,7 @@ const STEPS: Step[] = [
     Icon: CalendarIcon,
     paragraphs: [
       'Der „Kalender" zeigt den Monat mit allen Trainings und markiert die Tage, an denen ihr geübt habt.',
-      'Darunter stehen fällige Impfungen und Folgetermine, damit nichts untergeht.'
+      'Darunter stehen fällige Vorsorge-Termine und Tierarzt-Folgetermine, damit nichts untergeht. Auf Wunsch erinnert dich die App daran.'
     ]
   },
   {
@@ -123,11 +123,7 @@ export default function Onboarding({ onClose }: Props) {
         <div className="mt-8">
           <div className="flex items-center gap-2">
             {step > 0 && (
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setStep((s) => s - 1)}
-              >
+              <button type="button" className="btn-secondary" onClick={() => setStep((s) => s - 1)}>
                 Zurück
               </button>
             )}

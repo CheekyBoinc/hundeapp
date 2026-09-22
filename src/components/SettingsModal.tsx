@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Settings } from '../settings';
 import type { ThemeSetting } from '../theme';
 import {
@@ -10,6 +10,7 @@ import {
   readBackupFile
 } from '../backup';
 import { Capacitor } from '@capacitor/core';
+import { notificationsAllowed, requestNotificationPermission, sendTestReminder } from '../notify';
 import Modal from './Modal';
 import { CoffeeIcon } from './NavIcons';
 
@@ -63,6 +64,31 @@ function Toggle({
       </span>
     </button>
   );
+}
+
+const WEEKDAYS = [
+  { value: 1, label: 'Mo' },
+  { value: 2, label: 'Di' },
+  { value: 3, label: 'Mi' },
+  { value: 4, label: 'Do' },
+  { value: 5, label: 'Fr' },
+  { value: 6, label: 'Sa' },
+  { value: 0, label: 'So' }
+];
+
+const NOTIFICATION_HINT =
+  'Benachrichtigungen sind für die Hundeapp ausgeschaltet. Du kannst sie in den Systemeinstellungen erlauben.';
+
+// Nur in Test-Builds gesetzt (siehe docs/entwicklung.md).
+const DEBUG_REMINDERS = import.meta.env.VITE_DEBUG_REMINDERS === '1';
+
+// Feedback per Mail: vorausgefüllt werden nur App-Version und Plattform.
+function feedbackMailto(): string {
+  const platform = Capacitor.getPlatform();
+  const name = platform === 'android' ? 'Android' : platform === 'ios' ? 'iOS' : 'Web';
+  const subject = encodeURIComponent('Hundeapp: Feedback');
+  const body = encodeURIComponent(`App-Version ${__APP_VERSION__} (${name})`);
+  return `mailto:hundeapp@thundermail.com?subject=${subject}&body=${body}`;
 }
 
 const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
@@ -144,6 +170,40 @@ export default function SettingsModal({
   const activeCloud = provider === 'cloud' && configured;
   const activeGithub = provider === 'github' && configured;
 
+  // Beim Öffnen prüfen, ob die Erlaubnis noch steht: Wurde sie im System
+  // entzogen, bleiben die Schalter aus.
+  useEffect(() => {
+    if (!settings.remindHealth && !settings.remindTraining) return;
+    void notificationsAllowed().then((erlaubt) => {
+      if (!erlaubt) onChange({ ...settings, remindHealth: false, remindTraining: false });
+    });
+  }, [settings, onChange]);
+
+  async function enableReminders(art: 'health' | 'training') {
+    if (art === 'health' ? settings.remindHealth : settings.remindTraining) {
+      onChange({
+        ...settings,
+        ...(art === 'health' ? { remindHealth: false } : { remindTraining: false })
+      });
+      return;
+    }
+    if (await requestNotificationPermission()) {
+      onChange({
+        ...settings,
+        ...(art === 'health' ? { remindHealth: true } : { remindTraining: true })
+      });
+    } else {
+      setNotice({ kind: 'error', text: NOTIFICATION_HINT });
+    }
+  }
+
+  function toggleDay(tag: number) {
+    const tage = settings.trainingDays.includes(tag)
+      ? settings.trainingDays.filter((t) => t !== tag)
+      : [...settings.trainingDays, tag].sort((a, b) => a - b);
+    onChange({ ...settings, trainingDays: tage });
+  }
+
   async function handleExport() {
     setBusy(true);
     setNotice(null);
@@ -199,6 +259,62 @@ export default function SettingsModal({
             value={!settings.headerText}
             onToggle={() => onChange({ ...settings, headerText: !settings.headerText })}
           />
+        </Section>
+
+        <Section title="Erinnerungen">
+          <Toggle
+            label="Fällige Impfungen, Vorsorge und Tierarzttermine"
+            hint="Sieben Tage vorher und am Tag selbst, morgens um 9 Uhr"
+            value={settings.remindHealth}
+            onToggle={() => void enableReminders('health')}
+          />
+          <Toggle
+            label="Übungserinnerung"
+            hint="Erinnert an die Aufgaben aus der letzten Stunde"
+            value={settings.remindTraining}
+            onToggle={() => void enableReminders('training')}
+          />
+          {settings.remindTraining && (
+            <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+              <span className="label">Wochentage</span>
+              <div className="flex flex-wrap gap-2">
+                {WEEKDAYS.map((tag) => {
+                  const an = settings.trainingDays.includes(tag.value);
+                  return (
+                    <button
+                      key={tag.value}
+                      type="button"
+                      onClick={() => toggleDay(tag.value)}
+                      className={`chip-toggle ${
+                        an
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-stone-300 bg-white text-stone-700'
+                      }`}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3">
+                <label className="label">Uhrzeit</label>
+                <input
+                  type="time"
+                  className="input"
+                  value={settings.trainingTime}
+                  onChange={(ev) => onChange({ ...settings, trainingTime: ev.target.value })}
+                />
+              </div>
+              <p className="mt-2 text-xs text-stone-500">
+                Jedes Gerät plant seine eigenen Erinnerungen.
+              </p>
+            </div>
+          )}
+          {DEBUG_REMINDERS && (
+            <button className="btn-secondary" onClick={() => void sendTestReminder()}>
+              Test-Erinnerung in 1 Minute
+            </button>
+          )}
         </Section>
 
         <Section title="Hilfe">
@@ -267,8 +383,8 @@ export default function SettingsModal({
               {activeCloud ? (
                 <>
                   <p className="mt-0.5 text-xs text-stone-500">
-                    {cloudEmail ? `Verbunden als ${cloudEmail}.` : 'Verbunden.'} Beim Trennen bleiben
-                    alle Einträge auf diesem Gerät erhalten.
+                    {cloudEmail ? `Verbunden als ${cloudEmail}.` : 'Verbunden.'} Beim Trennen
+                    bleiben alle Einträge auf diesem Gerät erhalten.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" className="btn-danger" onClick={onDisconnect}>
@@ -343,6 +459,21 @@ export default function SettingsModal({
                 </a>
               </div>
             )}
+            <div
+              className={`${
+                Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs text-stone-500">
+                  Fehler gefunden oder eine Idee? Schreib mir eine Mail.
+                </span>
+                <a href={feedbackMailto()} className="btn-secondary px-3 py-1.5 text-xs">
+                  Feedback senden
+                </a>
+              </div>
+              <p className="mt-1 text-xs text-stone-500">hundeapp@thundermail.com</p>
+            </div>
             <p
               className={`text-center text-xs text-stone-500 ${
                 Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
