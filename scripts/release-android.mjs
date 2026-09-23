@@ -44,6 +44,14 @@ if (!existsSync(join(root, 'android', 'keystore.properties'))) {
   process.exit(1);
 }
 
+// Die Versionshinweise gehören zum Release: Fehlen sie, baut das Skript
+// trotzdem, weist aber deutlich darauf hin (auch im Probelauf).
+const eintragDatei = join(root, 'store', 'store-eintrag.md');
+const eintragText = existsSync(eintragDatei) ? readFileSync(eintragDatei, 'utf8') : '';
+if (!eintragText.includes(`## Versionshinweise für Release ${nextName}`)) {
+  console.log(`\nHinweis: In store/store-eintrag.md fehlen die Versionshinweise für ${nextName}.`);
+}
+
 if (dryRun) {
   console.log('Probelauf: nichts geändert, nichts gebaut.');
   process.exit(0);
@@ -133,6 +141,7 @@ copyFileSync(aab, target);
 console.log(`
 Fertig: ${target}
 Nächste Schritte:
-  1. git add -A && git commit -m "Release ${nextName} (${nextCode})"
-  2. Bundle in der Play Console hochladen (Testen und veröffentlichen -> Track -> Neuen Release erstellen)
+  1. Versionshinweise für ${nextName} in store/store-eintrag.md ergänzen und in beiden Stores eintragen
+  2. git add -A && git commit -m "Release ${nextName} (${nextCode})"
+  3. Bundle in der Play Console hochladen (Testen und veröffentlichen -> Track -> Neuen Release erstellen)
 `);
