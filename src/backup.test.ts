@@ -333,7 +333,7 @@ describe('formatImportSummary', () => {
       { neu: 2, aktualisiert: 1, loescht: 0 }
     );
     expect(text).toBe(
-      'Die Datei enthält 3 Einträge, 2 Kommandos, 1 Hund. 2 Datensätze sind neu. 1 Datensatz ersetzt einen älteren Stand auf diesem Gerät. Fortfahren?'
+      'Die Datei enthält 3 Einträge, 2 Kommandos, 1 Hund. 2 Datensätze sind neu. 1 Datensatz ersetzt einen älteren Stand auf diesem Gerät. Gleichnamige Kommandos werden dabei zusammengelegt. Fortfahren?'
     );
   });
 
@@ -364,7 +364,10 @@ describe('Zusatzfelder beim Einspielen', () => {
     expect(state.dogs[0]).toMatchObject({ id: 'd1', fellfarbe: 'rot' });
   });
 
-  it('ein unbekannter Text über 20.000 Zeichen kostet nicht den Datensatz', () => {
+  // Beim Einspielen gilt die strenge Regel: Ein unplausibler Wert lässt den
+  // Datensatz wegfallen (gezählt als übersprungen). Der Abgleich leert dagegen
+  // nur das Feld.
+  it('ein unbekannter Text über 20.000 Zeichen verwirft den Datensatz', () => {
     const text = JSON.stringify({
       app: 'hundeapp',
       version: 1,
@@ -372,9 +375,8 @@ describe('Zusatzfelder beim Einspielen', () => {
       data: { ...leererZustand(), dogs: [{ ...hund('d1'), notiz: 'x'.repeat(20001) }] }
     });
     const { state, counts } = parseBackup(text);
-    expect(counts.ignored).toBe(0);
-    expect(state.dogs).toHaveLength(1);
-    expect(state.dogs[0]).not.toHaveProperty('notiz');
+    expect(counts.ignored).toBe(1);
+    expect(state.dogs).toHaveLength(0);
   });
 });
 
@@ -393,4 +395,3 @@ describe('Hundefoto in der Sicherung', () => {
     expect(state.dogs[0].photo).toBe(foto);
   });
 });
-

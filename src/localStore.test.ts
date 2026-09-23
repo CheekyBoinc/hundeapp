@@ -210,3 +210,18 @@ describe('Hundefoto', () => {
     expect(fetchDogs()[0].photo).toBe(foto);
   });
 });
+
+describe('Foto beim Speichern', () => {
+  it('verwirft ein Foto mit falschem Präfix', () => {
+    const d = dog();
+    saveDogProfile({ ...d, photo: 'data:image/png;base64,AAAA' });
+    expect(fetchDogs()[0].photo).toBeNull();
+  });
+
+  it('behält ein gültiges Foto', () => {
+    const d = dog();
+    const foto = `data:image/jpeg;base64,${'A'.repeat(40)}`;
+    saveDogProfile({ ...d, photo: foto });
+    expect(fetchDogs()[0].photo).toBe(foto);
+  });
+});

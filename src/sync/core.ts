@@ -1,4 +1,10 @@
-import { PHOTO_MAX_CHARS, PHOTO_PREFIX } from '../types';
+import {
+  MAX_ID_LENGTH,
+  MAX_TEXT_LENGTH,
+  MAX_TOMBSTONES_PER_LIST,
+  PHOTO_MAX_CHARS,
+  PHOTO_PREFIX
+} from '../types';
 import type {
   Command,
   DogProfile,
@@ -48,16 +54,40 @@ function asRecord(v: unknown): Record<string, unknown> | null {
     : null;
 }
 
+// Überlange Texte gelten wie ein fehlender Wert: Der Datensatz bleibt, das
+// Feld fällt weg — dieselbe Grenze wie beim Einspielen.
 function asString(v: unknown): string | null {
-  return typeof v === 'string' ? v : null;
+  if (typeof v !== 'string') return null;
+  return v.length <= MAX_TEXT_LENGTH ? v : null;
+}
+
+// IDs sind kurz; alles darüber kann kein echter Datensatz sein.
+function asId(v: unknown): string | null {
+  const id = asString(v);
+  return id !== null && id.length <= MAX_ID_LENGTH ? id : null;
 }
 
 function asNumber(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
+// Zahlen aus fremden Daten in einen plausiblen Bereich zwingen.
+function asBoundedNumber(v: unknown, min: number, max: number): number | null {
+  const value = asNumber(v);
+  return value !== null && value >= min && value <= max ? value : null;
+}
+
+let tombstoneNoticeShown = false;
+
 function asIdList(v: unknown): string[] {
-  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  if (!Array.isArray(v)) return [];
+  const ids = v.filter((x): x is string => typeof x === 'string' && x.length <= MAX_ID_LENGTH);
+  if (ids.length <= MAX_TOMBSTONES_PER_LIST) return ids;
+  if (!tombstoneNoticeShown) {
+    tombstoneNoticeShown = true;
+    notifyNotice('Die Liste der Löschungen war ungewöhnlich lang und wurde gekürzt.');
+  }
+  return ids.slice(0, MAX_TOMBSTONES_PER_LIST);
 }
 
 function cleanList<T>(v: unknown, clean: (x: unknown) => T | null): T[] {
@@ -70,12 +100,24 @@ function cleanList<T>(v: unknown, clean: (x: unknown) => T | null): T[] {
   return out;
 }
 
+const MAX_CLOCK_AHEAD_MS = 24 * 60 * 60 * 1000;
+
+// Nur gültige Zeitstempel ohne weiten Zukunftssprung. Im Abgleich wird
+// normalisiert statt verworfen: Hier kommen echte Daten an, ein Verwerfen wäre
+// Datenverlust. Der Import ist strenger (siehe src/backup.ts).
+function plausibleStamp(value: string | null): string | null {
+  if (!value) return null;
+  const time = Date.parse(value);
+  if (Number.isNaN(time) || time > Date.now() + MAX_CLOCK_AHEAD_MS) return null;
+  return value;
+}
+
 function withTimestamps<T extends object>(
   obj: T,
   r: Record<string, unknown>
 ): T & { created_at: string; updated_at?: string } {
-  const created = asString(r.created_at) ?? new Date().toISOString();
-  const updated = asString(r.updated_at);
+  const created = plausibleStamp(asString(r.created_at)) ?? new Date().toISOString();
+  const updated = plausibleStamp(asString(r.updated_at));
   return { ...obj, created_at: created, ...(updated ? { updated_at: updated } : {}) };
 }
 
@@ -92,7 +134,7 @@ const EXTRA_KEY_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{0,39}$/;
 function isExtraValue(value: unknown): boolean {
   if (value === null) return true;
   if (typeof value === 'boolean') return true;
-  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value === 'number') return Number.isFinite(value) && Math.abs(value) <= 1e12;
   // Längere unbekannte Texte würden beim Einspielen den ganzen Datensatz
   // kosten (plausibleRecord), deshalb bleiben sie schon hier draußen.
   if (typeof value === 'string') return value.length <= MAX_EXTRA_TEXT;
@@ -115,14 +157,14 @@ function withExtras<T extends object>(known: T, source: Record<string, unknown>)
 function cleanCommand(v: unknown): Command | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
+  const id = asId(r.id);
   const name = asString(r.name);
   if (!id || !name) return null;
   return withExtras(
     withTimestamps(
       {
         id,
-        dogId: asString(r.dogId),
+        dogId: asId(r.dogId),
         name,
         beschreibung: asString(r.beschreibung),
         tipp: asString(r.tipp)
@@ -136,14 +178,14 @@ function cleanCommand(v: unknown): Command | null {
 function cleanEntry(v: unknown): Entry | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
+  const id = asId(r.id);
   const date = asString(r.date);
   if (!id || !date) return null;
   return withExtras(
     withTimestamps(
       {
         id,
-        dogId: asString(r.dogId),
+        dogId: asId(r.dogId),
         date,
         ort: asString(r.ort),
         was_gemacht: asString(r.was_gemacht),
@@ -161,14 +203,15 @@ function cleanEntry(v: unknown): Entry | null {
 function cleanDog(v: unknown): DogProfile | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
+  const id = asId(r.id);
   const name = asString(r.name);
   if (!id || !name) return null;
   const g = asString(r.geschlecht);
   const geschlecht: DogProfile['geschlecht'] = g === 'w' || g === 'm' ? g : null;
   // Das Foto ist ein langes Feld: Es wird hier geprüft und beim Einspielen von
   // der Längengrenze ausgenommen (siehe plausibleRecord in src/backup.ts).
-  const foto = asString(r.photo);
+  // Das Foto ist länger als die Textgrenze und wird deshalb direkt geprüft.
+  const foto = typeof r.photo === 'string' ? r.photo : null;
   const photo =
     foto && foto.startsWith(PHOTO_PREFIX) && foto.length <= PHOTO_MAX_CHARS ? foto : undefined;
   return withExtras(
@@ -197,10 +240,10 @@ function cleanDog(v: unknown): DogProfile | null {
 function cleanWeight(v: unknown): WeightEntry | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
-  const dogId = asString(r.dogId);
+  const id = asId(r.id);
+  const dogId = asId(r.dogId);
   const date = asString(r.date);
-  const weightKg = asNumber(r.weightKg);
+  const weightKg = asBoundedNumber(r.weightKg, 0.1, 199.9);
   if (!id || !dogId || !date || weightKg === null) return null;
   return withExtras(withTimestamps({ id, dogId, date, weightKg, note: asString(r.note) }, r), r);
 }
@@ -208,8 +251,8 @@ function cleanWeight(v: unknown): WeightEntry | null {
 function cleanStool(v: unknown): StoolEntry | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
-  const dogId = asString(r.dogId);
+  const id = asId(r.id);
+  const dogId = asId(r.dogId);
   const date = asString(r.date);
   if (!id || !dogId || !date) return null;
   const amount = asString(r.amount);
@@ -221,7 +264,7 @@ function cleanStool(v: unknown): StoolEntry | null {
         id,
         dogId,
         date,
-        consistency: asNumber(r.consistency) ?? 0,
+        consistency: asBoundedNumber(r.consistency, 1, 7) ?? 0,
         color: asString(r.color),
         amount: amountValue,
         abnormal: r.abnormal === true,
@@ -236,8 +279,8 @@ function cleanStool(v: unknown): StoolEntry | null {
 function cleanVet(v: unknown): VetVisit | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
-  const dogId = asString(r.dogId);
+  const id = asId(r.id);
+  const dogId = asId(r.dogId);
   const date = asString(r.date);
   if (!id || !dogId || !date) return null;
   return withExtras(
@@ -263,8 +306,8 @@ function cleanVet(v: unknown): VetVisit | null {
 function cleanVaccination(v: unknown): Vaccination | null {
   const r = asRecord(v);
   if (!r) return null;
-  const id = asString(r.id);
-  const dogId = asString(r.dogId);
+  const id = asId(r.id);
+  const dogId = asId(r.dogId);
   const date = asString(r.date);
   const name = asString(r.name);
   if (!id || !dogId || !date || !name) return null;
@@ -639,8 +682,11 @@ export async function pushNow(): Promise<void> {
         return;
       }
       try {
-        lastServerRev = await backend.put(merged, currentRemote?.rev);
-        persistMerged(merged);
+        // Vor dem Hochladen noch einmal prüfen: Was die Prüfung nicht passiert,
+        // darf auch nicht auf dem Server landen.
+        const sauber = sanitizeState(merged);
+        lastServerRev = await backend.put(sauber, currentRemote?.rev);
+        persistMerged(sauber);
         return;
       } catch (err) {
         lastError = err;

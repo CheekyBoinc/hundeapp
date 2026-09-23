@@ -54,6 +54,7 @@ export {
 export {
   isConfigured,
   mergeIntoLocal,
+  notifyNotice,
   onChange,
   onSyncError,
   onSyncNotice,

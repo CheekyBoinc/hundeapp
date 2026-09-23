@@ -35,7 +35,7 @@ const EXPORT_DIR = 'exports';
 
 // Vor jedem Export aufräumen. Nicht direkt nach dem Teilen: Die Ziel-App liest
 // die Datei je nach Plattform erst nach dem Schließen des Dialogs.
-async function prepareExportDir(): Promise<void> {
+export async function prepareExportDir(): Promise<void> {
   // mkdir meldet einen vorhandenen Ordner je nach Plattform als Fehler; das
   // darf das Aufräumen nicht überspringen.
   await Filesystem.mkdir({ path: EXPORT_DIR, directory: Directory.Cache, recursive: true }).catch(

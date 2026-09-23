@@ -47,3 +47,22 @@ describe('Erinnerungen', () => {
     expect(s.reminderHintDismissed).toBe(false);
   });
 });
+
+describe('Erinnerungs-Einstellungen', () => {
+  it('prüft Wochentage und Uhrzeit beim Laden', () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ trainingDays: [1, 'x', 9, -2, 3], trainingTime: '25:99' })
+    );
+    const s = loadSettings();
+    expect(s.trainingDays).toEqual([1, 3]);
+    expect(s.trainingTime).toBe('18:00');
+  });
+
+  it('übernimmt gültige Werte', () => {
+    localStorage.setItem(KEY, JSON.stringify({ trainingDays: [2, 4], trainingTime: '07:30' }));
+    const s = loadSettings();
+    expect(s.trainingDays).toEqual([2, 4]);
+    expect(s.trainingTime).toBe('07:30');
+  });
+});

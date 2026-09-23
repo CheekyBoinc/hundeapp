@@ -208,3 +208,55 @@ describe('planReminders', () => {
     }
   });
 });
+
+describe('Robustheit der Planung', () => {
+  it('liefert Gesundheitstermine auch bei kaputten Trainings-Einstellungen', () => {
+    const plan = planReminders(
+      state({ vaccinations: [vax('v1', '2026-09-20')] }),
+      settings({
+        remindHealth: true,
+        remindTraining: true,
+        trainingDays: 'kaputt' as unknown as number[],
+        trainingTime: 'keine Uhrzeit' as unknown as string
+      }),
+      JETZT
+    );
+    expect(plan.map((n) => n.title)).toEqual(['In 7 Tagen: Impfung', 'Heute fällig: Impfung']);
+  });
+
+  it('kürzt lange Texte und hält sie einzeilig', () => {
+    const plan = planReminders(
+      state({
+        entries: [
+          {
+            id: 'e1',
+            dogId: null,
+            date: '2026-09-04',
+            ort: null,
+            was_gemacht: null,
+            uebungsaufgaben: 'Zeile eins\n' + 'x'.repeat(300),
+            tipps: null,
+            erledigt: false,
+            created_at: T,
+            commands: []
+          }
+        ]
+      }),
+      settings({ remindTraining: true, trainingDays: [1] }),
+      JETZT
+    );
+    expect(plan[0].body.length).toBeLessThanOrEqual(120);
+    expect(plan[0].body).not.toContain('\n');
+    expect(plan[0].body.endsWith('…')).toBe(true);
+  });
+
+  it('plant jede Benachrichtigung nur einmal', () => {
+    const plan = planReminders(
+      state({ vaccinations: [vax('v1', '2026-09-20'), vax('v2', '2026-09-21')] }),
+      settings({ remindHealth: true, remindTraining: true, trainingDays: [1, 3, 5] }),
+      JETZT
+    );
+    const ids = plan.map((n) => n.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});

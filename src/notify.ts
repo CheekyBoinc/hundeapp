@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { loadState } from './localStore';
+import { notifyNotice } from './sync';
 import { loadSettings } from './settings';
 import { planReminders } from './reminders';
 
@@ -12,21 +13,44 @@ const STALE_MS = 12 * 60 * 60 * 1000;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 let lastPlanned = 0;
+let laufend: Promise<void> | null = null;
+let erneut = false;
 
 async function plan(): Promise<void> {
   try {
-    const pending = await LocalNotifications.getPending();
-    if (pending.notifications.length > 0) {
+    // Erst planen, dann aufräumen: Geht das Planen schief, bleiben die
+    // bisherigen Erinnerungen bestehen, statt dass der Nutzer ohne dasteht.
+    const neu = planReminders(loadState(), loadSettings(), new Date());
+    if (neu.length > 0) await LocalNotifications.schedule({ notifications: neu });
+    const neueIds = new Set(neu.map((n) => n.id));
+    const alte = await LocalNotifications.getPending();
+    const ueberzaehlig = alte.notifications.filter((n) => !neueIds.has(n.id));
+    if (ueberzaehlig.length > 0) {
       await LocalNotifications.cancel({
-        notifications: pending.notifications.map((n) => ({ id: n.id }))
+        notifications: ueberzaehlig.map((n) => ({ id: n.id }))
       });
     }
-    const plan = planReminders(loadState(), loadSettings(), new Date());
-    if (plan.length > 0) await LocalNotifications.schedule({ notifications: plan });
     lastPlanned = Date.now();
   } catch {
-    // Erinnerungen sind Beiwerk; ein Fehler darf die App nicht stören.
+    // Ein Fehler darf die App nicht stören, aber auch nicht stumm bleiben.
+    notifyNotice('Erinnerungen konnten nicht geplant werden.');
   }
+}
+
+// Nur ein Lauf zur Zeit; kommt währenddessen ein neuer Wunsch, wird danach
+// genau einmal nachgeplant.
+function anstossen(): void {
+  if (laufend) {
+    erneut = true;
+    return;
+  }
+  laufend = plan().finally(() => {
+    laufend = null;
+    if (erneut) {
+      erneut = false;
+      anstossen();
+    }
+  });
 }
 
 // Nach Änderungen aufrufen: kurz warten, dann alles neu planen. Das ersetzt
@@ -34,7 +58,7 @@ async function plan(): Promise<void> {
 export function rescheduleReminders(): void {
   if (!Capacitor.isNativePlatform()) return;
   clearTimeout(timer);
-  timer = setTimeout(() => void plan(), DEBOUNCE_MS);
+  timer = setTimeout(anstossen, DEBOUNCE_MS);
 }
 
 // Beim Zurückkehren in die App: nur, wenn die letzte Planung lange her ist.
@@ -64,12 +88,14 @@ export async function notificationsAllowed(): Promise<boolean> {
 
 // Nur für Test-Builds mit VITE_DEBUG_REMINDERS: eine Erinnerung in einer Minute.
 export async function sendTestReminder(): Promise<void> {
-  if (!Capacitor.isNativePlatform() || import.meta.env.VITE_DEBUG_REMINDERS !== '1') return;
+  if (!Capacitor.isNativePlatform() || import.meta.env.PROD) return;
+  if (import.meta.env.VITE_DEBUG_REMINDERS !== '1') return;
   try {
     await LocalNotifications.schedule({
       notifications: [
         {
-          id: 424242,
+          // Außerhalb des Hash-Bereichs (0 … 2^31-1) der echten Erinnerungen.
+          id: -424242,
           title: 'Test-Erinnerung',
           body: 'Wenn du das siehst, funktionieren die Erinnerungen.',
           schedule: {

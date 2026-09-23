@@ -1,7 +1,8 @@
-import type { AppState, Entry } from './types';
+import type { AppState } from './types';
 import { loadState } from './localStore';
 import { mergeIntoLocal, sanitizeState, schedulePush } from './sync';
 import { readFileAsText, saveFile } from './files';
+import { MAX_ID_LENGTH, MAX_TEXT_LENGTH, MAX_TOMBSTONES_PER_LIST } from './types';
 import { todayLocal } from './utils';
 
 // Sicherung als Datei: alle Daten der App als JSON. Dient dem Handywechsel
@@ -32,13 +33,11 @@ export interface ImportPreview {
 // dagegen echte Daten kosten. Datensätze mit unplausiblen Angaben fallen
 // deshalb hier weg, nicht im Sync.
 const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
-const MAX_TOMBSTONES_PER_LIST = 5000;
-const MAX_ID_LENGTH = 100;
-const MAX_TEXT_LENGTH = 20000;
 const MAX_CLOCK_AHEAD_MS = 24 * 60 * 60 * 1000;
 
 const STATE_KEYS = ['commands', 'entries', 'dogs', 'weight', 'stool', 'vet', 'vaccinations'];
 
+// Für die Vorschau vor dem Einspielen: Datensätze mit stabilem Zeitstempel.
 interface Stamped {
   id: string;
   created_at: string;
@@ -51,7 +50,14 @@ interface Cleaned<T> {
 }
 
 function buildBackup(): BackupFile {
-  return { app: 'hundeapp', version: 1, exportedAt: new Date().toISOString(), data: loadState() };
+  // Vor dem Export noch einmal prüfen: Ein manipulierter lokaler Speicher soll
+  // nicht in die Sicherungsdatei durchschlagen.
+  return {
+    app: 'hundeapp',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data: sanitizeState(loadState())
+  };
 }
 
 function backupFilename(): string {
@@ -79,58 +85,53 @@ function plausibleRecord(record: Record<string, unknown>): boolean {
   return true;
 }
 
-function keepPlausible<T extends Stamped>(items: T[]): Cleaned<T> {
-  const kept: T[] = [];
-  let ignored = 0;
-  for (const item of items) {
-    if (plausibleRecord(item as unknown as Record<string, unknown>)) kept.push(item);
-    else ignored += 1;
-  }
-  return { kept, ignored };
+function asRawRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
-// Einträge tragen ihre Kommandos mit. Ein unplausibles Kommando fällt einzeln
-// weg, der Eintrag bleibt.
-function cleanEntries(entries: Entry[]): Cleaned<Entry> {
-  const kept: Entry[] = [];
+// Der Import ist strenger als der Abgleich: Ein Datensatz, dessen Angaben die
+// Grenzen verletzen, wird verworfen und gezählt — der Abgleich normalisiert
+// dagegen, weil dort echte Daten ankommen. Geprüft wird deshalb das rohe JSON,
+// bevor sanitizeState die Felder glättet.
+function rawFilter(value: unknown): Cleaned<unknown> {
+  if (!Array.isArray(value)) return { kept: [], ignored: 0 };
+  const kept: unknown[] = [];
   let ignored = 0;
-  for (const entry of entries) {
-    if (!plausibleRecord(entry as unknown as Record<string, unknown>)) {
+  for (const item of value) {
+    const record = asRawRecord(item);
+    if (!record || !plausibleRecord(record)) {
       ignored += 1;
       continue;
     }
-    const commands = keepPlausible(entry.commands);
-    ignored += commands.ignored;
-    kept.push(
-      commands.kept.length === entry.commands.length ? entry : { ...entry, commands: commands.kept }
-    );
+    if (Array.isArray(record.commands)) {
+      // Ein unplausibles Kommando fällt einzeln weg, der Eintrag bleibt.
+      const commands = rawFilter(record.commands);
+      ignored += commands.ignored;
+      kept.push({ ...record, commands: commands.kept });
+    } else {
+      kept.push(item);
+    }
   }
   return { kept, ignored };
 }
 
-// Löschvermerke laufen nie ab; sie halten eine Löschung auf allen Geräten
-// fest. Eine gekürzte Liste würde gelöschte Datensätze zurückholen, deshalb
-// wird die Datei bei einer überlangen Liste als Ganzes abgelehnt. Einzelne
-// überlange IDs können dagegen keinen echten Datensatz treffen und fallen weg.
-function cleanTombstones(deleted: AppState['deleted']): {
-  deleted: AppState['deleted'];
-  ignored: number;
-} {
-  let ignored = 0;
-  const lists = Object.entries(deleted).map(([key, ids]) => {
-    const kept = ids.filter((id) => {
-      if (id.length <= MAX_ID_LENGTH) return true;
-      ignored += 1;
-      return false;
-    });
-    if (kept.length > MAX_TOMBSTONES_PER_LIST) {
-      throw new Error(
-        'Die Datei enthält ungewöhnlich viele Löschvermerke und wird nicht eingespielt.'
-      );
-    }
-    return [key, kept] as const;
-  });
-  return { deleted: Object.fromEntries(lists) as AppState['deleted'], ignored };
+// Löschvermerke laufen nie ab; eine gekürzte Liste würde gelöschte Datensätze
+// zurückholen. Deshalb wird die Datei bei einer überlangen Liste als Ganzes
+// abgelehnt. Einzelne überlange IDs können dagegen keinen echten Datensatz
+// treffen und fallen weg.
+function tombstoneCounts(deleted: unknown): { zuLang: number; zuViele: boolean } {
+  const d = asRawRecord(deleted);
+  if (!d) return { zuLang: 0, zuViele: false };
+  let zuLang = 0;
+  let zuViele = false;
+  for (const list of Object.values(d)) {
+    if (!Array.isArray(list)) continue;
+    if (list.length > MAX_TOMBSTONES_PER_LIST) zuViele = true;
+    zuLang += list.filter((id) => typeof id === 'string' && id.length > MAX_ID_LENGTH).length;
+  }
+  return { zuLang, zuViele };
 }
 
 // Akzeptiert die Sicherungsdatei (mit Kopf) und zur Sicherheit auch das rohe
@@ -152,36 +153,43 @@ export function parseBackup(text: string): { state: AppState; counts: BackupCoun
     throw new Error('Die Datei ist keine Hundeapp-Sicherung.');
   }
 
-  const cleaned = sanitizeState(raw);
-  const commands = keepPlausible(cleaned.commands);
-  const entries = cleanEntries(cleaned.entries);
-  const dogs = keepPlausible(cleaned.dogs);
-  const weight = keepPlausible(cleaned.weight);
-  const stool = keepPlausible(cleaned.stool);
-  const vet = keepPlausible(cleaned.vet);
-  const vaccinations = keepPlausible(cleaned.vaccinations);
-  const tombstones = cleanTombstones(cleaned.deleted);
+  const vermerke = tombstoneCounts(rawObj.deleted);
+  if (vermerke.zuViele) {
+    throw new Error(
+      'Die Datei enthält ungewöhnlich viele Löschvermerke und wird nicht eingespielt.'
+    );
+  }
 
-  const state: AppState = {
-    commands: commands.kept,
-    entries: entries.kept,
-    dogs: dogs.kept,
-    weight: weight.kept,
-    stool: stool.kept,
-    vet: vet.kept,
-    vaccinations: vaccinations.kept,
-    deleted: tombstones.deleted
+  const listen = {
+    commands: rawFilter(rawObj.commands),
+    entries: rawFilter(rawObj.entries),
+    dogs: rawFilter(rawObj.dogs),
+    weight: rawFilter(rawObj.weight),
+    stool: rawFilter(rawObj.stool),
+    vet: rawFilter(rawObj.vet),
+    vaccinations: rawFilter(rawObj.vaccinations)
   };
 
+  const state: AppState = sanitizeState({
+    commands: listen.commands.kept,
+    entries: listen.entries.kept,
+    dogs: listen.dogs.kept,
+    weight: listen.weight.kept,
+    stool: listen.stool.kept,
+    vet: listen.vet.kept,
+    vaccinations: listen.vaccinations.kept,
+    deleted: rawObj.deleted
+  });
+
   const ignored =
-    commands.ignored +
-    entries.ignored +
-    dogs.ignored +
-    weight.ignored +
-    stool.ignored +
-    vet.ignored +
-    vaccinations.ignored +
-    tombstones.ignored;
+    listen.commands.ignored +
+    listen.entries.ignored +
+    listen.dogs.ignored +
+    listen.weight.ignored +
+    listen.stool.ignored +
+    listen.vet.ignored +
+    listen.vaccinations.ignored +
+    vermerke.zuLang;
 
   return {
     state,
@@ -309,6 +317,9 @@ export function formatImportSummary(counts: BackupCounts, preview: ImportPreview
         ? '1 Datensatz wurde übersprungen, weil die Angaben unplausibel sind.'
         : `${counts.ignored} Datensätze wurden übersprungen, weil die Angaben unplausibel sind.`
     );
+  }
+  if (counts.commands > 1) {
+    parts.push('Gleichnamige Kommandos werden dabei zusammengelegt.');
   }
   parts.push('Fortfahren?');
   return parts.join(' ');

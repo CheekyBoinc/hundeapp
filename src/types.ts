@@ -24,6 +24,12 @@ export interface Entry {
 
 // Grenzen für das Hundefoto (JPEG als Data-URL); Prüfung und Erzeugung
 // arbeiten mit denselben Werten.
+// Grenzen für eingehende Daten. Import (src/backup.ts) und Abgleich
+// (src/sync/core.ts) benutzen dieselben Werte.
+export const MAX_ID_LENGTH = 100;
+export const MAX_TEXT_LENGTH = 20000;
+export const MAX_TOMBSTONES_PER_LIST = 5000;
+
 export const PHOTO_PREFIX = 'data:image/jpeg;base64,';
 export const PHOTO_MAX_CHARS = 100000;
 

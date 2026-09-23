@@ -341,3 +341,54 @@ describe('Hundefoto', () => {
   });
 });
 
+describe('Grenzen im Abgleich (wie beim Einspielen)', () => {
+  it('verwirft überlange Freitexte, behält den Datensatz', () => {
+    const state = sanitizeState({
+      commands: [{ id: 'c1', name: 'Sitz', tipp: 'x'.repeat(20001) }]
+    });
+    expect(state.commands).toHaveLength(1);
+    expect(state.commands[0].tipp).toBeNull();
+  });
+
+  it('verwirft Datensätze mit überlanger ID', () => {
+    const state = sanitizeState({ commands: [{ id: 'x'.repeat(101), name: 'Sitz' }] });
+    expect(state.commands).toHaveLength(0);
+  });
+
+  it('kürzt eine übergroße Liste von Löschvermerken', () => {
+    const viele = Array.from({ length: 5001 }, (_, i) => `id-${i}`);
+    const state = sanitizeState({ deleted: { commands: viele } });
+    expect(state.deleted.commands).toHaveLength(5000);
+  });
+
+  it('normalisiert Zeitstempel weit in der Zukunft', () => {
+    const state = sanitizeState({
+      commands: [{ id: 'c1', name: 'Sitz', created_at: '9999-01-01T00:00:00.000Z' }]
+    });
+    const stamp = state.commands[0].created_at;
+    expect(stamp < '2100').toBe(true);
+
+    // Danach ist der Datensatz wieder überschreibbar.
+    const gleich = new Date(Date.now() + 60 * 1000).toISOString();
+    const neuer = sanitizeState({ commands: [{ id: 'c1', name: 'Sitz', created_at: gleich }] });
+    const merged = mergeStates(state, neuer);
+    expect(merged.commands[0].created_at).toBe(gleich);
+  });
+
+  it('zwingt Zahlen in plausible Bereiche', () => {
+    const state = sanitizeState({
+      stool: [{ id: 's1', dogId: 'd1', date: '2026-08-20', consistency: 99 }],
+      weight: [{ id: 'w1', dogId: 'd1', date: '2026-08-20', weightKg: -3 }]
+    });
+    expect(state.stool[0].consistency).toBe(0);
+    expect(state.weight).toHaveLength(0);
+  });
+
+  it('verwirft unbekannte Zahlen außerhalb des Bereichs', () => {
+    const state = sanitizeState({
+      commands: [{ id: 'c1', name: 'Sitz', grosse_zahl: 1e300, kleine_zahl: 5 }]
+    });
+    expect(state.commands[0]).not.toHaveProperty('grosse_zahl');
+    expect(state.commands[0]).toMatchObject({ kleine_zahl: 5 });
+  });
+});

@@ -32,10 +32,25 @@ function csp(): Plugin {
   };
 }
 
+// Der Test-Schalter darf in keinen Build geraten, der ausgeliefert wird.
+function guardDebugReminders(): Plugin {
+  return {
+    name: 'guard-debug-reminders',
+    apply: 'build',
+    configResolved(config) {
+      if (config.mode === 'production' && process.env.VITE_DEBUG_REMINDERS) {
+        throw new Error(
+          'VITE_DEBUG_REMINDERS ist gesetzt. Bitte entfernen; die Test-Erinnerung gehört nicht in einen Release-Build.'
+        );
+      }
+    }
+  };
+}
+
 export default defineConfig({
   base: './',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version)
   },
-  plugins: [react(), tailwindcss(), csp()]
+  plugins: [react(), tailwindcss(), csp(), guardDebugReminders()]
 });

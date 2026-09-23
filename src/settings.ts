@@ -36,10 +36,25 @@ const DEFAULTS: Settings = {
   reminderHintDismissed: false
 };
 
+// Im Speicher kann alles stehen; die Werte werden beim Laden geprüft, damit
+// die Erinnerungs-Planung nicht an einem kaputten Wert scheitert.
+function normalize(raw: Partial<Settings>): Settings {
+  const merged = { ...DEFAULTS, ...raw };
+  return {
+    ...merged,
+    trainingDays: Array.isArray(merged.trainingDays)
+      ? merged.trainingDays.filter((tag) => Number.isInteger(tag) && tag >= 0 && tag <= 6)
+      : DEFAULTS.trainingDays,
+    trainingTime: /^([01]\d|2[0-3]):[0-5]\d$/.test(merged.trainingTime ?? '')
+      ? (merged.trainingTime as string)
+      : DEFAULTS.trainingTime
+  };
+}
+
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) } : { ...DEFAULTS };
+    return raw ? normalize(JSON.parse(raw) as Partial<Settings>) : { ...DEFAULTS };
   } catch {
     return { ...DEFAULTS };
   }

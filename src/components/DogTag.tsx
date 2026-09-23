@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { PHOTO_PREFIX } from '../types';
 
 interface Props {
   name: string;
@@ -12,6 +13,9 @@ interface Props {
 // Foto des Hundes.
 export default function DogTag({ name, size = 56, photo, className = '' }: Props) {
   const letter = name.trim().slice(0, 1).toUpperCase() || '?';
+  // Nur ein geprüftes Datenbild rendern; alles andere fällt auf den Buchstaben
+  // zurück.
+  const bild = photo && photo.startsWith(PHOTO_PREFIX) ? photo : null;
   const width = Math.round(size * 0.86);
   // useId enthält Doppelpunkte; die sind in url(#…) nicht brauchbar.
   const clipId = `dogtag-${useId().replace(/:/g, '')}`;
@@ -37,7 +41,7 @@ export default function DogTag({ name, size = 56, photo, className = '' }: Props
         stroke="var(--color-accent-deep)"
         strokeWidth="1.2"
       />
-      {photo ? (
+      {bild ? (
         <>
           <defs>
             <clipPath id={clipId}>
@@ -45,7 +49,7 @@ export default function DogTag({ name, size = 56, photo, className = '' }: Props
             </clipPath>
           </defs>
           <image
-            href={photo}
+            href={bild}
             x="4.5"
             y="18"
             width="34"

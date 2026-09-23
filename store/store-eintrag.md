@@ -82,7 +82,9 @@ Digitale Käufe: Nein.
 - Erhebt oder teilt die App Nutzerdaten? **Ja**, aber nur wenn der optionale
   Abgleich über den Dienst genutzt wird: E-Mail-Adresse, die Einträge der App und ein
   hinterlegtes Profilfoto des Hundes.
-  Ohne Konto werden keine Daten erhoben.
+  Ohne Konto werden keine Daten erhoben. Beim Abgleich über ein eigenes privates
+  GitHub-Repository werden die Einträge an GitHub übertragen; der Anbieter erhält
+  davon nichts.
 - Werden Daten verschlüsselt übertragen? Ja (HTTPS bei Dienst und GitHub).
 - Können Nutzer die Löschung ihrer Daten verlangen? Ja – direkt in der App
   (Einstellungen → Abgleich zwischen Geräten → Konto löschen) und per E-Mail.

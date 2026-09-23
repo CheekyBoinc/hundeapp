@@ -95,8 +95,10 @@ alle Geräte die neue Version haben.
 ### Test-Erinnerung
 
 `VITE_DEBUG_REMINDERS=1 npm run dev` (nur auf der Kommandozeile, nie in `.env`)
-blendet in den Einstellungen „Test-Erinnerung in 1 Minute" ein. Das Release-Skript
-bricht ab, wenn die Variable gesetzt ist.
+blendet in den Einstellungen „Test-Erinnerung in 1 Minute" ein. Der Schalter gilt
+nur außerhalb von Produktions-Builds: Das Release-Skript prüft alle `.env*`-Dateien,
+und `npm run build` bricht ab, wenn die Variable gesetzt ist. Für iOS gilt
+dieselbe Regel — vor dem Archivieren prüfen, dass die Variable nicht gesetzt ist.
 
 ### Plugins
 

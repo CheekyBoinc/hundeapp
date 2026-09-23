@@ -27,6 +27,15 @@ export interface ReminderNotification {
 // kommen dazu.
 const MAX_HEALTH = 50;
 const HEALTH_HOUR = 9;
+const MAX_TITLE = 60;
+const MAX_BODY = 120;
+
+// Texte stammen aus Nutzerdaten: auf eine Zeile bringen und begrenzen, damit
+// eine Benachrichtigung nicht aus dem Rahmen läuft.
+function kurz(text: string, max: number): string {
+  const sauber = text.replace(/\s+/g, ' ').trim();
+  return sauber.length <= max ? sauber : `${sauber.slice(0, max - 1).trimEnd()}…`;
+}
 
 // FNV-1a, 31 Bit: stabile, positive IDs (Android verlangt eine 32-Bit-Zahl).
 function hashId(text: string): number {
@@ -119,11 +128,16 @@ export function planReminders(
   }
 
   if (settings.remindTraining) {
-    const [stunde, minute] = settings.trainingTime.split(':').map(Number);
+    // Einstellungen kommen aus dem lokalen Speicher und werden hier nicht
+    // vorausgesetzt: Ein kaputter Wert darf die Gesundheitstermine nicht
+    // mitreißen.
+    const teile = typeof settings.trainingTime === 'string' ? settings.trainingTime.split(':') : [];
+    const stunde = Number(teile[0]);
+    const minute = Number(teile[1]);
+    const tage = Array.isArray(settings.trainingDays) ? settings.trainingDays : [];
     const aufgaben = currentHomework(state.entries, null, isoDay(now));
-    const text =
-      (aufgaben?.uebungsaufgaben ?? '').slice(0, 80).trim() || 'Ein paar Minuten Training?';
-    for (const tag of settings.trainingDays) {
+    const text = kurz(aufgaben?.uebungsaufgaben ?? '', 80) || 'Ein paar Minuten Training?';
+    for (const tag of tage) {
       if (!Number.isInteger(tag) || tag < 0 || tag > 6) continue;
       training.push({
         id: hashId(`training:${tag}:${settings.trainingTime}`),
@@ -147,5 +161,19 @@ export function planReminders(
   const sortiert = [...health]
     .sort((a, b) => (a.schedule.at?.getTime() ?? 0) - (b.schedule.at?.getTime() ?? 0))
     .slice(0, MAX_HEALTH);
-  return [...sortiert, ...training];
+
+  // Der Hash kann doppelte IDs erzeugen: Der spätere Eintrag fällt weg, damit
+  // der Plan eindeutig bleibt. Texte werden dabei gekürzt.
+  const eindeutig: ReminderNotification[] = [];
+  const gesehen = new Set<number>();
+  for (const eintrag of [...sortiert, ...training]) {
+    if (gesehen.has(eintrag.id)) continue;
+    gesehen.add(eintrag.id);
+    eindeutig.push({
+      ...eintrag,
+      title: kurz(eintrag.title, MAX_TITLE),
+      body: kurz(eintrag.body, MAX_BODY)
+    });
+  }
+  return eindeutig;
 }

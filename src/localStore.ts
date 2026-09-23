@@ -1,3 +1,4 @@
+import { PHOTO_MAX_CHARS, PHOTO_PREFIX } from './types';
 import type {
   AppState,
   Command,
@@ -250,11 +251,24 @@ export function saveDogProfile(
   dog: Omit<DogProfile, 'id' | 'created_at' | 'updated_at'> & { id?: string }
 ): DogProfile {
   const dogs = readJson<DogProfile[]>(DOGS_KEY, []);
+  // Das Foto auch hier prüfen, nicht nur beim Einlesen fremder Daten: Sonst
+  // könnte ein fehlerhafter Aufrufer ungeprüfte Werte speichern, die später
+  // mit abgeglichen und exportiert werden. Fehlt der Schlüssel ganz, bleibt der
+  // bisherige Wert stehen.
+  const sauber: typeof dog = { ...dog };
+  if ('photo' in dog) {
+    sauber.photo =
+      typeof dog.photo === 'string' &&
+      dog.photo.startsWith(PHOTO_PREFIX) &&
+      dog.photo.length <= PHOTO_MAX_CHARS
+        ? dog.photo
+        : null;
+  }
   const existing = dogs.find((d) => d.id === dog.id);
   if (existing) {
-    Object.assign(existing, dog, { updated_at: now() });
+    Object.assign(existing, sauber, { updated_at: now() });
   } else {
-    dogs.push({ ...dog, id: uuid(), created_at: now(), updated_at: now() });
+    dogs.push({ ...sauber, id: uuid(), created_at: now(), updated_at: now() });
   }
   writeJson(DOGS_KEY, dogs);
   return dogs.find((d) => d.id === (dog.id ?? '')) ?? dogs[dogs.length - 1];

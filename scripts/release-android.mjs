@@ -9,7 +9,7 @@
 // kopieren. Danach die Änderung an build.gradle committen.
 
 import { execSync } from 'node:child_process';
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -49,9 +49,12 @@ if (dryRun) {
   process.exit(0);
 }
 
-// Die Test-Erinnerung darf nie in einen Store-Build geraten.
-const envFile = join(root, '.env');
-const envText = existsSync(envFile) ? readFileSync(envFile, 'utf8') : '';
+// Die Test-Erinnerung darf nie in einen Store-Build geraten. Vite liest außer
+// .env auch .env.local und .env.production*, deshalb werden alle geprüft.
+const envText = readdirSync(root)
+  .filter((name) => name.startsWith('.env') && name !== '.env.test')
+  .map((name) => readFileSync(join(root, name), 'utf8'))
+  .join('\n');
 if (process.env.VITE_DEBUG_REMINDERS || /^VITE_DEBUG_REMINDERS=/m.test(envText)) {
   console.error(
     'VITE_DEBUG_REMINDERS ist gesetzt. Bitte entfernen; die Test-Erinnerung gehört nicht in einen Release.'

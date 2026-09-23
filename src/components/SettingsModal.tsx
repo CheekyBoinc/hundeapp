@@ -80,7 +80,7 @@ const NOTIFICATION_HINT =
   'Benachrichtigungen sind für die Hundeapp ausgeschaltet. Du kannst sie in den Systemeinstellungen erlauben.';
 
 // Nur in Test-Builds gesetzt (siehe docs/entwicklung.md).
-const DEBUG_REMINDERS = import.meta.env.VITE_DEBUG_REMINDERS === '1';
+const DEBUG_REMINDERS = import.meta.env.VITE_DEBUG_REMINDERS === '1' && !import.meta.env.PROD;
 
 // Feedback per Mail: vorausgefüllt werden nur App-Version und Plattform.
 function feedbackMailto(): string {
