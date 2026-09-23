@@ -120,6 +120,16 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.5.6
+
+<de-DE>
+Zuverlässigere Erinnerungen: Sie bleiben erhalten, wenn das Neuplanen einmal
+scheitert, und ihre Texte sind kürzer. Sicherungen mit fehlerhaften Angaben
+behandelt die App sauberer, das Hundefoto wird beim Speichern geprüft, und alte
+Exportdateien räumt sie beim Start auf. Dazu Klarstellungen in der
+Datenschutzerklärung.
+</de-DE>
+
 ## Versionshinweise für Release 1.5.5
 
 <de-DE>
