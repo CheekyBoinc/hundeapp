@@ -120,6 +120,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.5.7
+
+<de-DE>
+Besser lesbar: Beschriftungen auf orangen Schaltflächen, Feldränder, Platzhalter
+und der Fokusrahmen haben jetzt deutlich mehr Kontrast, in hell und dunkel.
+Kleinere Beschriftungen sind zudem klarer vom Fließtext abgesetzt.
+</de-DE>
+
 ## Versionshinweise für Release 1.5.6
 
 <de-DE>
