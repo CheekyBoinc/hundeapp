@@ -120,6 +120,14 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.5.8
+
+<de-DE>
+Das Profilfoto erscheint jetzt als runder Ausschnitt mit Ring und zeigt deutlich
+mehr vom Hund. Schaltflächen und Auswahlfelder hatten im dunklen Design kaum
+sichtbare Flächen; sie heben sich jetzt in beiden Designs klar ab.
+</de-DE>
+
 ## Versionshinweise für Release 1.5.7
 
 <de-DE>
