@@ -181,7 +181,7 @@ export default function EntryModal({
                     className={`chip-toggle ${
                       on
                         ? 'border-accent bg-accent text-white'
-                        : 'border-stone-300 bg-white text-stone-700'
+                        : 'border-stone-300 bg-control text-stone-700'
                     }`}
                   >
                     {c.name}

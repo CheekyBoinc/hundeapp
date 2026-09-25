@@ -1,24 +1,37 @@
-import { useId } from 'react';
 import { PHOTO_PREFIX } from '../types';
 
 interface Props {
   name: string;
   size?: number; // Höhe in px
-  // Kleines JPEG als Data-URL; ersetzt den Anfangsbuchstaben.
+  // Kleines JPEG als Data-URL; ersetzt die Hundemarke.
   photo?: string | null;
   className?: string;
 }
 
-// Hundemarke als Avatar: Anhänger mit Öse, darin der Anfangsbuchstabe oder das
-// Foto des Hundes.
+// Avatar des Hundes: Mit Foto ein runder Ausschnitt mit Markenring, ohne Foto
+// die Hundemarke mit Anfangsbuchstabe.
 export default function DogTag({ name, size = 56, photo, className = '' }: Props) {
   const letter = name.trim().slice(0, 1).toUpperCase() || '?';
   // Nur ein geprüftes Datenbild rendern; alles andere fällt auf den Buchstaben
   // zurück.
   const bild = photo && photo.startsWith(PHOTO_PREFIX) ? photo : null;
+
+  // Mit Foto füllt das Bild die ganze Fläche, die Marke bleibt als Ring. Das
+  // gibt doppelt so viel Bildfläche wie im Anhänger, und der Ring trennt auch
+  // ein dunkles Fell vom Hintergrund.
+  if (bild) {
+    return (
+      <img
+        src={bild}
+        alt={`Foto von ${name}`}
+        width={size}
+        height={size}
+        className={`shrink-0 rounded-full object-cover ring-2 ring-accent ${className}`}
+      />
+    );
+  }
+
   const width = Math.round(size * 0.86);
-  // useId enthält Doppelpunkte; die sind in url(#…) nicht brauchbar.
-  const clipId = `dogtag-${useId().replace(/:/g, '')}`;
   return (
     <svg
       viewBox="0 0 43 50"
@@ -41,36 +54,17 @@ export default function DogTag({ name, size = 56, photo, className = '' }: Props
         stroke="var(--color-accent-deep)"
         strokeWidth="1.2"
       />
-      {bild ? (
-        <>
-          <defs>
-            <clipPath id={clipId}>
-              <rect x="4.5" y="18" width="34" height="28" rx="5" />
-            </clipPath>
-          </defs>
-          <image
-            href={bild}
-            x="4.5"
-            y="18"
-            width="34"
-            height="28"
-            preserveAspectRatio="xMidYMid slice"
-            clipPath={`url(#${clipId})`}
-          />
-        </>
-      ) : (
-        <text
-          x="21.5"
-          y="34.5"
-          textAnchor="middle"
-          fontSize="20"
-          fontWeight="700"
-          fontFamily="inherit"
-          fill="#fffaf4"
-        >
-          {letter}
-        </text>
-      )}
+      <text
+        x="21.5"
+        y="34.5"
+        textAnchor="middle"
+        fontSize="20"
+        fontWeight="700"
+        fontFamily="inherit"
+        fill="var(--color-on-accent)"
+      >
+        {letter}
+      </text>
     </svg>
   );
 }

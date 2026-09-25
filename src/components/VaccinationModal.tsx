@@ -85,7 +85,7 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
                 className={`chip-toggle ${
                   kind === k.value
                     ? 'border-accent bg-accent text-white'
-                    : 'border-stone-300 bg-white text-stone-700'
+                    : 'border-stone-300 bg-control text-stone-700'
                 }`}
               >
                 {k.label}
@@ -117,7 +117,7 @@ export default function VaccinationModal({ dogId, entry, onClose, onSaved }: Pro
                 <button
                   key={choice.label}
                   type="button"
-                  className="chip-toggle border-stone-300 bg-white text-stone-700"
+                  className="chip-toggle border-stone-300 bg-control text-stone-700"
                   onClick={() => setNextDue(addMonths(date || todayLocal(), choice.months))}
                 >
                   {choice.label}

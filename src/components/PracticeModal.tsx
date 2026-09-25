@@ -85,7 +85,7 @@ export default function PracticeModal({ source, onClose, onSaved }: Props) {
                     className={`chip-toggle ${
                       an
                         ? 'border-accent bg-accent text-white'
-                        : 'border-stone-300 bg-white text-stone-700'
+                        : 'border-stone-300 bg-control text-stone-700'
                     }`}
                   >
                     {c.name}

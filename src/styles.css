@@ -32,6 +32,9 @@
   --color-stone-200: #d3c4b0;
   --color-stone-300: #a08f7c;
   --color-stone-400: #827061;
+  /* Fläche für Bedienelemente auf Karten (sekundäre Buttons, Segmentwahl).
+     Muss sich in beiden Themes von der Karte abheben. */
+  --color-control: #efe8dd;
   --color-stone-500: #7d6d5c;
   --color-stone-600: #5f5145;
   --color-stone-700: #4a3f36;
@@ -66,8 +69,10 @@
   .btn-primary {
     @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-sm hover:bg-accent-strong active:bg-accent-deep disabled:opacity-50;
   }
+  /* Eigene Fläche statt Kartenfarbe: Vorher war der Button im Hellen wie im
+     Dunklen unsichtbar, weil er dieselbe Fläche wie die Karte hatte. */
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100;
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-300 bg-control px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-200;
   }
   .btn-danger {
     @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100;
@@ -154,6 +159,7 @@ html {
   --color-stone-200: #574b3e;
   --color-stone-300: #7d6d5c;
   --color-stone-400: #9c8d7d;
+  --color-control: #3d342b;
   --color-stone-500: #a99a8b;
   --color-stone-600: #c4b6a7;
   --color-stone-700: #d8ccbf;

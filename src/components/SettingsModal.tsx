@@ -113,7 +113,7 @@ function ThemePicker({
       <div
         role="radiogroup"
         aria-label="Design"
-        className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-stone-100 p-1"
+        className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-control p-1"
       >
         {THEME_OPTIONS.map((o) => {
           const active = o.value === value;
@@ -288,7 +288,7 @@ export default function SettingsModal({
                       className={`chip-toggle ${
                         an
                           ? 'border-accent bg-accent text-white'
-                          : 'border-stone-300 bg-white text-stone-700'
+                          : 'border-stone-300 bg-control text-stone-700'
                       }`}
                     >
                       {tag.label}
