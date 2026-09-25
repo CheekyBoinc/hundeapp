@@ -14,17 +14,24 @@
   --color-accent-soft: #ffedd5;
   --color-accent-tint: #fff7ed;
   --color-accent-mid: #fb923c;
-  --color-accent-ring: #fed7aa;
+  /* Fokusring: muss sich gegen die Fläche abheben (mindestens 3:1). */
+  --color-accent-ring: #b5561a;
+  /* Text auf gefüllten Akzentflächen. Der Akzent ist in beiden Themes
+     derselbe, deshalb ist diese Farbe bewusst kein Theme-Token, das kippt. */
+  --color-on-accent: #221a14;
   --color-surface: #faf7f2;
 
   /* Papier statt Weiß, Sand statt Grau: Tailwinds Stone-Palette wird warm
-     umgedeutet, damit jede Karte und Linie zum Feldbuch passt. */
+     umgedeutet, damit jede Karte und Linie zum Feldbuch passt.
+     Achtung: --color-white ist die Kartenfläche, nicht die Farbe Weiß —
+     im Dunkelmodus wird daraus ein Braun. Für Text auf farbigen Flächen
+     deshalb --color-on-accent oder ein eigenes Token benutzen. */
   --color-white: #fffdf8;
   --color-stone-50: #f7f2ea;
   --color-stone-100: #efe8dd;
-  --color-stone-200: #e4dacb;
-  --color-stone-300: #d2c5b2;
-  --color-stone-400: #a08f7c;
+  --color-stone-200: #d3c4b0;
+  --color-stone-300: #a08f7c;
+  --color-stone-400: #827061;
   --color-stone-500: #7d6d5c;
   --color-stone-600: #5f5145;
   --color-stone-700: #4a3f36;
@@ -54,8 +61,10 @@
   select.input {
     @apply h-11;
   }
+  /* Beschriftung in Tinte statt Papierweiß: Weiß auf Terracotta erreicht nur
+     2,78:1, Tinte 6,07:1 (Hover 4,58:1). */
   .btn-primary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-strong active:bg-accent-deep disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-sm hover:bg-accent-strong active:bg-accent-deep disabled:opacity-50;
   }
   .btn-secondary {
     @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100;
@@ -76,8 +85,10 @@
     @apply border-l-2 border-accent pl-3 text-sm italic leading-relaxed text-accent-dark;
     font-family: var(--font-serif);
   }
+  /* Kleinste Stufe bewusst kleiner und weiter gesperrt, damit die Schriftskala
+     unten klar gestuft ist (11 / 14 / 16 statt 12 / 14 / 16). */
   .label {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-stone-500;
+    @apply mb-1 block text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-stone-600;
   }
   .chip {
     @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-medium;
@@ -140,9 +151,9 @@ html {
   --color-surface: #231d19;
   --color-stone-50: #171311;
   --color-stone-100: #2c251f;
-  --color-stone-200: #433930;
-  --color-stone-300: #50453b;
-  --color-stone-400: #8f8072;
+  --color-stone-200: #574b3e;
+  --color-stone-300: #7d6d5c;
+  --color-stone-400: #9c8d7d;
   --color-stone-500: #a99a8b;
   --color-stone-600: #c4b6a7;
   --color-stone-700: #d8ccbf;
@@ -152,7 +163,8 @@ html {
   --color-accent-soft: #4a2a14;
   --color-accent-tint: #2a1d14;
   --color-accent-dark: #fdba74;
-  --color-accent-ring: #7c3a12;
+  --color-accent-ring: #fdba74;
+  --color-on-accent: #221a14;
 
   --color-emerald-50: #1b2417;
   --color-emerald-100: #27351f;
