@@ -13,6 +13,9 @@ const STALE_MS = 12 * 60 * 60 * 1000;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 let lastPlanned = 0;
+// Zeichenkette des zuletzt erfolgreich eingeplanten Plans. Liegt nur im
+// Speicher: Nach einem Neustart ist unklar, was das System noch kennt.
+let lastPlanKey: string | null = null;
 let laufend: Promise<void> | null = null;
 let erneut = false;
 
@@ -21,6 +24,13 @@ async function plan(): Promise<void> {
     // Erst planen, dann aufräumen: Geht das Planen schief, bleiben die
     // bisherigen Erinnerungen bestehen, statt dass der Nutzer ohne dasteht.
     const neu = planReminders(loadState(), loadSettings(), new Date());
+    // Nach id sortiert vergleichen: planReminders folgt der gespeicherten
+    // Listenreihenfolge, die sich nach einem Abgleich ändern kann.
+    const schluessel = JSON.stringify([...neu].sort((a, b) => a.id - b.id));
+    if (schluessel === lastPlanKey) {
+      lastPlanned = Date.now();
+      return;
+    }
     if (neu.length > 0) await LocalNotifications.schedule({ notifications: neu });
     const neueIds = new Set(neu.map((n) => n.id));
     const alte = await LocalNotifications.getPending();
@@ -30,8 +40,12 @@ async function plan(): Promise<void> {
         notifications: ueberzaehlig.map((n) => ({ id: n.id }))
       });
     }
+    lastPlanKey = schluessel;
     lastPlanned = Date.now();
   } catch {
+    // Nach einem Fehler ist unklar, was das System wirklich kennt: Der nächste
+    // Lauf plant wieder vollständig.
+    lastPlanKey = null;
     // Ein Fehler darf die App nicht stören, aber auch nicht stumm bleiben.
     notifyNotice('Erinnerungen konnten nicht geplant werden.');
   }
@@ -61,9 +75,20 @@ export function rescheduleReminders(): void {
   timer = setTimeout(anstossen, DEBOUNCE_MS);
 }
 
+// Verwirft den gemerkten Plan. Beim Zurückkehren in die App und vor einer
+// neuen Planung nach langer Pause: Auf iOS meldet das Plugin 'schedule' als
+// erfolgreich, bevor das System die Benachrichtigung angenommen hat, und der
+// Nutzer kann Mitteilungen außerhalb der App umstellen.
+export function forgetReminderPlan(): void {
+  lastPlanKey = null;
+}
+
 // Beim Zurückkehren in die App: nur, wenn die letzte Planung lange her ist.
 export function rescheduleIfStale(): void {
-  if (Date.now() - lastPlanned > STALE_MS) rescheduleReminders();
+  if (Date.now() - lastPlanned > STALE_MS) {
+    forgetReminderPlan();
+    rescheduleReminders();
+  }
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {

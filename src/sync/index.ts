@@ -28,10 +28,14 @@ export async function setProvider(next: Provider): Promise<void> {
 
 // Einmalig vor dem ersten Render aufrufen.
 export async function initSync(): Promise<void> {
-  await initConfig();
-  await initCloud().catch(() => undefined);
-
-  const stored = (await Preferences.get({ key: PROVIDER_KEY })).value;
+  // Die drei Lesevorgänge sind unabhängig voneinander; zusammen spart das die
+  // Wege zwischen JS und nativer Seite. Die nativen Aufrufe selbst laufen dort
+  // ohnehin nacheinander.
+  const [, , { value: stored }] = await Promise.all([
+    initConfig(),
+    initCloud().catch(() => undefined),
+    Preferences.get({ key: PROVIDER_KEY })
+  ]);
   provider = stored === 'cloud' && cloudAvailable ? 'cloud' : 'github';
   setActiveBackend(provider === 'cloud' ? cloudBackend : githubBackend);
 }

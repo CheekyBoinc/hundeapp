@@ -1,10 +1,15 @@
 import * as local from './localStore';
+import { rescheduleReminders } from './notify';
 import { maybeRequestReview } from './review';
 import { schedulePush } from './sync';
 import type { Command, DogProfile, Entry } from './types';
 
 function afterMutation() {
   schedulePush();
+  // Ohne Sync tut schedulePush nichts. Die Erinnerungen müssen trotzdem neu
+  // geplant werden, sonst erscheint eine neue Fälligkeit erst nach einem
+  // Neustart der App.
+  rescheduleReminders();
 }
 
 // Hüllt eine lokale Mutation ein und stößt danach den Sync an.

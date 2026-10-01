@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { messe, zaehle } from './perf';
 import { onChange } from './sync';
 
 const STORAGE_PREFIX = 'hundeapp.';
@@ -11,7 +12,12 @@ export function useLiveReload(reload: () => void) {
   }, [reload]);
 
   useEffect(() => {
-    const fire = () => reloadRef.current();
+    // Mess-Build: Wie oft lädt dieser Hook wirklich, und wie lange dauert das?
+    // Erst damit lässt sich entscheiden, ob eine Entprellung nötig ist.
+    const fire = () => {
+      zaehle('reload');
+      messe('reload', () => reloadRef.current());
+    };
     const onStorage = (e: StorageEvent) => {
       if (!e.key || e.key.startsWith(STORAGE_PREFIX)) fire();
     };

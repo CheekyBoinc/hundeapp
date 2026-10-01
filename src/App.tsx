@@ -20,6 +20,7 @@ import {
 } from './sync';
 import AccountSetup from './components/AccountSetup';
 import {
+  forgetReminderPlan,
   onNotificationTab,
   requestNotificationPermission,
   rescheduleIfStale,
@@ -161,7 +162,12 @@ export default function App() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) rescheduleIfStale();
+      if (isActive) {
+        // Was das System an Erinnerungen noch kennt, ist nach der Zeit im
+        // Hintergrund nicht sicher bekannt.
+        forgetReminderPlan();
+        rescheduleIfStale();
+      }
     });
     return () => {
       void handle.then((h) => h.remove());

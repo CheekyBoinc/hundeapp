@@ -11,7 +11,15 @@ interface ImportMetaEnv {
   readonly VITE_CLOUD_SYNC?: string;
   // Nur für Test-Builds: blendet die Test-Erinnerung in den Einstellungen ein.
   readonly VITE_DEBUG_REMINDERS?: string;
+  // Nur für Mess-Builds: schaltet die Messhilfen in src/perf.ts und
+  // src/perfStart.ts ein (siehe docs/entwicklung.md).
+  readonly VITE_DEBUG_PERF?: string;
 }
+
+// Marke aus src/perfStart.ts. Muss "var" sein: Bei "declare const" scheitert
+// tsc an der Zuweisung über globalThis (TS7017).
+// eslint-disable-next-line no-var
+declare var __perfStart: number | undefined;
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;

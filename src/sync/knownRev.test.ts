@@ -182,7 +182,7 @@ describe('Revisionsmarke des Dienstes', () => {
     const backend: SyncBackend = {
       id: 'github',
       isConfigured: () => true,
-      // Wie GitHub: knownRev wird ignoriert, es kommt nie 'unchanged'.
+      // Backend ohne Revisionsabkürzung: knownRev wird ignoriert.
       fetch: async (knownRev) => {
         calls.push(knownRev);
         return { rev, state: stand };

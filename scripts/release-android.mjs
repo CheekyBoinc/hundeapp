@@ -52,22 +52,29 @@ if (!eintragText.includes(`## Versionshinweise für Release ${nextName}`)) {
   console.log(`\nHinweis: In store/store-eintrag.md fehlen die Versionshinweise für ${nextName}.`);
 }
 
-if (dryRun) {
-  console.log('Probelauf: nichts geändert, nichts gebaut.');
-  process.exit(0);
-}
-
-// Die Test-Erinnerung darf nie in einen Store-Build geraten. Vite liest außer
-// .env auch .env.local und .env.production*, deshalb werden alle geprüft.
+// Mess- und Test-Schalter dürfen nie in einen Store-Build geraten. Vite liest
+// außer .env auch .env.local und .env.production*, deshalb werden alle geprüft.
+// Steht vor dem Probelauf, damit auch der sie meldet.
 const envText = readdirSync(root)
   .filter((name) => name.startsWith('.env') && name !== '.env.test')
   .map((name) => readFileSync(join(root, name), 'utf8'))
   .join('\n');
-if (process.env.VITE_DEBUG_REMINDERS || /^VITE_DEBUG_REMINDERS=/m.test(envText)) {
+const debugSchalter = [
+  ...new Set([
+    ...Object.keys(process.env).filter((k) => /^VITE_DEBUG_/.test(k)),
+    ...[...envText.matchAll(/^(VITE_DEBUG_\w*)=/gm)].map((m) => m[1])
+  ])
+];
+if (debugSchalter.length > 0) {
   console.error(
-    'VITE_DEBUG_REMINDERS ist gesetzt. Bitte entfernen; die Test-Erinnerung gehört nicht in einen Release.'
+    `${debugSchalter.join(', ')} ist gesetzt. Bitte entfernen; Mess- und Test-Schalter gehören nicht in einen Release.`
   );
   process.exit(1);
+}
+
+if (dryRun) {
+  console.log('Probelauf: nichts geändert, nichts gebaut.');
+  process.exit(0);
 }
 
 writeFileSync(

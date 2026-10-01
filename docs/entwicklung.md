@@ -181,3 +181,27 @@ Nutzungsbedingungen und Kontolöschung. Diese Seiten müssen erreichbar bleiben,
 weil beide Stores sie verlangen. GitHub Pages braucht dafür ein öffentliches
 Repo; soll das Repo privat werden, veröffentlicht `site/` stattdessen über
 Cloudflare Pages, Netlify oder Vercel.
+
+## Mess-Build und Mess-Schalter
+
+Für Messungen am Gerät gibt es einen eigenen Build-Modus. Er schaltet die
+Messhilfen in `src/perf.ts` und `src/perfStart.ts` ein (Marken nach
+`console.info`, sichtbar in Logcat unter dem Tag `Capacitor/Console`):
+
+```sh
+VITE_DEBUG_PERF=1 npx vite build --mode perf && npx cap sync
+```
+
+Danach einen Debug-Build aufs Gerät bringen; der Mess-Modus `perf` bleibt
+erlaubt, `production` nicht. Zwei Sperren verhindern, dass ein Schalter
+ausgeliefert wird: `guardDebugReminders` in `vite.config.ts` prüft im Modus
+`production` alle Variablen mit Präfix `VITE_DEBUG_` aus der Umgebung und aus
+den `.env*`-Dateien, und `scripts/release-android.mjs` bricht bei jedem solchen
+Schalter ab, auch im Probelauf.
+
+Gemessen wird der Kaltstart über fünf Läufe (Median), den ersten Lauf nach einer
+Installation verwerfen. Die Marken sind `bisStart`, `modulstart`, `init` und
+`render`; daraus ergeben sich `auswerten`, `initDauer`, `renderDauer` und
+`gesamt`. Auf Android kommt `chunk` aus dem Resource Timing hinzu, auf iOS
+gibt es dafür keine Einträge. Den nativen Teil vor der Navigation misst
+`adb shell am start -S -W de.cloudplay.hundeapp/.MainActivity` (`TotalTime`).

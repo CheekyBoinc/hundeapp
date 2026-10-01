@@ -28,6 +28,17 @@ interface SyncConfig {
 
 let configCache: SyncConfig | null = null;
 
+// Zuletzt gesehener Stand auf dem Server: GitHubs Blob-sha und der ETag der
+// Antwort. Mit beidem fragt der Abruf bedingt an und bekommt bei unverändertem
+// Stand eine 304 ohne Daten. Beides liegt nur im Speicher.
+let knownSha: string | null = null;
+let knownEtag: string | null = null;
+
+function forgetRemoteMarkers(): void {
+  knownSha = null;
+  knownEtag = null;
+}
+
 function parseConfig(raw: string | null | undefined): SyncConfig | null {
   if (!raw) return null;
   try {
@@ -75,11 +86,13 @@ function getConfig(): SyncConfig | null {
 
 export function setConfig(cfg: SyncConfig) {
   configCache = cfg;
+  forgetRemoteMarkers();
   void writeStored(CONFIG_KEY, JSON.stringify(cfg)).catch(() => undefined);
 }
 
 export function clearConfig() {
   configCache = null;
+  forgetRemoteMarkers();
   void removeStored(CONFIG_KEY).catch(() => undefined);
 }
 
@@ -142,19 +155,44 @@ function headers(cfg: SyncConfig): Record<string, string> {
   };
 }
 
-async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncState } | null> {
+async function fetchFile(
+  cfg: SyncConfig,
+  knownRev?: string
+): Promise<{ sha: string; state: SyncState } | 'unchanged' | null> {
   // GitHub darf Antworten 60 Sekunden zwischenspeichern (Cache-Control);
   // ein Abruf für den Abgleich darf aber nie aus dem Cache kommen.
-  const res = await safeFetch(apiBase(cfg), { headers: headers(cfg), cache: 'no-store' });
+  // Bedingt nur, wenn ein ETag vorliegt und der Aufrufer genau den Stand kennt,
+  // den wir zuletzt gesehen haben. If-None-Match gehört nur hierher: Der PUT
+  // darf den Header nicht tragen, sonst könnte er mit 412 scheitern.
+  const kopf: Record<string, string> = headers(cfg);
+  const bedingt = knownEtag !== null && knownRev !== undefined && knownRev === knownSha;
+  if (bedingt && knownEtag) kopf['If-None-Match'] = knownEtag;
+  let res: Response;
+  try {
+    res = await safeFetch(apiBase(cfg), { headers: kopf, cache: 'no-store' });
+  } catch (err) {
+    // Die bedingte Anfrage hat nicht getragen: nächstes Mal wieder ohne.
+    knownEtag = null;
+    throw err;
+  }
+  // 304 ist nicht res.ok und wird deshalb vor der Fehlerbehandlung geprüft.
+  if (res.status === 304) return 'unchanged';
   if (res.status === 404) return null;
-  if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
+  if (!res.ok) {
+    knownEtag = null;
+    throw new SyncError(friendlyHttpError(res.status));
+  }
   const json = await res.json();
   let state: SyncState;
   try {
     state = sanitizeState(JSON.parse(b64decode(json.content)));
   } catch {
+    knownEtag = null;
     throw new SyncError('Die Datei konnte nicht gelesen werden (Formatfehler).');
   }
+  knownSha = json.sha;
+  // Ohne ETag bleibt er leer; dann fragt der nächste Abruf ohne Bedingung.
+  knownEtag = res.headers.get('ETag');
   return { sha: json.sha, state };
 }
 
@@ -189,7 +227,12 @@ async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise
   }
   if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
   const json = (await res.json().catch(() => null)) as { content?: { sha?: string } } | null;
-  return json?.content?.sha ?? sha ?? '';
+  const neueRev = json?.content?.sha ?? sha ?? '';
+  // Der Blob-sha hängt am Inhalt, deshalb passt der ETag immer dazu: Eine 304
+  // kommt nur, wenn der Server genau auf diesem Inhalt steht.
+  knownSha = neueRev || null;
+  knownEtag = neueRev ? `"${neueRev}"` : null;
+  return neueRev;
 }
 
 export async function validateConfig(cfg: SyncConfig): Promise<void> {
@@ -205,12 +248,13 @@ export async function validateConfig(cfg: SyncConfig): Promise<void> {
 export const githubBackend: SyncBackend = {
   id: 'github',
   isConfigured,
-  // GitHub kennt keine Revisionsmarke: knownRev wird ignoriert, es kommt nie
-  // 'unchanged' zurück.
-  fetch: async () => {
+  // Bedingte Anfrage: Kennt der Aufrufer den zuletzt gesehenen sha und liegt ein
+  // ETag vor, antwortet GitHub bei unverändertem Stand mit 304 statt mit Daten.
+  fetch: async (knownRev) => {
     const cfg = getConfig();
     if (!cfg) return null;
-    const file = await fetchFile(cfg);
+    const file = await fetchFile(cfg, knownRev);
+    if (file === 'unchanged') return 'unchanged';
     return file ? { rev: file.sha, state: file.state } : null;
   },
   put: async (state, rev) => {
