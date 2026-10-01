@@ -472,8 +472,15 @@ export function mergeStates(local: SyncState, remote: SyncState): SyncState {
   };
 }
 
+// Vergleichsschlüssel eines Zustands: sortierte Listen und sortierte
+// Objektschlüssel (siehe normalize/stableStringify). Zwei Zustände sind genau
+// dann gleich, wenn ihre Schlüssel gleich sind.
+function keyOf(s: SyncState): string {
+  return stableStringify(normalize(s));
+}
+
 export function areEqual(a: SyncState, b: SyncState): boolean {
-  return stableStringify(normalize(a)) === stableStringify(normalize(b));
+  return keyOf(a) === keyOf(b);
 }
 
 // JSON mit sortierten Objektschlüsseln. Lokal erzeugte Objekte und die per
@@ -605,8 +612,18 @@ let activeBackend: SyncBackend | null = null;
 // Anmeldung, deshalb wird sie beim Wechsel zurückgesetzt.
 let lastServerRev: string | null = null;
 
+// Vergleichsschlüssel des zuletzt gesehenen Serverstands (siehe keyOf). Damit
+// erkennt pushNow, ob über die letzte Revision hinaus lokal etwas dazugekommen
+// ist. Er beschreibt immer den Stand auf dem Server, nie den lokal
+// gespeicherten: persistMerged mischt Änderungen ein, die während der Anfrage
+// entstanden sind und deshalb noch hochgeladen werden müssen.
+let lastServerKey: string | null = null;
+
 export function setActiveBackend(backend: SyncBackend | null): void {
-  if (backend !== activeBackend) lastServerRev = null;
+  if (backend !== activeBackend) {
+    lastServerRev = null;
+    lastServerKey = null;
+  }
   activeBackend = backend;
 }
 
@@ -642,15 +659,25 @@ export function schedulePush() {
   }, 1200);
 }
 
-// Holt den Serverstand. 'unchanged' meldet ein Backend, wenn der Server bereits
-// auf der zuletzt gesehenen Revision steht und deshalb keine Daten geschickt hat.
-async function fetchRemote(
-  backend: SyncBackend
-): Promise<{ rev: string; state: SyncState } | null> {
+// Holt den Serverstand. Die drei Ergebnisse sind bewusst unterscheidbar:
+// 'unchanged' heißt „steht auf der zuletzt gesehenen Revision" (es wurden keine
+// Daten übertragen), 'none' heißt „es gibt noch keinen Stand", 'state' bringt
+// den vollständigen Stand samt Revision. Revision und Schlüssel werden nur bei
+// 'state' bzw. 'none' nachgeführt; bei 'unchanged' bleiben sie stehen.
+type RemoteResult =
+  { kind: 'unchanged' } | { kind: 'none' } | { kind: 'state'; rev: string; state: SyncState };
+
+async function fetchRemote(backend: SyncBackend): Promise<RemoteResult> {
   const result = await backend.fetch(lastServerRev ?? undefined);
-  if (result === 'unchanged') return null;
-  lastServerRev = result?.rev ?? null;
-  return result;
+  if (result === 'unchanged') return { kind: 'unchanged' };
+  if (!result) {
+    lastServerRev = null;
+    lastServerKey = null;
+    return { kind: 'none' };
+  }
+  lastServerRev = result.rev;
+  lastServerKey = keyOf(result.state);
+  return { kind: 'state', rev: result.rev, state: result.state };
 }
 
 // Nach dem Netzwerk-Roundtrip den aktuellen lokalen Stand erneut einmischen,
@@ -674,9 +701,14 @@ export async function pushNow(): Promise<void> {
       if (attempt > 0) {
         currentRemote = await fetchRemote(backend);
       }
-      const remote = currentRemote?.state ?? emptyState();
+      const remote = currentRemote.kind === 'state' ? currentRemote.state : emptyState();
       const merged = mergeStates(loadState(), remote);
-      if (currentRemote && areEqual(remote, merged)) {
+      if (currentRemote.kind === 'unchanged' && keyOf(merged) === lastServerKey) {
+        // Nichts zu tun: Der Server steht auf der zuletzt gesehenen Revision,
+        // und lokal ist seither nichts dazugekommen.
+        return;
+      }
+      if (currentRemote.kind === 'state' && areEqual(currentRemote.state, merged)) {
         // Keine Änderung gegenüber dem Server – nur lokale Konvergenz sicherstellen.
         persistMerged(merged);
         return;
@@ -685,7 +717,13 @@ export async function pushNow(): Promise<void> {
         // Vor dem Hochladen noch einmal prüfen: Was die Prüfung nicht passiert,
         // darf auch nicht auf dem Server landen.
         const sauber = sanitizeState(merged);
-        lastServerRev = await backend.put(sauber, currentRemote?.rev);
+        // Bei 'unchanged' hat das Backend keine Daten geschickt; die Revision
+        // stammt dann aus dem letzten vollständigen Abruf oder Upload.
+        const rev =
+          currentRemote.kind === 'state' ? currentRemote.rev : (lastServerRev ?? undefined);
+        lastServerRev = await backend.put(sauber, rev);
+        // Der Schlüssel beschreibt, was jetzt auf dem Server liegt.
+        lastServerKey = keyOf(sauber);
         persistMerged(sauber);
         return;
       } catch (err) {
@@ -715,7 +753,7 @@ export async function pullNow(): Promise<SyncState> {
     const backend = activeBackend;
     if (!backend?.isConfigured()) return loadState();
     const result = await fetchRemote(backend);
-    if (result === null) return loadState();
+    if (result.kind !== 'state') return loadState();
     const merged = pruneStaleTombstones(mergeStates(loadState(), result.state));
     saveState(merged);
     notifyChanged();

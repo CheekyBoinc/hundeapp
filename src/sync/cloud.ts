@@ -79,7 +79,7 @@ async function api(path: string, init: RequestInit = {}, token?: string): Promis
   };
   if (token) headers.Authorization = `Bearer ${token}`;
   try {
-    return await fetch(`${url}${path}`, { ...init, headers });
+    return await fetch(`${url}${path}`, { ...init, headers, cache: 'no-store' });
   } catch {
     throw new SyncError('Keine Verbindung – bitte Internetverbindung prüfen.');
   }
@@ -95,7 +95,10 @@ export async function requestCode(email: string): Promise<void> {
   });
   if (res.ok) return;
 
-  const body = (await res.json().catch(() => null)) as { msg?: string; error_description?: string } | null;
+  const body = (await res.json().catch(() => null)) as {
+    msg?: string;
+    error_description?: string;
+  } | null;
   const message = `${body?.msg ?? ''} ${body?.error_description ?? ''}`;
   if (/rate|too many/i.test(message)) {
     throw new SyncError('Zu viele Anfragen. Bitte kurz warten und erneut versuchen.');
@@ -169,7 +172,11 @@ async function token(): Promise<string> {
     await saveSession(null);
     throw new SyncError('Die Anmeldung ist abgelaufen. Bitte neu anmelden.');
   }
-  const data = (await res.json()) as { access_token: string; refresh_token: string; expires_in?: number };
+  const data = (await res.json()) as {
+    access_token: string;
+    refresh_token: string;
+    expires_in?: number;
+  };
   await saveSession({
     ...current,
     accessToken: data.access_token,
@@ -251,7 +258,8 @@ export const cloudBackend: SyncBackend = {
     }
 
     const next = (await res.json()) as number | null;
-    if (next === null) throw new SyncConflictError('Der Stand wurde auf einem anderen Gerät geändert.');
+    if (next === null)
+      throw new SyncConflictError('Der Stand wurde auf einem anderen Gerät geändert.');
     return String(next);
   },
 

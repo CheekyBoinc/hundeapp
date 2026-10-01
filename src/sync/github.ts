@@ -143,7 +143,9 @@ function headers(cfg: SyncConfig): Record<string, string> {
 }
 
 async function fetchFile(cfg: SyncConfig): Promise<{ sha: string; state: SyncState } | null> {
-  const res = await safeFetch(apiBase(cfg), { headers: headers(cfg) });
+  // GitHub darf Antworten 60 Sekunden zwischenspeichern (Cache-Control);
+  // ein Abruf für den Abgleich darf aber nie aus dem Cache kommen.
+  const res = await safeFetch(apiBase(cfg), { headers: headers(cfg), cache: 'no-store' });
   if (res.status === 404) return null;
   if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
   const json = await res.json();
@@ -193,7 +195,7 @@ async function putFile(cfg: SyncConfig, state: SyncState, sha?: string): Promise
 export async function validateConfig(cfg: SyncConfig): Promise<void> {
   const res = await safeFetch(
     `https://api.github.com/repos/${encodeURIComponent(cfg.user)}/${encodeURIComponent(cfg.repo)}`,
-    { headers: headers(cfg) }
+    { headers: headers(cfg), cache: 'no-store' }
   );
   if (!res.ok) throw new SyncError(friendlyHttpError(res.status));
 }
