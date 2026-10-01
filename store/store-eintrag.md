@@ -120,6 +120,13 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.5.9
+
+<de-DE>
+Behoben: Beim Abgleich über den Hundeapp-Sync wurden Änderungen nach dem ersten
+Abgleich erst beim nächsten App-Start hochgeladen, dazu erschien eine Fehlermeldung.
+</de-DE>
+
 ## Versionshinweise für Release 1.5.8
 
 <de-DE>
