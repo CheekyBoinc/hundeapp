@@ -120,6 +120,15 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.6.0
+
+<de-DE>
+Schnellerer Start und sparsamerer Abgleich: Unveränderte Stände werden beim
+GitHub-Abgleich nicht mehr vollständig geladen. Nicht benötigte Teile des
+PDF-Berichts sind nicht mehr enthalten, das App-Paket ist rund 400 kB kleiner.
+Behoben: Ohne Sync wurden Erinnerungen erst nach einem Neustart neu geplant.
+</de-DE>
+
 ## Versionshinweise für Release 1.5.9
 
 <de-DE>
