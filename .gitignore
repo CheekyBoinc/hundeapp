@@ -2,6 +2,7 @@ node_modules
 dist
 .env*
 !.env.test
+!.env.example
 .DS_Store
 .commandcode/
 # Debug-Screenshots

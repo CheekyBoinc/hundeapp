@@ -10,6 +10,7 @@ import { formatDateShort, formatDayMonth } from '../utils';
 import EntryDetail from './EntryDetail';
 import EntryModal from './EntryModal';
 import Modal from './Modal';
+import ErrorBanner from './ErrorBanner';
 
 const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const MONTHS = [
@@ -176,14 +177,7 @@ export default function CalendarPage({ showRemindHint, onRemind, onDismissRemind
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>
-            Erneut versuchen
-          </button>
-        </div>
-      )}
+      <ErrorBanner error={error} onRetry={load} />
 
       {loading ? (
         <p className="py-10 text-center text-stone-500">Wird geladen…</p>

@@ -27,6 +27,7 @@ export default function ExportMenu({ dog, onClose }: Props) {
   const [commands, setCommands] = useState<Awaited<ReturnType<typeof fetchCommands>>>([]);
   const [weights, setWeights] = useState<Awaited<ReturnType<typeof fetchWeights>>>([]);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,8 +56,13 @@ export default function ExportMenu({ dog, onClose }: Props) {
 
   async function run(fn: () => void | Promise<void>) {
     setBusy(true);
+    setError(null);
     try {
       await fn();
+    } catch (err) {
+      // Ein abgebrochenes Teilen fängt saveFile schon ab; was hier ankommt,
+      // ist ein echter Fehler und soll sichtbar sein.
+      setError(err instanceof Error ? err.message : 'Export fehlgeschlagen.');
     } finally {
       setBusy(false);
     }
@@ -64,6 +70,14 @@ export default function ExportMenu({ dog, onClose }: Props) {
 
   return (
     <Modal title={`Export – ${dog.name}`} onClose={onClose}>
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
+        >
+          Export fehlgeschlagen: {error}
+        </div>
+      )}
       <div className="space-y-3">
         <div>
           <p className="label">CSV (Excel / Sheets)</p>

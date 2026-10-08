@@ -6,6 +6,7 @@ import { formatDateShort } from '../utils';
 import StoolModal from './StoolModal';
 import DateStamp from './DateStamp';
 import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
+import ErrorBanner from './ErrorBanner';
 
 interface Props {
   dogId: string;
@@ -66,14 +67,7 @@ export default function StoolTab({ dogId }: Props) {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>
-            Erneut versuchen
-          </button>
-        </div>
-      )}
+      <ErrorBanner error={error} onRetry={load} />
 
       {loading ? (
         <p className="py-8 text-center text-stone-500">Wird geladen…</p>

@@ -27,7 +27,7 @@ im Skript festgenagelt (3.0.5); der Aufruf holt sie bei Bedarf aus der Registry.
 ## Zugangsdaten des Sync-Dienstes
 
 Der Abgleich über den Dienst läuft über ein Supabase-Projekt. Zwei Werte landen
-im Build und stehen deshalb in `.env` (nicht im Repo):
+im Build und stehen deshalb in `.env` (nicht im Repo; Vorlage: `.env.example`):
 
 ```
 VITE_SUPABASE_URL=https://<projekt>.supabase.co
@@ -171,6 +171,17 @@ Release:
 
 Version und Build stehen in `ios/App/App.xcodeproj/project.pbxproj`. Das Paket
 nutzt Swift Package Manager, CocoaPods ist nicht nötig.
+
+## Lizenzen
+
+Der eigene Code steht unter „Alle Rechte vorbehalten" (`LICENSE`,
+`package.json`: `UNLICENSED`). Die Lizenzen der Open-Source-Bausteine sammelt
+beim Build das Plugin `thirdPartyLicenses` in `vite.config.ts`: alle Pakete, die
+im Bundle landen, dazu `@capacitor/android` und `@capacitor/ios` und ein Abschnitt
+für die Android-Bibliotheken von Google (Apache-2.0). Das Ergebnis liegt als
+`dist/licenses.txt` neben der App und erscheint unter „Einstellungen → Über die
+App → Lizenzen". Kommt ein neues Paket dazu, steht es nach dem nächsten Build
+automatisch darin.
 
 ## Rechtsseiten und Hosting
 

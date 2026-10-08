@@ -11,6 +11,7 @@ import {
 } from '../backup';
 import { Capacitor } from '@capacitor/core';
 import { notificationsAllowed, requestNotificationPermission, sendTestReminder } from '../notify';
+import LicensesModal from './LicensesModal';
 import Modal from './Modal';
 import { CoffeeIcon } from './NavIcons';
 
@@ -165,6 +166,7 @@ export default function SettingsModal({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [showLicenses, setShowLicenses] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const activeCloud = provider === 'cloud' && configured;
@@ -240,267 +242,289 @@ export default function SettingsModal({
   }
 
   return (
-    <Modal title="Einstellungen" onClose={onClose}>
-      <div className="space-y-5">
-        <Section title="Darstellung">
-          <ThemePicker
-            value={settings.theme}
-            onChange={(t) => onChange({ ...settings, theme: t })}
-          />
-          <Toggle
-            label="Buttons oben anzeigen"
-            hint="Einträge / Kommandos oben statt unten"
-            value={settings.navTop}
-            onToggle={() => onChange({ ...settings, navTop: !settings.navTop })}
-          />
-          <Toggle
-            label="Kopfzeile kompakt"
-            hint="App-Name und Untertitel ausblenden"
-            value={!settings.headerText}
-            onToggle={() => onChange({ ...settings, headerText: !settings.headerText })}
-          />
-        </Section>
+    <>
+      <Modal title="Einstellungen" onClose={onClose}>
+        <div className="space-y-5">
+          <Section title="Darstellung">
+            <ThemePicker
+              value={settings.theme}
+              onChange={(t) => onChange({ ...settings, theme: t })}
+            />
+            <Toggle
+              label="Buttons oben anzeigen"
+              hint="Einträge / Kommandos oben statt unten"
+              value={settings.navTop}
+              onToggle={() => onChange({ ...settings, navTop: !settings.navTop })}
+            />
+            <Toggle
+              label="Kopfzeile kompakt"
+              hint="App-Name und Untertitel ausblenden"
+              value={!settings.headerText}
+              onToggle={() => onChange({ ...settings, headerText: !settings.headerText })}
+            />
+          </Section>
 
-        <Section title="Erinnerungen">
-          <Toggle
-            label="Fällige Impfungen, Vorsorge und Tierarzttermine"
-            hint="Sieben Tage vorher und am Tag selbst, morgens um 9 Uhr"
-            value={settings.remindHealth}
-            onToggle={() => void enableReminders('health')}
-          />
-          <Toggle
-            label="Übungserinnerung"
-            hint="Erinnert an die Aufgaben aus der letzten Stunde"
-            value={settings.remindTraining}
-            onToggle={() => void enableReminders('training')}
-          />
-          {settings.remindTraining && (
-            <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-              <span className="label">Wochentage</span>
-              <div className="flex flex-wrap gap-2">
-                {WEEKDAYS.map((tag) => {
-                  const an = settings.trainingDays.includes(tag.value);
-                  return (
-                    <button
-                      key={tag.value}
-                      type="button"
-                      onClick={() => toggleDay(tag.value)}
-                      className={`chip-toggle ${
-                        an
-                          ? 'border-accent bg-accent text-white'
-                          : 'border-stone-300 bg-control text-stone-700'
-                      }`}
-                    >
-                      {tag.label}
-                    </button>
-                  );
-                })}
+          <Section title="Erinnerungen">
+            <Toggle
+              label="Fällige Impfungen, Vorsorge und Tierarzttermine"
+              hint="Sieben Tage vorher und am Tag selbst, morgens um 9 Uhr"
+              value={settings.remindHealth}
+              onToggle={() => void enableReminders('health')}
+            />
+            <Toggle
+              label="Übungserinnerung"
+              hint="Erinnert an die Aufgaben aus der letzten Stunde"
+              value={settings.remindTraining}
+              onToggle={() => void enableReminders('training')}
+            />
+            {settings.remindTraining && (
+              <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+                <span className="label">Wochentage</span>
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAYS.map((tag) => {
+                    const an = settings.trainingDays.includes(tag.value);
+                    return (
+                      <button
+                        key={tag.value}
+                        type="button"
+                        onClick={() => toggleDay(tag.value)}
+                        className={`chip-toggle ${
+                          an
+                            ? 'border-accent bg-accent text-white'
+                            : 'border-stone-300 bg-control text-stone-700'
+                        }`}
+                      >
+                        {tag.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-3">
+                  <label className="label">Uhrzeit</label>
+                  <input
+                    type="time"
+                    className="input"
+                    value={settings.trainingTime}
+                    onChange={(ev) => onChange({ ...settings, trainingTime: ev.target.value })}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-stone-500">
+                  Jedes Gerät plant seine eigenen Erinnerungen.
+                </p>
               </div>
-              <div className="mt-3">
-                <label className="label">Uhrzeit</label>
+            )}
+            {DEBUG_REMINDERS && (
+              <button className="btn-secondary" onClick={() => void sendTestReminder()}>
+                Test-Erinnerung in 1 Minute
+              </button>
+            )}
+          </Section>
+
+          <Section title="Hilfe">
+            <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+              <p className="text-sm font-medium text-stone-800">Einführung und Hilfe</p>
+              <p className="mt-0.5 text-xs text-stone-500">
+                Kurze Erklärungen zu den Bereichen der App, zur Sicherung und zum Abgleich zweier
+                Handys.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className="btn-primary" onClick={onOpenHelp}>
+                  Hilfe öffnen
+                </button>
+                <button type="button" className="btn-secondary" onClick={onStartOnboarding}>
+                  Einführung erneut zeigen
+                </button>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Sicherung">
+            <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+              <p className="text-xs text-stone-500">
+                Alle Daten als Datei sichern, z. B. für den Handywechsel oder um sie einem zweiten
+                Gerät zu geben. Beim Einspielen wird zusammengeführt, nichts geht verloren.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={busy}
+                  onClick={handleExport}
+                >
+                  Sicherung erstellen
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={busy}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  Sicherung einspielen
+                </button>
                 <input
-                  type="time"
-                  className="input"
-                  value={settings.trainingTime}
-                  onChange={(ev) => onChange({ ...settings, trainingTime: ev.target.value })}
+                  ref={fileInput}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={(ev) => {
+                    const file = ev.target.files?.[0];
+                    if (file) void handleImportFile(file);
+                  }}
                 />
               </div>
-              <p className="mt-2 text-xs text-stone-500">
-                Jedes Gerät plant seine eigenen Erinnerungen.
-              </p>
+              {notice && (
+                <p
+                  className={`mt-3 rounded-lg px-3 py-2 text-xs ${
+                    notice.kind === 'ok'
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : 'bg-red-50 text-red-700'
+                  }`}
+                >
+                  {notice.text}
+                </p>
+              )}
             </div>
-          )}
-          {DEBUG_REMINDERS && (
-            <button className="btn-secondary" onClick={() => void sendTestReminder()}>
-              Test-Erinnerung in 1 Minute
-            </button>
-          )}
-        </Section>
+          </Section>
 
-        <Section title="Hilfe">
-          <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-            <p className="text-sm font-medium text-stone-800">Einführung und Hilfe</p>
-            <p className="mt-0.5 text-xs text-stone-500">
-              Kurze Erklärungen zu den Bereichen der App, zur Sicherung und zum Abgleich zweier
-              Handys.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" className="btn-primary" onClick={onOpenHelp}>
-                Hilfe öffnen
-              </button>
-              <button type="button" className="btn-secondary" onClick={onStartOnboarding}>
-                Einführung erneut zeigen
-              </button>
-            </div>
-          </div>
-        </Section>
-
-        <Section title="Sicherung">
-          <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-            <p className="text-xs text-stone-500">
-              Alle Daten als Datei sichern, z. B. für den Handywechsel oder um sie einem zweiten
-              Gerät zu geben. Beim Einspielen wird zusammengeführt, nichts geht verloren.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" className="btn-primary" disabled={busy} onClick={handleExport}>
-                Sicherung erstellen
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={busy}
-                onClick={() => fileInput.current?.click()}
-              >
-                Sicherung einspielen
-              </button>
-              <input
-                ref={fileInput}
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={(ev) => {
-                  const file = ev.target.files?.[0];
-                  if (file) void handleImportFile(file);
-                }}
-              />
-            </div>
-            {notice && (
-              <p
-                className={`mt-3 rounded-lg px-3 py-2 text-xs ${
-                  notice.kind === 'ok' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700'
-                }`}
-              >
-                {notice.text}
-              </p>
+          <Section title="Abgleich zwischen Geräten">
+            {cloudAvailable && (
+              <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+                <p className="text-sm font-medium text-stone-800">Hundeapp-Sync</p>
+                {activeCloud ? (
+                  <>
+                    <p className="mt-0.5 text-xs text-stone-500">
+                      {cloudEmail ? `Verbunden als ${cloudEmail}.` : 'Verbunden.'} Beim Trennen
+                      bleiben alle Einträge auf diesem Gerät erhalten.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button type="button" className="btn-danger" onClick={onDisconnect}>
+                        Verbindung trennen
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={onDeleteAccount}>
+                        Konto löschen
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-0.5 text-xs text-stone-500">
+                      Konto per E-Mail, in der Einführungsphase kostenlos. Einträge, Kommandos und
+                      Hunde gleichen sich dann von selbst zwischen deinen Geräten ab.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-secondary mt-3"
+                      onClick={onOpenAccountSetup}
+                    >
+                      Verbinden
+                    </button>
+                  </>
+                )}
+              </div>
             )}
-          </div>
-        </Section>
 
-        <Section title="Abgleich zwischen Geräten">
-          {cloudAvailable && (
             <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-              <p className="text-sm font-medium text-stone-800">Hundeapp-Sync</p>
-              {activeCloud ? (
+              <p className="text-sm font-medium text-stone-800">Eigenes GitHub-Repo</p>
+              {activeGithub ? (
                 <>
                   <p className="mt-0.5 text-xs text-stone-500">
-                    {cloudEmail ? `Verbunden als ${cloudEmail}.` : 'Verbunden.'} Beim Trennen
-                    bleiben alle Einträge auf diesem Gerät erhalten.
+                    Verbunden. Beim Trennen bleiben alle Einträge auf diesem Gerät erhalten.
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" className="btn-danger" onClick={onDisconnect}>
-                      Verbindung trennen
-                    </button>
-                    <button type="button" className="btn-secondary" onClick={onDeleteAccount}>
-                      Konto löschen
-                    </button>
-                  </div>
+                  <button type="button" className="btn-danger mt-3" onClick={onDisconnect}>
+                    Synchronisierung trennen
+                  </button>
                 </>
               ) : (
                 <>
                   <p className="mt-0.5 text-xs text-stone-500">
-                    Konto per E-Mail, in der Einführungsphase kostenlos. Einträge, Kommandos und
-                    Hunde gleichen sich dann von selbst zwischen deinen Geräten ab.
+                    Kostenlos, für Fortgeschrittene: Abgleich über ein eigenes privates GitHub-Repo.
+                    Braucht ein GitHub-Konto und einen Zugriffstoken.
                   </p>
-                  <button type="button" className="btn-secondary mt-3" onClick={onOpenAccountSetup}>
-                    Verbinden
+                  <button type="button" className="btn-secondary mt-3" onClick={onOpenSyncSetup}>
+                    Einrichten
                   </button>
                 </>
               )}
             </div>
-          )}
+          </Section>
 
-          <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-            <p className="text-sm font-medium text-stone-800">Eigenes GitHub-Repo</p>
-            {activeGithub ? (
-              <>
-                <p className="mt-0.5 text-xs text-stone-500">
-                  Verbunden. Beim Trennen bleiben alle Einträge auf diesem Gerät erhalten.
-                </p>
-                <button type="button" className="btn-danger mt-3" onClick={onDisconnect}>
-                  Synchronisierung trennen
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="mt-0.5 text-xs text-stone-500">
-                  Kostenlos, für Fortgeschrittene: Abgleich über ein eigenes privates GitHub-Repo.
-                  Braucht ein GitHub-Konto und einen Zugriffstoken.
-                </p>
-                <button type="button" className="btn-secondary mt-3" onClick={onOpenSyncSetup}>
-                  Einrichten
-                </button>
-              </>
-            )}
-          </div>
-        </Section>
-
-        <Section title="Über die App">
-          <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-            {Capacitor.getPlatform() !== 'ios' && (
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-dark">
-                  <CoffeeIcon className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-stone-800">
-                    Gefällt dir die Hundeapp?
+          <Section title="Über die App">
+            <div className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+              {Capacitor.getPlatform() !== 'ios' && (
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-dark">
+                    <CoffeeIcon className="h-5 w-5" />
                   </span>
-                  <span className="block text-xs text-stone-500">
-                    Kostenlos und ohne Werbung. Ein Kaffee hilft beim Weiterbauen.
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-stone-800">
+                      Gefällt dir die Hundeapp?
+                    </span>
+                    <span className="block text-xs text-stone-500">
+                      Kostenlos und ohne Werbung. Ein Kaffee hilft beim Weiterbauen.
+                    </span>
                   </span>
-                </span>
+                  <a
+                    href="https://ko-fi.com/cloudplay"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary shrink-0 px-3 py-1.5 text-xs"
+                  >
+                    Unterstützen
+                  </a>
+                </div>
+              )}
+              <div
+                className={`${
+                  Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
+                }`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs text-stone-500">
+                    Fehler gefunden oder eine Idee? Schreib mir eine Mail.
+                  </span>
+                  <a href={feedbackMailto()} className="btn-secondary px-3 py-1.5 text-xs">
+                    Feedback senden
+                  </a>
+                </div>
+                <p className="mt-1 text-xs text-stone-500">hundeapp@thundermail.com</p>
+              </div>
+              <p
+                className={`text-center text-xs text-stone-500 ${
+                  Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
+                }`}
+              >
+                Version {__APP_VERSION__} ·{' '}
                 <a
-                  href="https://ko-fi.com/cloudplay"
+                  href="https://cheekyboinc.github.io/hundeapp/datenschutz.html"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-secondary shrink-0 px-3 py-1.5 text-xs"
+                  className="underline hover:text-stone-700"
                 >
-                  Unterstützen
-                </a>
-              </div>
-            )}
-            <div
-              className={`${
-                Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
-              }`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs text-stone-500">
-                  Fehler gefunden oder eine Idee? Schreib mir eine Mail.
-                </span>
-                <a href={feedbackMailto()} className="btn-secondary px-3 py-1.5 text-xs">
-                  Feedback senden
-                </a>
-              </div>
-              <p className="mt-1 text-xs text-stone-500">hundeapp@thundermail.com</p>
+                  Datenschutz
+                </a>{' '}
+                ·{' '}
+                <a
+                  href="https://cheekyboinc.github.io/hundeapp/datenschutz.html#impressum"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-stone-700"
+                >
+                  Impressum
+                </a>{' '}
+                ·{' '}
+                <button
+                  type="button"
+                  className="underline hover:text-stone-700"
+                  onClick={() => setShowLicenses(true)}
+                >
+                  Lizenzen
+                </button>
+              </p>
             </div>
-            <p
-              className={`text-center text-xs text-stone-500 ${
-                Capacitor.getPlatform() !== 'ios' ? 'mt-3 border-t border-stone-100 pt-3' : ''
-              }`}
-            >
-              Version {__APP_VERSION__} ·{' '}
-              <a
-                href="https://cheekyboinc.github.io/hundeapp/datenschutz.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-stone-700"
-              >
-                Datenschutz
-              </a>{' '}
-              ·{' '}
-              <a
-                href="https://cheekyboinc.github.io/hundeapp/datenschutz.html#impressum"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-stone-700"
-              >
-                Impressum
-              </a>
-            </p>
-          </div>
-        </Section>
-      </div>
-    </Modal>
+          </Section>
+        </div>
+      </Modal>
+      {showLicenses && <LicensesModal onClose={() => setShowLicenses(false)} />}
+    </>
   );
 }

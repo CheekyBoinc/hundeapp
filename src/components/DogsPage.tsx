@@ -9,6 +9,7 @@ import StoolTab from './StoolTab';
 import VetTab from './VetTab';
 import VaccinationTab from './VaccinationTab';
 import ExportMenu from './ExportMenu';
+import ErrorBanner from './ErrorBanner';
 
 type SubTab = 'profil' | 'gewicht' | 'kot' | 'tierarzt' | 'impfungen';
 
@@ -146,14 +147,7 @@ export default function DogsPage({ activeDogId, onActiveDogChange }: Props) {
             </div>
           )}
 
-          {error && (
-            <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <span>{error}</span>
-              <button className="shrink-0 font-semibold underline" onClick={load}>
-                Erneut versuchen
-              </button>
-            </div>
-          )}
+          <ErrorBanner error={error} onRetry={load} />
 
           {selected && subTab === 'profil' && (
             <DogProfileTab dog={selected} onEdit={() => setEditingDog(selected)} />

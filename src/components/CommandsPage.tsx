@@ -7,6 +7,7 @@ import { formatDateShort } from '../utils';
 import CommandModal from './CommandModal';
 import { PawIcon } from './PawIcon';
 import { IconButton, PencilIcon, TrashIcon } from './NavIcons';
+import ErrorBanner from './ErrorBanner';
 
 const IDLE_DAYS = 30;
 
@@ -144,14 +145,7 @@ export default function CommandsPage() {
         </select>
       </div>
 
-      {error && (
-        <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>
-            Erneut versuchen
-          </button>
-        </div>
-      )}
+      <ErrorBanner error={error} onRetry={load} />
 
       {loading ? (
         <p className="py-10 text-center text-stone-500">Wird geladen…</p>

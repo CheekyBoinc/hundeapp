@@ -12,7 +12,6 @@ import {
   onChange,
   onSyncError,
   onSyncNotice,
-  pullNow,
   pushNow,
   setConfig,
   setProvider,
@@ -234,35 +233,32 @@ export default function App() {
     const unsubNotice = onSyncNotice((message) => {
       if (!cancelled) setNotice(message);
     });
-    // Beim Zurückkehren in die App höchstens alle 30 s abrufen, sonst löst
-    // jeder App-Wechsel einen Request aus.
-    const PULL_COOLDOWN_MS = 30_000;
-    let lastPull = Date.now();
+    // Beim Zurückkehren in die App und sobald das Netz wieder da ist, abgleichen.
+    // pushNow holt zuerst den Serverstand und lädt nur hoch, wenn lokal etwas
+    // dazugekommen ist. So gehen offline entstandene Änderungen nicht erst mit
+    // der nächsten eigenen Änderung hoch. Bei Rückkehr höchstens alle 30 s,
+    // sonst löst jeder App-Wechsel einen Request aus.
+    const RESUME_COOLDOWN_MS = 30_000;
+    let lastRun = Date.now();
     const onVisible = () => {
-      if (document.visibilityState === 'visible') {
-        if (Date.now() - lastPull < PULL_COOLDOWN_MS) return;
-        lastPull = Date.now();
-        setStatus('syncing');
-        pullNow()
-          .then(() => {
-            if (cancelled) return;
-            setStatus('ok');
-            setLastSync(new Date().toLocaleTimeString('de-DE'));
-          })
-          .catch((err: Error) => {
-            if (cancelled) return;
-            setStatus('error');
-            setErrorMsg(err.message);
-          });
-      }
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastRun < RESUME_COOLDOWN_MS) return;
+      lastRun = Date.now();
+      run();
+    };
+    const onOnline = () => {
+      lastRun = Date.now();
+      run();
     };
     document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', onOnline);
     return () => {
       cancelled = true;
       unsub();
       unsubError();
       unsubNotice();
       document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onOnline);
     };
   }, [configured]);
 

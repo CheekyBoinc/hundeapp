@@ -37,3 +37,5 @@ lassen sich auf der Einträge-Seite mit einem Tipp entfernen.
 
 - Abgleich einrichten: [docs/einrichtung.md](docs/einrichtung.md)
 - Entwicklung und Releases: [docs/entwicklung.md](docs/entwicklung.md)
+
+© 2026 Stefan Dehnert. Alle Rechte vorbehalten, siehe [LICENSE](LICENSE).

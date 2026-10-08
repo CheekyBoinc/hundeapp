@@ -17,6 +17,7 @@ import EntryDetail from './EntryDetail';
 import EntryModal from './EntryModal';
 import HomeworkCard from './HomeworkCard';
 import PracticeModal from './PracticeModal';
+import ErrorBanner from './ErrorBanner';
 
 export default function EntriesPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -56,6 +57,12 @@ export default function EntriesPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Fehler aus Aktionen (z. B. Speicher voll beim Abhaken) in die Fehlerzeile
+  // statt sie zu verschlucken.
+  const showError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen.');
+  }, []);
 
   useLiveReload(load);
 
@@ -160,8 +167,7 @@ export default function EntriesPage() {
             onClick={async () => {
               if (!window.confirm('Alle Beispieleinträge und Beispiel-Kommandos entfernen?'))
                 return;
-              await removeDemoData();
-              load();
+              await removeDemoData().then(load, showError);
             }}
           >
             Alle entfernen
@@ -175,19 +181,12 @@ export default function EntriesPage() {
           dogName={homeworkDogName}
           onPractice={() => setPracticing(homework)}
           onDone={() => {
-            void toggleEntryDone(homework.id, true).then(load);
+            toggleEntryDone(homework.id, true).then(load, showError);
           }}
         />
       )}
 
-      {error && (
-        <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{error}</span>
-          <button className="shrink-0 font-semibold underline" onClick={load}>
-            Erneut versuchen
-          </button>
-        </div>
-      )}
+      <ErrorBanner error={error} onRetry={load} />
 
       {loading ? (
         <p className="py-10 text-center text-stone-500">Wird geladen…</p>
@@ -249,7 +248,9 @@ export default function EntriesPage() {
                         className="h-5 w-5 accent-accent"
                         checked={e.erledigt}
                         onClick={(ev) => ev.stopPropagation()}
-                        onChange={(ev) => toggleEntryDone(e.id, ev.target.checked).then(load)}
+                        onChange={(ev) =>
+                          toggleEntryDone(e.id, ev.target.checked).then(load, showError)
+                        }
                       />
                     </td>
                     <td className="px-3 py-3 text-right text-stone-400">

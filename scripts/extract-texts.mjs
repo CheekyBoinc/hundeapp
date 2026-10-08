@@ -44,6 +44,8 @@ const SCREEN_BY_FILE = {
   'review.ts': 'Bewertung',
   'components/HomeworkCard.tsx': 'Übungsaufgaben',
   'components/PracticeModal.tsx': 'Heute geübt',
+  'components/ErrorBanner.tsx': 'Fehlerzeile',
+  'components/LicensesModal.tsx': 'Lizenzen',
   'sync/core.ts': 'Sync-Meldungen',
   'sync/github.ts': 'Sync: GitHub',
   'backup.ts': 'Sicherung',

@@ -1,7 +1,8 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
@@ -24,11 +25,75 @@ function csp(): Plugin {
   return {
     name: 'csp-header',
     apply: 'build',
-    transformIndexHtml(html) {
-      return html.replace(
-        '<head>',
-        `<head>\n    <meta http-equiv="Content-Security-Policy" content="${policy}">`
+    // Über die Tags-Schnittstelle statt per Textersetzung: So landet die CSP
+    // auch dann im Kopf, wenn sich das Markup von index.html ändert.
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'meta',
+          attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
+          injectTo: 'head-prepend'
+        }
+      ];
+    }
+  };
+}
+
+// Sammelt die Lizenzen aller Pakete, die tatsächlich im App-Bundle landen, und
+// legt sie als licenses.txt neben die App („Einstellungen → Über die App →
+// Lizenzen"). Dazu kommen die nativen Capacitor-Pakete und ein Hinweis auf die
+// Android-Bibliotheken von Google, die nur im nativen Teil stecken.
+function thirdPartyLicenses(): Plugin {
+  const root = fileURLToPath(new URL('.', import.meta.url));
+  const nativ = ['@capacitor/android', '@capacitor/ios'];
+
+  function lizenztext(ordner: string): string | null {
+    const datei = readdirSync(ordner).find((n) => /^(licen[cs]e|copying)(\.(md|txt))?$/i.test(n));
+    return datei ? readFileSync(join(ordner, datei), 'utf8').trim() : null;
+  }
+
+  return {
+    name: 'third-party-licenses',
+    apply: 'build',
+    generateBundle() {
+      const ordner = new Map<string, string>();
+      for (const id of this.getModuleIds()) {
+        const pfad = id.replace(/^\0/, '').split('?')[0];
+        const treffer = /^(.*\/node_modules\/((?:@[^/]+\/)?[^/]+))\//.exec(pfad);
+        if (treffer) ordner.set(treffer[2], treffer[1]);
+      }
+      for (const name of nativ) {
+        const pfad = join(root, 'node_modules', name);
+        if (existsSync(pfad)) ordner.set(name, pfad);
+      }
+
+      const teile = [...ordner.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, pfad]) => {
+          const meta = JSON.parse(readFileSync(join(pfad, 'package.json'), 'utf8')) as {
+            version?: string;
+            license?: string;
+          };
+          const text = lizenztext(pfad) ?? `Lizenz: ${meta.license ?? 'unbekannt'}`;
+          return `== ${name} ${meta.version ?? ''} (${meta.license ?? 'unbekannt'}) ==\n\n${text}`;
+        });
+
+      // Nur im nativen Android-Teil: AndroidX, Kotlin und Google Play In-App
+      // Review stehen unter der Apache License 2.0. Den Text liefert ein
+      // Paket mit derselben Lizenz aus node_modules mit.
+      const apache = join(root, 'node_modules', 'typescript', 'LICENSE.txt');
+      teile.push(
+        '== Android: AndroidX, Kotlin-Standardbibliothek, Google Play In-App Review (Apache-2.0) ==\n\n' +
+          (existsSync(apache)
+            ? readFileSync(apache, 'utf8').trim()
+            : 'Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0')
       );
+
+      this.emitFile({
+        type: 'asset',
+        fileName: 'licenses.txt',
+        source: `${teile.join('\n\n\n')}\n`
+      });
     }
   };
 }
@@ -90,5 +155,5 @@ export default defineConfig({
       }
     ]
   },
-  plugins: [react(), tailwindcss(), csp(), guardDebugReminders()]
+  plugins: [react(), tailwindcss(), csp(), guardDebugReminders(), thirdPartyLicenses()]
 });

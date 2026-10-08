@@ -120,6 +120,15 @@ https://cheekyboinc.github.io/hundeapp/datenschutz.html
 - Screenshots Play Store: store/screenshots/phone-1.png bis phone-3.png
   (1080 x 1920)
 
+## Versionshinweise für Release 1.7.0
+
+<de-DE>
+Fehler beim Abhaken, beim Entfernen der Beispiele und beim Export werden jetzt
+angezeigt, statt still zu scheitern. Nach einer Funkloch-Pause gleicht die App
+von selbst wieder ab, sobald das Netz zurück ist. Neu unter „Über die App":
+die Lizenzen der verwendeten Open-Source-Bausteine.
+</de-DE>
+
 ## Versionshinweise für Release 1.6.0
 
 <de-DE>
